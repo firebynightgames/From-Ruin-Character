@@ -2,28 +2,29 @@
    GLOBAL
    ================================================ */
 html, body {
-  height: 100%;
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  background: #fff;
+}
+
+#character-sheet {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 80px;
+  box-sizing: border-box;
+  transform-origin: top left;
 }
 
 #character-sheet,
 #character-sheet * {
   font-family: "Century Gothic", sans-serif;
-}
-
-#character-sheet {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  width: 420px;
-  height: calc(100% - 20px);
-  overflow-y: auto;
-  padding-bottom: 80px;
-  box-sizing: border-box;
-  transform-origin: top left;
 }
 
 /* ================================================
