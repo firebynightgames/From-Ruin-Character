@@ -4,22 +4,18 @@
 html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
   height: 100%;
   overflow: hidden;
 }
 
 #character-sheet {
   position: relative;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
   padding-bottom: 80px;
   box-sizing: border-box;
-  transform-origin: top left;
 }
 
 #character-sheet,
@@ -132,11 +128,16 @@ html, body {
    HEADER, TABS & ACCORDION FLUSH STACKING
    ================================================ */
 .sheet-combined-header {
-  width: 420px;               
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #ffffff;
+  box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
+  width: 100%;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  margin-bottom: 0 !important; /* Removes any gap below the header block */
+  margin-bottom: 0;
 }
 
 .tab-menu {
