@@ -527,7 +527,7 @@ html, body {
 .diamond-box:hover {border-color: #27ae60; background-color: #1e8449;
 }
 
-.diamond-box:checked: hover {background-color: #1e8449; border-color: #27ae60;
+.diamond-box:checked:hover {background-color: #1e8449; border-color: #27ae60;
 }
 
 /* --- Diamond Positions (Adjust these % values to fit your graphic perfectly!) --- */
@@ -760,8 +760,8 @@ input.single-digit {
 
 .wound-row select {
   -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
   cursor: pointer;
 }
 
@@ -1208,7 +1208,7 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   position: relative !important;
   z-index: 10 !important;
   background-color: #ffffff !important;
-  box-shadow: 0px 6px 8px -6px rgba(0,0,0,0.3);
+  box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
   width: 420px;
   display: flex;
   flex-direction: column;

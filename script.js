@@ -11,7 +11,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
     const isGearTab = btn.dataset.tab === 'tab-2';
     const sheet = document.getElementById('character-sheet');
-    isGearTab ? sheet.classList.add('gear-active') : sheet.classList.remove('gear-active');
+   if (isGearTab) {
+  sheet.classList.add('gear-active');
+} else {
+  sheet.classList.remove('gear-active');
+}
 
     document.getElementById('xp-header').style.display  = isGearTab ? 'none'  : 'block';
     document.getElementById('xp-body').style.display    = isGearTab ? 'none'  : 'flex';
@@ -376,29 +380,24 @@ if (woundsContainer) {
 }
 
 /* ====================================================
-RELIC
+   RELIC
 ==================================================== */
 const relicContainer = document.getElementById('relics-container');
-if (relicContainer) {
-  function addRelicRow() {
-    const row = document.createElement('div');
-    row.className = 'relic-row';
-    // Single wide box that handles all three pieces of data
-    row.innerHTML = `<textarea name="attr_relic_${Date.now()}" rows="1" placeholder="Name, Type, Effect..."></textarea>`;
-    relicContainer.appendChild(row);
-  }
 
-  // Start with 3 empty rows
+function addRelicRow() {
+  const row = document.createElement('div');
+  row.className = 'relic-row';
+  row.innerHTML = `<textarea name="attr_relic_${Date.now()}" rows="1" placeholder="Name, Type, Effect..."></textarea>`;
+  if (relicContainer) relicContainer.appendChild(row);
+}
+
+if (relicContainer) {
   for (let i = 0; i < 3; i++) addRelicRow();
 
   relicContainer.addEventListener('input', (e) => {
     if (e.target.tagName !== 'TEXTAREA') return;
-
-    // Expand height
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
-
-    // Add new row logic
     const rows = relicContainer.querySelectorAll('.relic-row');
     const lastRow = rows[rows.length - 1];
     if (e.target.closest('.relic-row') === lastRow && e.target.value.trim() !== '') {
