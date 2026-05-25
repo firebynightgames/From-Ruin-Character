@@ -1205,13 +1205,14 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
    STICKY HEADER & TAB MENU
    ================================================ */
 .sheet-combined-header {
-  position: relative !important;
-  z-index: 10 !important;
-  background-color: #ffffff !important;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #ffffff;
   box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
-  width: 420px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  margin-bottom: 0 !important;
+  margin-bottom: 0;
 }
