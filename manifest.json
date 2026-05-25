@@ -1,4 +1,5 @@
 {
+  "manifest_version": 1,
   "name": "From Ruin Character Sheet",
   "version": "1.0.0",
   "description": "Character sheet for From Ruin",
