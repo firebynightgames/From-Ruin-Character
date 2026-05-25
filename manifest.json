@@ -1,17 +1,12 @@
 {
-  "manifest_version": 1,
   "name": "From Ruin Character Sheet",
   "version": "1.0.0",
-  "description": "Character sheet for From Ruin",
-  "author": "Your Name",
-  "permissions": ["player"],
+  "manifest_version": 1,
   "action": {
-    "title": "Character Sheet",
+    "title": "From Ruin Character Sheet",
     "icon": "/icon.svg",
-    "popover": {
-      "url": "/index.html",
-      "height": 600,
-      "width": 460
-    }
+    "popover": "/index.html",
+    "height": 600,
+    "width": 460
   }
 }
