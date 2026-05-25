@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Ruin Character Sheet</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="character-sheet">
+
+  <div class="sheet-combined-header">
+    <div class="sheet-header-area">
+      <div class="header-logo-container">
+        <img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_header.jpg" class="sheet-logo-img" alt="From Ruin Header">
+      </div>
+      <div class="header-counter-box">
+        <div id="xp-header" class="counter-header-title">Experience</div>
+        <div id="xp-body" class="counter-body">
+          <input type="number" name="attr_advances_left" placeholder="-">
+          <span class="box-slash">/</span>
+          <input type="number" name="attr_advances_right" placeholder="-">
+        </div>
+        <div id="bulk-header" class="counter-header-title" style="display:none;">Bulk</div>
+        <div id="bulk-body" class="counter-body" style="display:none;">
+          <span id="bulk-total" style="font-weight:bold;font-size:16px;">0</span>
+          <span class="box-slash">/</span>
+          <span id="bulk-threshold" style="font-weight:bold;font-size:16px;">20</span>
+        </div>
+        <div id="bulk-penalty" style="display:none;font-size:10px;font-weight:bold;text-align:center;color:red;line-height:1;padding-bottom:3px;"></div>
+      </div>
+    </div>
+
+    <div class="edge-track">
+      <span class="edge-label">Edge</span>
+      <input type="checkbox" name="attr_edge_1"  class="edge-box">
+      <input type="checkbox" name="attr_edge_2"  class="edge-box">
+      <input type="checkbox" name="attr_edge_3"  class="edge-box">
+      <input type="checkbox" name="attr_edge_4"  class="edge-box">
+      <input type="checkbox" name="attr_edge_5"  class="edge-box">
+      <input type="checkbox" name="attr_edge_6"  class="edge-box">
+      <input type="checkbox" name="attr_edge_7"  class="edge-box">
+      <input type="checkbox" name="attr_edge_8"  class="edge-box">
+      <input type="checkbox" name="attr_edge_9"  class="edge-box">
+      <input type="checkbox" name="attr_edge_10" class="edge-box">
+    </div>
+
+    <div class="tab-menu">
+      <button class="tab-btn active" data-tab="tab-1">MAIN</button>
+      <button class="tab-btn"        data-tab="tab-2">GEAR</button>
+      <button class="tab-btn"        data-tab="tab-3">SPELLS</button>
+      <button class="tab-btn"        data-tab="tab-4">STORY</button>
+    </div>
+  </div>
+  
+  <div id="tab-1" class="tab-content active-tab">
+    <div id="accordion">
+      <div class="acc-section">
+        <button class="acc-header">Details <span class="acc-caret">▼</span></button>
+        <div class="acc-body open desc-panel">
+          <p class="desc-text">
+            I am <span class="desc-field" contenteditable="true" data-placeholder="NAME"></span>,
+            a(n) <span class="desc-field" contenteditable="true" data-placeholder="AGE"></span>
+            <span class="desc-field" contenteditable="true" data-placeholder="FLAW"></span>
+            <span class="desc-field" contenteditable="true" data-placeholder="PEOPLE"></span> that
+            <span class="desc-field" contenteditable="true" data-placeholder="ORIGIN"></span> the life of a
+            <span class="desc-field" contenteditable="true" data-placeholder="BACKGROUND"></span>.
+            I carry a <span class="desc-field" contenteditable="true" data-placeholder="MOMENTO"></span>
+            to remind me how the Deep changed me.
+            <span class="desc-field" contenteditable="true" data-placeholder="EVENT"></span> shaped me, but I survived.
+          </p>
+        </div>
+      </div>
+
+      <div class="acc-section">
+        <button class="acc-header">Aptitudes <span class="acc-caret">▼</span></button>
+       <div class="acc-body open sheet-panel">
+  <input type="number" id="apt-finesse" class="aptitude-field left-apt  row-1" name="attr_finesse"  placeholder="#">
+  <span class="apt-current left-apt  row-1" id="cur-finesse"></span>
+  <input type="number" id="apt-devise"  class="aptitude-field right-apt row-1" name="attr_devise"   placeholder="#">
+  <span class="apt-current right-apt row-1" id="cur-devise"></span>
+
+  <input type="number" id="apt-exert"   class="aptitude-field left-apt  row-2" name="attr_exert"    placeholder="#">
+  <span class="apt-current left-apt  row-2" id="cur-exert"></span>
+  <input type="number" id="apt-adapt"   class="aptitude-field right-apt row-2" name="attr_adapt"    placeholder="#">
+  <span class="apt-current right-apt row-2" id="cur-adapt"></span>
+
+  <input type="number" id="apt-sense"   class="aptitude-field left-apt  row-3" name="attr_sense"    placeholder="#">
+  <span class="apt-current left-apt  row-3" id="cur-sense"></span>
+  <input type="number" id="apt-resist"  class="aptitude-field right-apt row-3" name="attr_resist"   placeholder="#">
+  <span class="apt-current right-apt row-3" id="cur-resist"></span>
+
+  <input type="number" id="apt-deceive" class="aptitude-field left-apt  row-4" name="attr_deceive"  placeholder="#">
+  <span class="apt-current left-apt  row-4" id="cur-deceive"></span>
+  <input type="number" id="apt-relate"  class="aptitude-field right-apt row-4" name="attr_relate"   placeholder="#">
+  <span class="apt-current right-apt row-4" id="cur-relate"></span>
+          <input type="checkbox" id="cond-hungry"  class="condition-checkbox cond-row-1">
+          <input type="checkbox" id="cond-thirsty" class="condition-checkbox cond-row-2">
+          <input type="checkbox" id="cond-exposed" class="condition-checkbox cond-row-3">
+          <input type="checkbox" id="cond-tired"   class="condition-checkbox cond-row-4">
+        </div>
+      </div>
+
+      <div class="acc-section">
+        <button class="acc-header">Features <span class="acc-caret">▼</span></button>
+        <div class="acc-body open">
+          <ol class="features-list">
+            <li><textarea placeholder="Add a feature..." rows="1"></textarea></li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="acc-section">
+        <button class="acc-header">Drives <span class="acc-caret">▼</span></button>
+        <div class="acc-body open">
+          <ol class="drives-list">
+            <li>
+              <div class="drive-item">
+                <textarea placeholder="Add a drive..." rows="1" name="attr_drive_1"></textarea>
+                <div class="drive-tracker">
+                  <input type="checkbox" name="attr_drive_1_cb_1" class="diamond-box db-1">
+                  <input type="checkbox" name="attr_drive_1_cb_2" class="diamond-box db-2">
+                  <input type="checkbox" name="attr_drive_1_cb_3" class="diamond-box db-3">
+                </div>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+            <div class="acc-section">
+              <button class="acc-header">Flaws <span class="acc-caret">▼</span></button>
+              <div class="acc-body open">
+                <ol class="flaws-list">
+                  <li><textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_1"></textarea></li>
+                </ol>
+              </div>
+            </div>
+            <div class="acc-section">
+        <button class="acc-header">Wounds <span class="acc-caret">▼</span></button>
+        <div class="acc-body open wounds-body">
+          <div class="wounds-container" id="wounds-container"></div>
+        </div>
+      </div>
+    </div>   
+  </div>
+
+  <div id="tab-2" class="tab-content">
+    <div id="accordion-gear">
+      <div class="acc-section">
+        <button class="acc-header">Weapons <span class="acc-caret">▼</span></button>
+        <div class="acc-body open weapons-body">
+          <div class="weapons-headers">
+            <span class="hdr-name">Name</span>
+            <span class="hdr-gear">Gear</span>
+            <span class="hdr-hand">Hand</span>
+            <span class="hdr-size">Size</span>
+            <span class="hdr-dmg">Dmg</span>
+            <span class="hdr-bulk">Bulk</span>
+          </div>
+          <div class="weapons-container" id="weapons-container"></div>
+        </div>
+      </div>
+
+      <div class="acc-section">
+        <button class="acc-header">Armor <span class="acc-caret">▼</span></button>
+        <div class="acc-body open armor-body">
+          <div class="armor-headers">
+            <span class="hdr-armor-name">Name</span>
+            <span class="hdr-armor-gear">Gear</span>
+            <span class="hdr-armor-features">Features</span>
+            <span class="hdr-armor-bulk">Bulk</span>
+          </div>
+          <div class="armor-container" id="armor-container"></div>
+        </div>
+      </div>
+
+      <div class="acc-section">
+        <button class="acc-header">Gear <span class="acc-caret">▼</span></button>
+        <div class="acc-body open gear-body">
+          <div class="sheet-gear-table">
+            <div class="gear-headers">
+              <span class="hdr-gear-name">Name</span>
+              <span class="hdr-gear-bulk">Bulk</span>
+            </div>
+            <div class="sheet-gear-container">
+              <div class="gear-row">
+                <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_1" placeholder="-"></div>
+                <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_1" placeholder="-"></div>
+              </div>
+              <div class="gear-row">
+                <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_2" placeholder="-"></div>
+                <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_2" placeholder="-"></div>
+              </div>
+              <div class="gear-row">
+                <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_3" placeholder="-"></div>
+                <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_3" placeholder="-"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-section">
+        <button class="acc-header">Relics <span class="acc-caret">▼</span></button>
+        <div class="acc-body open relics-body">
+          <div class="relics-headers">
+            <span class="hdr-rel-name">Name</span>
+            <span class="hdr-rel-type">Type</span>
+            <span class="hdr-rel-effect">Effect</span>
+          </div>
+          <div class="relics-container" id="relics-container"></div>
+        </div>
+      </div>
+    </div>
+  </div> 
+
+<div id="tab-3" class="tab-content">
+    <div id="accordion-spells">
+      <div class="acc-section">
+        <button class="acc-header">Spells <span class="acc-caret">▼</span></button>
+        <div class="acc-body open">
+          <div class="spells-table-header">
+            <span class="hdr-desc">Spell Description</span>
+            <span class="hdr-diff">Difficulty</span>
+          </div>
+          <ol class="spells-list" id="spells-container"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-4" class="tab-content">
+  <div id="accordion-story">
+    <div class="acc-section">
+      <button class="acc-header">History <span class="acc-caret">▼</span></button>
+      <div class="acc-body open">
+        <textarea class="story-field" name="attr_history" placeholder="Write your character's history..."></textarea>
+      </div>
+    </div>
+    <div class="acc-section">
+      <button class="acc-header">Notes <span class="acc-caret">▼</span></button>
+      <div class="acc-body open">
+        <textarea class="story-field" name="attr_notes" placeholder="Write your notes..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div> 
+<script src="script.js"></script>
+</body>
+</html>

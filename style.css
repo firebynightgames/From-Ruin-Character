@@ -1,0 +1,1216 @@
+/* ================================================
+   GLOBAL
+   ================================================ */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+#character-sheet,
+#character-sheet * {
+  font-family: "Century Gothic", sans-serif;
+}
+
+#character-sheet {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 420px;
+  height: calc(100% - 20px);
+  overflow-y: auto;
+  padding-bottom: 80px;
+  box-sizing: border-box;
+  transform-origin: top left;
+}
+
+/* ================================================
+   HEADER AREA & PERFECT LOGO CROP
+   ================================================ */
+.sheet-header-area {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important; 
+  width: 420px !important;
+  height: 65px !important; /* Set back to 65px to perfectly match the tracker box height */
+  position: relative !important;
+  background: transparent !important;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+  overflow: visible !important;
+}
+
+/* Left Side: Container acting as the exact window for your logo */
+.header-logo-container {
+  width: 225px; 
+  height: 85px; /* Slices the window vertically to hide the rest of the file */
+  overflow: hidden;
+}
+
+.header-logo-container .sheet-logo-img {
+  width: 420px; /* Scales the original image back to its native sheet width */
+  height: auto;
+  object-fit: fill; 
+  object-position: left top; /* Locks the alignment to the far top left corner */
+}
+
+/* Right Side: Tracker Box matching the height beautifully */
+.header-counter-box {
+  display: flex;
+  flex-direction: column;
+  width: 140px; 
+  height: 65px; 
+  border: 2px solid #000;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+/* Black Box Header (Accordion Style) */
+.counter-header-title {
+  background-color: #000;
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 4px 0;
+  line-height: 1;
+}
+
+/* Content Area inside the border */
+.counter-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.counter-body input[type="number"] {
+  width: 35px;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 16px;
+  font-family: "Century Gothic", sans-serif;
+  font-weight: bold;
+}
+
+.counter-body input[type="number"]:focus {
+  outline: none;
+}
+
+.box-slash {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 4px;
+  color: #000;
+}
+
+
+/* --- Dynamic Text Swap Fix --- */
+#character-sheet.gear-active .header-text-dynamic {
+  font-size: 0; 
+}
+#character-sheet.gear-active .header-text-dynamic::after {
+  content: "Bulk";
+  font-size: 11px; /* Restores size when text swaps */
+}
+
+#character-sheet:not(.gear-active) .header-text-dynamic {
+  font-size: 0;
+}
+#character-sheet:not(.gear-active) .header-text-dynamic::after {
+  content: "Experience";
+  font-size: 11px;
+}
+
+/* ================================================
+   HEADER, TABS & ACCORDION FLUSH STACKING
+   ================================================ */
+.sheet-combined-header {
+  width: 420px;               
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin-bottom: 0 !important; /* Removes any gap below the header block */
+}
+
+.tab-menu {
+  display: flex;
+  background: #222;
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 0 !important; /* Eliminates space under the tabs */
+  box-sizing: border-box;
+}
+
+#accordion, 
+#accordion-gear, 
+#accordion-spells {
+  width: 100%;
+  margin-top: 0 !important;   /* Pulls the inner layout engines up */
+  box-sizing: border-box;
+}
+
+.tab-content {
+  display: none;
+  margin-top: 0 !important;   
+  padding-top: 0 !important;  /* Stops wrapper padding from forcing a gap */
+}
+
+/* Forces the very first accordion header to sit directly under the tabs */
+.tab-content.active-tab .acc-section:first-child .acc-header {
+  margin-top: 0 !important;
+  border-top: none; /* Optional: cleans up the double-border look where they touch */
+}
+
+/* ================================================
+   EDGE TRACK
+   ================================================ */
+.edge-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;                  
+  padding: 6px 8px;          
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.edge-label {
+  color: #000;
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-right: 6px;         
+  white-space: nowrap;
+}
+
+.edge-box {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 22px !important;     
+  height: 22px !important;    
+  display: inline-block;
+  position: relative !important; 
+  background-color: transparent !important;
+  border: 1px solid #333333 !important; 
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border-radius: 2px;         
+}
+
+.edge-box:not(:checked):hover {
+  border-color: #27ae60 !important;
+  background-color: #1e8449 !important;
+}
+
+.edge-box:checked {
+  background-color: #2ecc71 !important; 
+  border-color: #6cc6a0 !important;
+}
+
+.edge-box:checked:hover {
+  background-color: #27ae60 !important; 
+  border-color: #1e8449 !important;
+}
+
+/* ================================================
+   TABS
+   ================================================ */
+.tab-menu {
+  display: flex;
+  background: #222;
+}
+
+.tab-btn {
+  flex: 1;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.tab-btn:hover       { background: #444; color: #fff; }
+.tab-btn.active      { background: #222; color: #fff; font-weight: bold; }
+.tab-content         { display: none; }
+.tab-content.active-tab { display: block; }
+
+/* ================================================
+   ACCORDION
+   ================================================ */
+#accordion, #accordion-gear {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.acc-header {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  width: 100%;
+  padding: 6px 10px;
+  background: #222;
+  color: #fff;
+  border: 1px solid #444;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+.acc-header:hover { background: #444; }
+
+.acc-caret {
+  font-size: 9px;
+  transition: transform 0.2s ease-in-out;
+  display: inline-block;
+}
+
+.acc-header:has(+ .acc-body.open) .acc-caret {
+  transform: rotate(180deg);
+}
+
+.acc-body {
+  display: none;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ccc;
+  border-top: none;
+  font-size: 11px;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.acc-body.open { display: block; }
+
+.acc-body.weapons-body,
+.acc-body.armor-body {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ================================================
+   APTITUDES PANEL (RESERVED GRAPHIC & POSITIONING)
+   ================================================ */
+.sheet-panel {
+  position: relative !important;
+  width: 420px !important;
+  height: 524px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_aptitudes.jpg") no-repeat center / 100% 100% !important;
+  box-sizing: border-box;
+}
+
+.aptitude-field {
+  position: absolute;
+  height: 11%;
+  font-size: 24px;
+  border: none !important;
+  background: transparent !important;
+  text-align: center;
+  outline: none;
+}
+
+.aptitude-field {
+  -moz-appearance: textfield;
+}
+
+.left-apt  { left: 9.6%;   width: 12.6%; }
+.right-apt { left: 76.5%;  width: 12.6%; }
+
+.row-1 { top: 11%; }
+.row-2 { top: 33.175%; }
+.row-3 { top: 55.75%; }
+.row-4 { top: 78%; }
+
+.apt-current {
+  position: absolute;
+  font-size: 16px;
+  font-weight: bold;
+  color: #C0392B;
+  text-align: center;
+  pointer-events: none;
+  width: 12.6%;
+}
+
+.apt-current.left-apt  { left: 15%; }
+.apt-current.right-apt { left: 82%; }
+
+.apt-current.row-1 { top: 11.5%; }
+.apt-current.row-2 { top: 34%; }
+.apt-current.row-3 { top: 56.5%; }
+.apt-current.row-4 { top: 79%; }
+
+/* ================================================
+   CHECKBOXES — CONDITIONS, STRESS, TRAUMA
+   ================================================ */
+.condition-checkbox,
+.track {
+  position: absolute;
+  width: 4.5%;
+  height: 3.6%;
+  border: none !important;
+  cursor: pointer;
+  appearance: none;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.condition-checkbox:hover,
+.track:hover                  { background: rgba(244, 162, 89, 0.5); }
+.condition-checkbox:checked,
+.track:checked                { background: #f4a259 !important; }
+.condition-checkbox:checked:hover,
+.track:checked:hover          { background: #d9823f !important; }
+
+.condition-checkbox { left: 37.75%; }
+.cond-row-1 { top: 5.95%; }
+.cond-row-2 { top: 28.35%; }
+.cond-row-3 { top: 50.65%; }
+.cond-row-4 { top: 73.15%; }
+
+.col-1 { left: 42.8%; }
+.col-2 { left: 47.7%; }
+.col-3 { left: 52.675%; }
+.col-4 { left: 57.5%; }
+.col-5 { left: 62.5%; }
+.col-6 { left: 67.5%; }
+
+.stress.row-1 { top: 12.25%; }
+.stress.row-2 { top: 34.75%; }
+.stress.row-3 { top: 56.9%; }
+.stress.row-4 { top: 79.4%; }
+
+.trauma.row-1 { top: 17%; }
+.trauma.row-2 { top: 39.25%; }
+.trauma.row-3 { top: 61.5%; }
+.trauma.row-4 { top: 83.95%; }
+
+/* ================================================
+   DESCRIPTION PANEL
+   ================================================ */
+.desc-text {
+  white-space: normal;
+  line-height: 1.6;
+  font-size: 20px;
+  color: #222;
+}
+
+.desc-field {
+  display: inline-block;
+  min-width: 40px;
+  max-width: 100%;
+  padding: 2px 4px;
+  border-bottom: 2px dashed #222;
+  font-size: 20px;
+  line-height: 1.2;
+  outline: none;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.desc-field:empty::before {
+  content: attr(data-placeholder);
+  color: #999;
+  font-weight: bold;
+}
+
+/* ================================================
+   FEATURES LIST
+   ================================================ */
+.features-list {
+  padding-left: 24px;
+  margin: 0;
+  list-style: disc;
+}
+
+.features-list li {
+  margin-bottom: 12px;
+  vertical-align: top;
+}
+
+.features-list textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: 24px;
+  background-size: 100% 24px;
+}
+
+/* ================================================
+   DRIVES LIST & DIAMOND TRACKER ENGINE
+   ================================================ */
+.drives-list {
+  padding-left: 24px;
+  margin: 0;
+  margin-bottom: 10px !important;
+  padding-right: 15px;
+  list-style: disc;
+}
+
+.drives-list li {
+  margin-bottom: 8px;
+}
+
+/* Flexbox to keep the text line and the image sitting side-by-side */
+.drive-item {
+  display: flex;
+  align-items: flex-end; 
+  gap: 15px;
+  width: 100%;
+}
+
+.drive-item textarea {
+  flex: 1;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font-family: "Century Gothic", AppleGothic, sans-serif !important;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  line-height: 24px;
+}
+
+/* The Graphic Container */
+.drive-tracker {
+  position: relative;
+  width: 80px;  /* Scaled down proportion of 133 */
+  height: 58px; /* Scaled down proportion of 97 */
+  background: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_drive.jpg') no-repeat center center / contain;
+  flex-shrink: 0;
+}
+
+/* Turns standard checkboxes into diamonds */
+.diamond-box {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #333;
+  background-color: transparent;
+  cursor: pointer;
+  transform: rotate(45deg); /* The magic diamond rotation */
+  transition: all 0.15s ease;
+  margin: 0;
+}
+
+.diamond-box:checked {background-color: #6cc6a0; border-color: #27ae60;
+}
+
+.diamond-box:hover {border-color: #27ae60; background-color: #1e8449;
+}
+
+.diamond-box:checked: hover {background-color: #1e8449; border-color: #27ae60;
+}
+
+/* --- Diamond Positions (Adjust these % values to fit your graphic perfectly!) --- */
+.db-1 { left: 6%; top: 45%; }
+.db-2 { left: 35%; top: 45%; }
+.db-3 { left: 64.25%; top: 45%; }
+
+/* ================================================
+   FLAWS LIST STYLES (CAPPED AT 3)
+   ================================================ */
+.flaws-list {
+  padding-left: 24px;
+  margin: 0;
+  margin-bottom: 10px !important;
+  padding-right: 15px;
+  list-style: disc;
+}
+
+.flaws-list li {
+  margin-bottom: 12px;
+  vertical-align: top;
+}
+
+.flaws-list textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font-family: "Century Gothic", AppleGothic, sans-serif !important;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: 24px;
+}
+
+/* ================================================
+   WEAPONS ACCORDION CONTENT & DYNAMIC ENGINE
+   ================================================ */
+.weapons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;                 
+  padding: 4px 0;           
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.weapon-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;                                           
+  width: 100%;
+  transition: all 0.25s ease-in-out; 
+  border-bottom: 1px solid #e0e0e0;  
+  padding-bottom: 4px;      
+}
+
+.weapons-headers {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 18px;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+.weapons-headers span {
+  position: absolute;
+  bottom: 2px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111111;              
+  text-align: center;
+  white-space: nowrap;        
+}
+
+.weapon-row {
+  position: relative;
+  width: 100%;
+  height: 49px;            
+  background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_weapon.jpg');
+  background-size: 100% 100%; 
+  background-repeat: no-repeat;
+}
+
+.weapon-features-row {
+  display: flex;
+  align-items: center;
+  width: 98%;                
+  padding-left: 28px;        
+  box-sizing: border-box;
+}
+
+.weapon-features-row label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #555;
+  text-transform: uppercase;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.weapon-features-row input {
+  flex: 1;
+  border: none !important;
+  border-bottom: 1px dashed #999 !important; 
+  background: transparent !important;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: normal;
+  color: #111;
+  padding: 1px 4px;
+  outline: none;
+}
+
+.weapon-features-row input:focus {
+  border-bottom-color: #222 !important;
+}
+
+.field-wrap {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  bottom: 16px;              
+  height: 18px;            
+}
+
+.field-wrap label {
+  display: none !important;
+}
+
+.field-wrap input {
+  width: 100%;
+  height: 100%;
+  border: none !important;
+  background: transparent !important;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: bold;
+  color: #111;
+  padding: 0 2px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.weapon-row .col-name input {
+  text-align: left;
+  padding-left: 6px;
+}
+
+.gear-double-input {
+  display: flex;
+  gap: 6px; 
+  width: 100%;
+  height: 100%;
+}
+
+input.single-digit {
+  text-align: center;
+  padding: 0;
+  width: 100%;
+}
+
+.weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;   width: 40%; }
+.weapons-headers .hdr-name                            { text-align: left !important; padding-left: 6px; }
+.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 43.75%;   width: 12%; }
+.weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 58%;  width: 9%; }
+.weapon-row .col-size, .weapons-headers .hdr-size     { left: 69.2%;  width: 9%; }
+.weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%;  width: 9%; }
+.weapon-row .col-bulk, .weapons-headers .hdr-bulk     { left: 88.5%;  width: 8.5%; }
+
+/* ================================================
+   WOUNDS ACCORDION
+   ================================================ */
+.wounds-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wounds-column-headers,
+.wound-row {
+  display: grid;
+  grid-template-columns: 18% 15% 1fr 40px;
+  align-items: center;
+  gap: 6px;
+}
+
+.wounds-column-headers {
+  margin-bottom: 4px;
+}
+
+.wounds-column-headers span {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111;
+  text-align: left;
+}
+
+.wounds-column-headers span:last-child {
+  text-align: right;
+}
+
+.wound-row {
+  padding: 4px 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+.wounds-container .wound-row:last-child { border-bottom: none; }
+
+.wound-row select,
+.wound-row input[type="text"] {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  font-family: "Century Gothic", sans-serif;
+  font-size: 13px;
+  color: #111;
+  padding: 2px 4px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.wound-row select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.wound-patch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #333;
+  background: transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  justify-self: end;
+  transition: background 0.15s ease;
+}
+
+.wound-patch:checked {background-color: #6cc6a0; border-color: #27ae60;
+}
+
+.wound-patch:hover {border-color: #27ae60; background-color: #1e8449;
+}
+
+.wound-patch:checked:hover  {border-color: #27ae60; background-color: #1e8449;
+}
+
+/* ================================================
+   ARMOR ACCORDION CONTENT
+   ================================================ */
+.armor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;                 
+  padding: 4px 0;           
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.armor-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  border-bottom: 1px solid #e0e0e0;  
+  padding-bottom: 4px;      
+}
+
+.armor-features-row {
+  display: flex;
+  align-items: center;
+  width: 98%;                
+  padding-left: 28px;        
+  box-sizing: border-box;
+}
+
+.armor-features-row label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #555;
+  text-transform: uppercase;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.armor-features-row input {
+  flex: 1;
+  border: none !important;
+  border-bottom: 1px dotted #999 !important; 
+  background: transparent !important;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111;
+  padding: 1px 4px;
+  outline: none;
+}
+
+.armor-features-row input:focus {
+  border-bottom-color: #222 !important;
+}
+
+/* Visibility engines */
+.slot-2, .slot-3, .slot-4, .slot-5 { display: none; opacity: 0; }
+.slot-1:not(:has(input[name="attr_weapon_name_1"]:placeholder-shown)) ~ .slot-2 { display: flex; opacity: 1; }
+.slot-2:not(:has(input[name="attr_weapon_name_2"]:placeholder-shown)) ~ .slot-3 { display: flex; opacity: 1; }
+.slot-3:not(:has(input[name="attr_weapon_name_3"]:placeholder-shown)) ~ .slot-4 { display: flex; opacity: 1; }
+.slot-4:not(:has(input[name="attr_weapon_name_4"]:placeholder-shown)) ~ .slot-5 { display: flex; opacity: 1; }
+
+.armor-slot-2, .armor-slot-3, .armor-slot-4, .armor-slot-5 { display: none; opacity: 0; }
+.armor-slot-1:not(:has(input[name="attr_armor_name_1"]:placeholder-shown)) ~ .armor-slot-2 { display: flex; opacity: 1; }
+.armor-slot-2:not(:has(input[name="attr_armor_name_2"]:placeholder-shown)) ~ .armor-slot-3 { display: flex; opacity: 1; }
+.armor-slot-3:not(:has(input[name="attr_armor_name_3"]:placeholder-shown)) ~ .armor-slot-4 { display: flex; opacity: 1; }
+.armor-slot-4:not(:has(input[name="attr_armor_name_4"]:placeholder-shown)) ~ .armor-slot-5 { display: flex; opacity: 1; }
+
+.armor-row {
+  position: relative;
+  width: 100%;
+  height: 49px;
+  background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_armor.jpg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.armor-headers {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 18px;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+.armor-headers span {
+  position: absolute;
+  bottom: 2px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111;
+  text-align: center;
+  white-space: nowrap;        
+}
+
+.col-armor-name, .hdr-armor-name         { left: 2%;    width: 48%; }
+.col-armor-gear, .hdr-armor-gear         { left: 43.75%;   width: 12%; }
+.col-armor-features, .hdr-armor-features { left: 57%;    width: 30%; }
+.col-armor-bulk, .hdr-armor-bulk         { left: 88%;    width: 10%; }
+
+.hdr-armor-name { text-align: left !important; padding-left: 6px; }
+.col-armor-name input { text-align: left !important; padding-left: 6px; }
+
+.armor-row .col-armor-bulk input {
+  -moz-appearance: textfield;
+}
+
+/* ================================================ 
+   GEAR ACCORDION TABLE & DIMENSIONS
+   ================================================ */
+.sheet-gear-container {
+  background-color: #ffffff;
+  position: relative;
+  width: 100%;
+  min-height: 74px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+
+.gear-headers, .gear-row {
+  position: relative;
+  width: 100%;
+  height: 24px;
+}
+
+.gear-headers span, .gear-row .field-wrap {
+  position: absolute;
+  height: 20px;
+  top: 2px;
+}
+
+.gear-headers span {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: bold;
+  color: #111;
+  text-align: center;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.sheet-gear-container .gear-row {
+  border-bottom: 1px dashed #cccccc;
+  height: 24px; 
+}
+
+.col-gear-name, .hdr-gear-name { 
+  left: 2%; 
+  width: 75%; 
+}
+.col-gear-bulk, .hdr-gear-bulk { 
+  left: 88%; 
+  width: 10%; 
+}
+
+.hdr-gear-name { text-align: left !important; padding-left: 6px; }
+.col-gear-name input { text-align: left !important; padding-left: 6px; }
+
+.sheet-gear-container .gear-row input {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.sheet-gear-container .gear-row input[type="number"] {
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+/* Relics - Grid Headers */
+.relics-headers { 
+  display: flex; 
+  width: 100%; 
+  margin-bottom: 5px; 
+}
+.relics-headers span { 
+  font-size: 11px; 
+  font-weight: bold; 
+  text-transform: uppercase; 
+}
+.hdr-rel-name { width: 30%; }
+.hdr-rel-type { width: 20%; }
+.hdr-rel-effect { width: 50%; }
+
+/* ================================================
+   RELICS-Auto Expand
+   ================================================ */
+.relic-row {
+  width: 100%;
+  margin-bottom: 5px;
+  overflow: visible;
+}
+
+.relic-row textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 5px 0;
+  font-family: inherit;
+  font-size: 13px;
+  resize: none;
+  overflow: hidden;
+  display: block;
+  box-sizing: border-box;
+  min-height: 30px;
+}
+
+
+/* ================================================
+   SPELLS & RITUALS LIST (FEATURES STYLE)
+   ================================================ */
+#accordion-spells {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.spells-table-header {
+  display: grid;
+  grid-template-columns: 83% 17%;
+  padding: 4px 12px 4px 28px; 
+  box-sizing: border-box;
+}
+
+.spells-table-header span {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.spells-table-header .hdr-diff {
+  text-align: center;
+}
+
+.spells-list {
+  padding-left: 24px;
+  margin: 0;
+  list-style: decimal;
+}
+
+.spells-list li {
+  margin-bottom: 12px;
+  display: list-item;
+}
+
+.spell-item-grid {
+  display: grid;
+  grid-template-columns: 83% 17%;
+  align-items: end;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 4px;
+}
+
+.spell-item-grid textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  vertical-align: bottom;
+  line-height: 24px;
+}
+
+.spell-item-grid input[type="number"] {
+  width: 85%;
+  margin-left: auto;
+  height: 22px;
+  border: 1px solid #333;
+  background: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  outline: none;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+
+/* ================================================
+   STORY TAB
+   ================================================ */
+#accordion-story {
+  width: 100%;
+  margin-top: 0 !important;
+  box-sizing: border-box;
+}
+
+.story-field {
+  width: 100%;
+  min-height: 80px;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  font-family: "Century Gothic", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #222;
+  resize: none;
+  overflow: hidden;
+  outline: none;
+  box-sizing: border-box;
+  padding: 4px 0;
+}
+
+/* ================================================
+   ACCORDION COHESION FIXES
+   ================================================ */
+/* Adds a matching border and background structure to the Aptitudes panel */
+.acc-body.sheet-panel {
+  border: 1px solid #ccc !important;
+  border-top: none !important; /* Matches the seamless header connection */
+  background-color: #ffffff !important; /* Fills behind the graphic if it scales */
+  box-sizing: border-box;
+}
+
+/* Prevents specialized padding overrides from breaking the uniform edge alignment */
+.acc-body.weapons-body,
+.acc-body.armor-body {
+  padding: 10px !important;
+}
+
+/* ================================================
+   GLOBAL SPINNER REMOVAL (ALL FIELDS)
+   ================================================ */
+/* Removes up/down spin arrows for Chrome, Safari, Edge, and Opera */
+#character-sheet input[type="number"]::-webkit-outer-spin-button,
+#character-sheet input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+/* Removes up/down spin arrows for Firefox */
+#character-sheet input[type="number"] {
+  -moz-appearance: textfield !important;
+}
+
+/* ================================================
+   FEATURES BOTTOM PADDING FIX
+   ================================================ */
+/* Adds safety padding to the bottom of all accordion bodies */
+.acc-body {
+  padding-bottom: 1px !important;
+}
+
+/* Fixes the features list spacing so it doesn't clip the bottom edge */
+.features-list {
+  margin-bottom: 10px !important;
+  padding-right: 15px; /* Gives a right-side safety buffer for typing */
+}
+
+.features-list li textarea {
+  margin-bottom: 4px;
+}
+
+/* ================================================
+   RESPONSIVE SCALING ENGINE
+   ================================================ */
+@media (max-width: 470px) {
+  #character-sheet { 
+    transform: scale(0.92); 
+    left: 15px;
+    top: 15px;
+  }
+}
+
+@media (max-width: 410px) {
+  #character-sheet { 
+    transform: scale(0.82); 
+    left: 10px;
+    top: 10px;
+  }
+}
+
+@media (max-width: 350px) {
+  #character-sheet { 
+    transform: scale(0.70); 
+    left: 5px;
+  }
+}
+
+/* ================================================
+   FORCE PARAGRAPH & EDITABLE FIELD TYPOGRAPHY
+   ================================================ */
+.desc-text,
+.desc-field,
+.desc-field::before {
+font-family: "Century Gothic", AppleGothic, sans-serif !important;
+}
+
+/* ================================================
+   UNIVERSAL TAB ROUTING ENGINE
+   ================================================ */
+/* If your JS targets the active class directly */
+#tab-1.active, #tab-2.active, #tab-3.active, #tab-4.active {
+  display: block !important;
+}
+
+/* If your JS targets the active-tab class */
+#character-sheet .tab-content.active-tab {
+  display: block !important;
+}
+
+/* ================================================
+   STICKY HEADER & TAB MENU
+   ================================================ */
+.sheet-combined-header {
+  position: relative !important;
+  z-index: 10 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0px 6px 8px -6px rgba(0,0,0,0.3);
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin-bottom: 0 !important;
+}
