@@ -1,10 +1,10 @@
 {
   "name": "From Ruin Character Sheet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "manifest_version": 1,
   "action": {
     "title": "From Ruin Character Sheet",
     "icon": "https://firebynightgames.github.io/From-Ruin-Character/icon.svg",
-    "popover": "https://firebynightgames.github.io/From-Ruin-Character/index.html"
+    "panel": "https://firebynightgames.github.io/From-Ruin-Character/index.html"
   }
 }
