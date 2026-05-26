@@ -718,7 +718,9 @@ function waitForElement(selector, timeout = 2000) {
 }
 
 OBR.onReady(async () => {
-  // Wait until weapons container has been populated by the generator
-  await waitForElement('.weapon-block');
+  // Wait for two animation frames to ensure all generators have rendered
+  await new Promise(resolve => requestAnimationFrame(() => 
+    requestAnimationFrame(resolve)
+  ));
   await loadSheet();
 });
