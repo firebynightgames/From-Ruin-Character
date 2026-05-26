@@ -1,5 +1,19 @@
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
 
+const storage = {
+  save(character) {
+    localStorage.setItem("character", JSON.stringify(character));
+  },
+
+  load() {
+    return JSON.parse(localStorage.getItem("character"));
+  },
+
+  clear() {
+    localStorage.removeItem("character");
+  }
+};
+
 /* ================================================
    TABS ROUTING
    ================================================ */
