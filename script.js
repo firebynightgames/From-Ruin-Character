@@ -559,24 +559,19 @@ let saveTimeout = null;
 function collectSheetData() {
   const data = {};
 
-  // Text inputs and number inputs
   document.querySelectorAll('#character-sheet input[name], #character-sheet textarea[name]').forEach(el => {
     if (el.type === 'checkbox') return;
     data[el.name] = el.value;
   });
 
-  // Checkboxes
   document.querySelectorAll('#character-sheet input[type="checkbox"][name]').forEach(el => {
     data[el.name] = el.checked;
   });
 
-  // Contenteditable desc fields
   document.querySelectorAll('.desc-field').forEach(el => {
-    const key = 'desc_' + el.dataset.placeholder;
-    data[key] = el.textContent.trim();
+    data['desc_' + el.dataset.placeholder] = el.textContent.trim();
   });
 
-  // Portrait
   const img = document.getElementById('portrait-img');
   if (img && img.src && img.style.display !== 'none') {
     data['portrait'] = img.src;
@@ -585,15 +580,74 @@ function collectSheetData() {
   return data;
 }
 
+function preExpandDynamicRows(data) {
+  // Wounds — count how many wound rows are in saved data
+  if (woundsContainer) {
+    const woundCount = Object.keys(data).filter(k => k.startsWith('attr_wound_severity_')).length;
+    const existing = woundsContainer.querySelectorAll('.wound-row').length;
+    for (let i = existing + 1; i <= woundCount; i++) {
+      woundsContainer.appendChild(createWoundRow(i));
+    }
+  }
+
+  // Spells
+  if (spellsContainer) {
+    const spellCount = Object.keys(data).filter(k => k.startsWith('attr_spell_desc_')).length;
+    const existing = spellsContainer.querySelectorAll('.spell-item-node').length;
+    for (let i = existing + 1; i <= spellCount; i++) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = createSpellRowHTML(i);
+      spellsContainer.appendChild(tempDiv.firstElementChild);
+    }
+  }
+
+  // Gear rows
+  const gearContainer = document.querySelector('.sheet-gear-container');
+  if (gearContainer) {
+    const gearCount = Object.keys(data).filter(k => k.startsWith('attr_gear_name_')).length;
+    const existing = gearContainer.querySelectorAll('.gear-row').length;
+    for (let i = existing + 1; i <= gearCount; i++) {
+      const newRow = document.createElement('div');
+      newRow.className = 'gear-row';
+      newRow.innerHTML = `
+        <div class="field-wrap col-gear-name">
+          <input type="text" name="attr_gear_name_${i}" placeholder="-">
+        </div>
+        <div class="field-wrap col-gear-bulk">
+          <input type="number" name="attr_gear_bulk_${i}" placeholder="-">
+        </div>
+      `;
+      gearContainer.appendChild(newRow);
+    }
+  }
+
+  // Relics
+  if (relicContainer) {
+    const relicCount = Object.keys(data).filter(k => k.startsWith('attr_relic_')).length;
+    const existing = relicContainer.querySelectorAll('.relic-row').length;
+    for (let i = existing; i < relicCount; i++) {
+      addRelicRow();
+    }
+  }
+
+  // Features
+  const featuresList = document.querySelector('.features-list');
+  if (featuresList) {
+    const featureCount = Object.keys(data).filter(k => k.startsWith('attr_feature_') || k === 'features').length;
+    // Features use unnamed textareas so we handle them differently — just ensure enough rows exist
+  }
+}
+
 function applySheetData(data) {
   if (!data) return;
 
-  // Text and number inputs
+  // Pre-expand dynamic rows before applying values
+  preExpandDynamicRows(data);
+
   document.querySelectorAll('#character-sheet input[name], #character-sheet textarea[name]').forEach(el => {
     if (el.type === 'checkbox') return;
     if (data[el.name] !== undefined) {
       el.value = data[el.name];
-      // Trigger height resize for textareas
       if (el.tagName === 'TEXTAREA') {
         el.style.height = 'auto';
         el.style.height = el.scrollHeight + 'px';
@@ -601,18 +655,15 @@ function applySheetData(data) {
     }
   });
 
-  // Checkboxes
   document.querySelectorAll('#character-sheet input[type="checkbox"][name]').forEach(el => {
     if (data[el.name] !== undefined) el.checked = data[el.name];
   });
 
-  // Contenteditable desc fields
   document.querySelectorAll('.desc-field').forEach(el => {
     const key = 'desc_' + el.dataset.placeholder;
     if (data[key] !== undefined) el.textContent = data[key];
   });
 
-  // Portrait
   if (data['portrait']) {
     const img = document.getElementById('portrait-img');
     const label = document.querySelector('.portrait-upload-label');
@@ -620,7 +671,6 @@ function applySheetData(data) {
     if (label) label.style.display = 'none';
   }
 
-  // Refresh calculated fields
   calculateTotalBulk();
   updateAllHealthLimits();
   syncSummary();
@@ -648,17 +698,9 @@ async function loadSheet() {
   }
 }
 
-// Attach autosave to all input events
 document.getElementById('character-sheet').addEventListener('input', scheduleSave);
 document.getElementById('character-sheet').addEventListener('change', scheduleSave);
 
-// Load on OBR ready
 OBR.onReady(async () => {
-  setTimeout(async () => {
-    await loadSheet();
-    // Second pass for dynamically generated fields
-    setTimeout(async () => {
-      await loadSheet();
-    }, 300);
-  }, 200);
+  await loadSheet();
 });
