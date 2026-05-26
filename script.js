@@ -1,16 +1,60 @@
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
 
+/* ================================================
+   CHARACTER STORAGE
+   ================================================ */
+const STORAGE_KEY = "fromRuinCharacter_v1";
+
+function getAllSheetFields() {
+  const root = document.getElementById("character-sheet");
+  return Array.from(
+    root.querySelectorAll(
+      'input, textarea, [contenteditable="true"], [contenteditable=""]'
+    )
+  );
+}
+
+function readSheetState() {
+  const fields = getAllSheetFields();
+  return fields.map(el => {
+    if (el.tagName === "INPUT") {
+      if (el.type === "checkbox") return { type: "checkbox", value: el.checked };
+      return { type: "input", value: el.value };
+    }
+    if (el.tagName === "TEXTAREA") {
+      return { type: "textarea", value: el.value };
+    }
+    if (el.isContentEditable) {
+      return { type: "contenteditable", value: el.innerHTML };
+    }
+    return { type: "unknown", value: null };
+  });
+}
+
+function writeSheetState(values) {
+  if (!values) return;
+  const fields = getAllSheetFields();
+  fields.forEach((el, i) => {
+    const saved = values[i];
+    if (!saved) return;
+
+    if (saved.type === "checkbox") el.checked = !!saved.value;
+    if (saved.type === "input") el.value = saved.value ?? "";
+    if (saved.type === "textarea") el.value = saved.value ?? "";
+    if (saved.type === "contenteditable") el.innerHTML = saved.value ?? "";
+  });
+}
+
 const storage = {
-  save(character) {
-    localStorage.setItem("character", JSON.stringify(character));
+  save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(readSheetState()));
   },
-
   load() {
-    return JSON.parse(localStorage.getItem("character"));
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
   },
-
   clear() {
-    localStorage.removeItem("character");
+    localStorage.removeItem(STORAGE_KEY);
   }
 };
 
@@ -734,4 +778,26 @@ document.getElementById('character-sheet').addEventListener('change', scheduleSa
 
 OBR.onReady(async () => {
   await loadSheet();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  // 1. Load saved sheet
+  const saved = storage.load();
+  if (saved) writeSheetState(saved);
+
+  // 2. Attach autosave to all fields
+  getAllSheetFields().forEach(el => {
+    const handler = () => storage.save();
+
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+      el.addEventListener("input", handler);
+      el.addEventListener("change", handler);
+    } else if (el.isContentEditable) {
+      el.addEventListener("input", handler);
+      el.addEventListener("blur", handler);
+    }
+  });
+
+  // 3. Your existing JS continues below this line
 });
