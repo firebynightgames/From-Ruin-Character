@@ -692,7 +692,11 @@ async function loadSheet() {
   try {
     const metadata = await OBR.player.getMetadata();
     const data = metadata[SHEET_KEY];
-    if (data) applySheetData(data);
+    if (data) {
+      console.log('Loaded data keys:', Object.keys(data));
+      console.log('Weapon name 1 at load time:', document.querySelector('input[name="attr_weapon_name_1"]'));
+      applySheetData(data);
+    }
   } catch (err) {
     console.warn('Load failed:', err);
   }
@@ -718,9 +722,5 @@ function waitForElement(selector, timeout = 2000) {
 }
 
 OBR.onReady(async () => {
-  // Wait for two animation frames to ensure all generators have rendered
-  await new Promise(resolve => requestAnimationFrame(() => 
-    requestAnimationFrame(resolve)
-  ));
   await loadSheet();
 });
