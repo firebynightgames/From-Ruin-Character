@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>From Ruin Character Sheet</title>
   <link rel="stylesheet" href="style.css">
+  <script type="module" src="script.js"></script>
 </head>
 <body>
 <div id="character-sheet">
@@ -229,8 +230,33 @@
     </div>
   </div>
 
-  <div id="tab-4" class="tab-content">
+ <div id="tab-4" class="tab-content">
   <div id="accordion-story">
+    <div class="acc-section">
+      <button class="acc-header">Portrait & Summary <span class="acc-caret">▼</span></button>
+      <div class="acc-body open">
+        <div class="portrait-summary-row">
+          <div class="portrait-side">
+            <label class="portrait-upload-label" for="portrait-upload">
+              Click to upload portrait
+            </label>
+            <input type="file" id="portrait-upload" accept="image/*" style="display:none;">
+            <img id="portrait-img" alt="" style="display:none;">
+          </div>
+          <div class="summary-side" id="summary-panel">
+            <p class="summary-line"><span class="summary-label">Name</span><span class="summary-value" id="sum-name"></span></p>
+            <p class="summary-line"><span class="summary-label">Age</span><span class="summary-value" id="sum-age"></span></p>
+            <p class="summary-line"><span class="summary-label">People</span><span class="summary-value" id="sum-people"></span></p>
+            <p class="summary-line"><span class="summary-label">Origin</span><span class="summary-value" id="sum-origin"></span></p>
+            <p class="summary-line"><span class="summary-label">Background</span><span class="summary-value" id="sum-background"></span></p>
+            <p class="summary-line"><span class="summary-label">Flaw</span><span class="summary-value" id="sum-flaw"></span></p>
+            <p class="summary-line"><span class="summary-label">Memento</span><span class="summary-value" id="sum-momento"></span></p>
+            <p class="summary-line"><span class="summary-label">Event</span><span class="summary-value" id="sum-event"></span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="acc-section">
       <button class="acc-header">History <span class="acc-caret">▼</span></button>
       <div class="acc-body open">
@@ -246,7 +272,6 @@
   </div>
 </div>
 
-</div> 
-<script src="script.js"></script>
+</div>
 </body>
 </html>

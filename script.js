@@ -1,3 +1,5 @@
+import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
+
 /* ================================================
    TABS ROUTING
    ================================================ */
@@ -407,6 +409,55 @@ if (relicContainer) {
 }
 
 /* ================================================
+   PORTRAIT UPLOAD
+   ================================================ */
+const portraitUpload = document.getElementById('portrait-upload');
+const portraitImg = document.getElementById('portrait-img');
+const portraitLabel = document.querySelector('.portrait-upload-label');
+
+if (portraitUpload) {
+  portraitUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      portraitImg.src = ev.target.result;
+      portraitImg.style.display = 'block';
+      portraitLabel.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ================================================
+   SUMMARY PANEL SYNC
+   ================================================ */
+const summaryMap = {
+  'sum-name':       'NAME',
+  'sum-age':        'AGE',
+  'sum-people':     'PEOPLE',
+  'sum-origin':     'ORIGIN',
+  'sum-background': 'BACKGROUND',
+  'sum-flaw':       'FLAW',
+  'sum-momento':    'MOMENTO',
+  'sum-event':      'EVENT'
+};
+
+function syncSummary() {
+  document.querySelectorAll('.desc-field').forEach(field => {
+    const placeholder = field.dataset.placeholder;
+    const id = Object.keys(summaryMap).find(k => summaryMap[k] === placeholder);
+    if (id) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = field.textContent.trim();
+    }
+  });
+}
+
+document.querySelector('.desc-panel')?.addEventListener('input', syncSummary);
+syncSummary();
+
+/* ================================================
    STORY FIELDS — AUTO GROW
    ================================================ */
 document.querySelectorAll('.story-field').forEach(field => {
@@ -498,3 +549,112 @@ document.addEventListener('change', (e) => {
 
 // Run once on load
 setTimeout(updateAllHealthLimits, 100);
+
+/* ================================================
+   OBR SAVE / LOAD / AUTOSAVE
+   ================================================ */
+const SHEET_KEY = 'fromruin.character';
+let saveTimeout = null;
+
+function collectSheetData() {
+  const data = {};
+
+  // Text inputs and number inputs
+  document.querySelectorAll('#character-sheet input[name], #character-sheet textarea[name]').forEach(el => {
+    if (el.type === 'checkbox') return;
+    data[el.name] = el.value;
+  });
+
+  // Checkboxes
+  document.querySelectorAll('#character-sheet input[type="checkbox"][name]').forEach(el => {
+    data[el.name] = el.checked;
+  });
+
+  // Contenteditable desc fields
+  document.querySelectorAll('.desc-field').forEach(el => {
+    const key = 'desc_' + el.dataset.placeholder;
+    data[key] = el.textContent.trim();
+  });
+
+  // Portrait
+  const img = document.getElementById('portrait-img');
+  if (img && img.src && img.style.display !== 'none') {
+    data['portrait'] = img.src;
+  }
+
+  return data;
+}
+
+function applySheetData(data) {
+  if (!data) return;
+
+  // Text and number inputs
+  document.querySelectorAll('#character-sheet input[name], #character-sheet textarea[name]').forEach(el => {
+    if (el.type === 'checkbox') return;
+    if (data[el.name] !== undefined) {
+      el.value = data[el.name];
+      // Trigger height resize for textareas
+      if (el.tagName === 'TEXTAREA') {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+      }
+    }
+  });
+
+  // Checkboxes
+  document.querySelectorAll('#character-sheet input[type="checkbox"][name]').forEach(el => {
+    if (data[el.name] !== undefined) el.checked = data[el.name];
+  });
+
+  // Contenteditable desc fields
+  document.querySelectorAll('.desc-field').forEach(el => {
+    const key = 'desc_' + el.dataset.placeholder;
+    if (data[key] !== undefined) el.textContent = data[key];
+  });
+
+  // Portrait
+  if (data['portrait']) {
+    const img = document.getElementById('portrait-img');
+    const label = document.querySelector('.portrait-upload-label');
+    if (img) { img.src = data['portrait']; img.style.display = 'block'; }
+    if (label) label.style.display = 'none';
+  }
+
+  // Refresh calculated fields
+  calculateTotalBulk();
+  updateAllHealthLimits();
+  syncSummary();
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    try {
+      const data = collectSheetData();
+      await OBR.player.setMetadata({ [SHEET_KEY]: data });
+    } catch (err) {
+      console.warn('Autosave failed:', err);
+    }
+  }, 500);
+}
+
+async function loadSheet() {
+  try {
+    const metadata = await OBR.player.getMetadata();
+    const data = metadata[SHEET_KEY];
+    if (data) applySheetData(data);
+  } catch (err) {
+    console.warn('Load failed:', err);
+  }
+}
+
+// Attach autosave to all input events
+document.getElementById('character-sheet').addEventListener('input', scheduleSave);
+document.getElementById('character-sheet').addEventListener('change', scheduleSave);
+
+// Load on OBR ready
+OBR.onReady(async () => {
+  setTimeout(async () => {
+    await loadSheet();
+  }, 200);
+});
