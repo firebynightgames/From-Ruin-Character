@@ -701,6 +701,24 @@ async function loadSheet() {
 document.getElementById('character-sheet').addEventListener('input', scheduleSave);
 document.getElementById('character-sheet').addEventListener('change', scheduleSave);
 
+function waitForElement(selector, timeout = 2000) {
+  return new Promise((resolve) => {
+    const el = document.querySelector(selector);
+    if (el) return resolve(el);
+    const observer = new MutationObserver(() => {
+      const el = document.querySelector(selector);
+      if (el) {
+        observer.disconnect();
+        resolve(el);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => { observer.disconnect(); resolve(null); }, timeout);
+  });
+}
+
 OBR.onReady(async () => {
+  // Wait until weapons container has been populated by the generator
+  await waitForElement('.weapon-block');
   await loadSheet();
 });
