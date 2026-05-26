@@ -688,14 +688,39 @@ function scheduleSave() {
   }, 500);
 }
 
+function scheduleSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    try {
+      const data = collectSheetData();
+      console.log('--- SAVING ---', Object.keys(data).length, 'keys');
+      await OBR.player.setMetadata({ [SHEET_KEY]: data });
+      console.log('--- SAVE COMPLETE ---');
+    } catch (err) {
+      console.warn('Autosave failed:', err);
+    }
+  }, 500);
+}
+
 async function loadSheet() {
   try {
+    console.log('--- LOAD SHEET STARTED ---');
     const metadata = await OBR.player.getMetadata();
+    console.log('Metadata received:', metadata);
     const data = metadata[SHEET_KEY];
+    console.log('Sheet data found:', data ? 'YES' : 'NO');
     if (data) {
-      console.log('Loaded data keys:', Object.keys(data));
-      console.log('Weapon name 1 at load time:', document.querySelector('input[name="attr_weapon_name_1"]'));
+      console.log('Data keys count:', Object.keys(data).length);
+      console.log('Sample - desc_NAME:', data['desc_NAME']);
+      console.log('Sample - attr_finesse:', data['attr_finesse']);
+      console.log('DOM - attr_finesse input exists:', !!document.querySelector('input[name="attr_finesse"]'));
+      console.log('DOM - attr_weapon_name_1 exists:', !!document.querySelector('input[name="attr_weapon_name_1"]'));
+      console.log('DOM - wounds-container exists:', !!document.getElementById('wounds-container'));
       applySheetData(data);
+      console.log('--- APPLY COMPLETE ---');
+      console.log('After apply - attr_finesse value:', document.querySelector('input[name="attr_finesse"]')?.value);
+    } else {
+      console.log('No saved data found in metadata');
     }
   } catch (err) {
     console.warn('Load failed:', err);
@@ -704,22 +729,6 @@ async function loadSheet() {
 
 document.getElementById('character-sheet').addEventListener('input', scheduleSave);
 document.getElementById('character-sheet').addEventListener('change', scheduleSave);
-
-function waitForElement(selector, timeout = 2000) {
-  return new Promise((resolve) => {
-    const el = document.querySelector(selector);
-    if (el) return resolve(el);
-    const observer = new MutationObserver(() => {
-      const el = document.querySelector(selector);
-      if (el) {
-        observer.disconnect();
-        resolve(el);
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(() => { observer.disconnect(); resolve(null); }, timeout);
-  });
-}
 
 OBR.onReady(async () => {
   await loadSheet();
