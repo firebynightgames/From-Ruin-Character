@@ -5,8 +5,10 @@
   "action": {
     "title": "From Ruin Character Sheet",
     "icon": "https://firebynightgames.github.io/From-Ruin-Character/icon.svg",
-    "popover": "https://firebynightgames.github.io/From-Ruin-Character/index.html",
-    "height": 600,
-    "width": 440
+    "title": "From Ruin Character Sheet",
+    "icon": "https://firebynightgames.github.io/From-Ruin-Character/icon.svg",
+    "panel": "https://firebynightgames.github.io/From-Ruin-Character/index.html"
+}
+
   }
 }
