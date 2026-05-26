@@ -688,20 +688,6 @@ function scheduleSave() {
   }, 500);
 }
 
-function scheduleSave() {
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(async () => {
-    try {
-      const data = collectSheetData();
-      console.log('--- SAVING ---', Object.keys(data).length, 'keys');
-      await OBR.player.setMetadata({ [SHEET_KEY]: data });
-      console.log('--- SAVE COMPLETE ---');
-    } catch (err) {
-      console.warn('Autosave failed:', err);
-    }
-  }, 500);
-}
-
 async function loadSheet() {
   try {
     console.log('--- LOAD SHEET STARTED ---');
