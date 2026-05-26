@@ -656,5 +656,5 @@ document.getElementById('character-sheet').addEventListener('change', scheduleSa
 OBR.onReady(async () => {
   setTimeout(async () => {
     await loadSheet();
-  }, 200);
+  }, 500);
 });
