@@ -629,3 +629,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 3. Your existing JS continues below this line
 });
+
+OBR.onReady(() => {
+  OBR.viewport.setHeight(1200); // or any height you want
+});
