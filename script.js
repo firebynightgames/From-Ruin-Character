@@ -656,5 +656,9 @@ document.getElementById('character-sheet').addEventListener('change', scheduleSa
 OBR.onReady(async () => {
   setTimeout(async () => {
     await loadSheet();
-  }, 500);
+    // Second pass for dynamically generated fields
+    setTimeout(async () => {
+      await loadSheet();
+    }, 300);
+  }, 200);
 });
