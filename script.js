@@ -1,5 +1,5 @@
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
- 
+
 /* ================================================
    CHARACTER MODEL
    ================================================ */
@@ -23,12 +23,12 @@ const character = {
     deceive_relate: false
   }
 };
- 
+
 /* ================================================
    STORAGE KEY
    ================================================ */
 const STORAGE_KEY = "fromRuinCharacter_v2";
- 
+
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
    These are managed by the stress/trauma engine —
@@ -44,7 +44,7 @@ function isPairEngineCheckbox(el) {
     el.id === "cond-deceive-relate"
   );
 }
- 
+
 /* ================================================
    SAVE — named + indexed hybrid
    ================================================ */
@@ -53,7 +53,7 @@ function saveSheet() {
   const named  = {};   // name="attr_*" fields  → saved by name
   const checks = {};   // id'd checkboxes w/o name → saved by id
   const desc   = [];   // contenteditable desc-fields → saved by order
- 
+
   // Named inputs & textareas
   root.querySelectorAll("input[name], textarea[name]").forEach(el => {
     if (isPairEngineCheckbox(el)) return;
@@ -63,18 +63,18 @@ function saveSheet() {
       named[el.name] = el.value;
     }
   });
- 
+
   // Unnamed but id'd checkboxes (edge boxes use name, global conds use id only)
   root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
     if (isPairEngineCheckbox(el)) return;
     checks[el.id] = el.checked;
   });
- 
+
   // Contenteditable desc-fields (no name/id — saved by position)
   root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
     desc.push(el.innerHTML);
   });
- 
+
   // Wounds: save as structured array so row count is preserved
   const wounds = [];
   root.querySelectorAll(".wound-row").forEach(row => {
@@ -84,19 +84,19 @@ function saveSheet() {
     const patched  = row.querySelector("input.wound-patch")?.checked     ?? false;
     wounds.push({ apt, severity, desc: descVal, patched });
   });
- 
+
   // Pair engine state
   const pairState = {
     stress:         character.stress,
     trauma:         character.trauma,
     pairConditions: character.pairConditions
   };
- 
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     named, checks, desc, wounds, pairState
   }));
 }
- 
+
 /* ================================================
    LOAD — named + indexed hybrid
    ================================================ */
@@ -105,11 +105,11 @@ function loadSheet() {
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
- 
+
 function restoreSheet(saved) {
   if (!saved) return;
   const root = document.getElementById("character-sheet");
- 
+
   // 1. Named fields
   if (saved.named) {
     Object.entries(saved.named).forEach(([name, value]) => {
@@ -119,7 +119,7 @@ function restoreSheet(saved) {
       else el.value = value ?? "";
     });
   }
- 
+
   // 2. Id'd checkboxes
   if (saved.checks) {
     Object.entries(saved.checks).forEach(([id, checked]) => {
@@ -127,21 +127,21 @@ function restoreSheet(saved) {
       if (el) el.checked = !!checked;
     });
   }
- 
+
   // 3. Contenteditable desc-fields
   if (saved.desc) {
     root.querySelectorAll(".desc-field[contenteditable]").forEach((el, i) => {
       if (saved.desc[i] !== undefined) el.innerHTML = saved.desc[i];
     });
   }
- 
+
   // 4. Wounds — generate rows first, then populate
   if (saved.wounds?.length) {
     const container = root.querySelector("#wounds-container");
     if (container) {
       // Clear all existing wound rows (keep the header)
       container.querySelectorAll(".wound-row").forEach(r => r.remove());
- 
+
       saved.wounds.forEach((w, i) => {
         const row = createWoundRow(i + 1);
         container.appendChild(row);
@@ -153,26 +153,26 @@ function restoreSheet(saved) {
         if (dsc) dsc.value      = w.desc     ?? "";
         if (pat) pat.checked    = !!w.patched;
       });
- 
+
       // Always leave one blank row at the end for new entry
       container.appendChild(createWoundRow(saved.wounds.length + 1));
     }
   }
- 
+
   // 5. Restore pair state — must come after aptitude values are in the DOM
   restorePairState(saved.pairState);
- 
+
   // 6. Re-sync derived UI
   syncSummary();
   calculateTotalBulk();
- 
+
   // 7. Re-expand textarea heights
   root.querySelectorAll("textarea").forEach(ta => {
     ta.style.height = "auto";
     ta.style.height = ta.scrollHeight + "px";
   });
 }
- 
+
 /* ================================================
    RESTORE PAIR STATE
    ================================================ */
@@ -182,17 +182,17 @@ function restorePairState(pairState) {
     return;
   }
   const { stress, trauma, pairConditions } = pairState;
- 
+
   // Restore pair conditions first (they affect stress caps)
   Object.entries(pairConditions).forEach(([key, checked]) => {
     const el = document.getElementById(`cond-${key.replace("_", "-")}`);
     if (el) el.checked = !!checked;
     character.pairConditions[key] = !!checked;
   });
- 
+
   // Set caps based on current aptitude values
   updateAllPairs();
- 
+
   // Now restore stress boxes (only those still enabled after cap enforcement)
   Object.entries(stress).forEach(([key, arr]) => {
     const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
@@ -202,7 +202,7 @@ function restorePairState(pairState) {
       character.stress[key][i] = box.checked;
     });
   });
- 
+
   // Restore trauma boxes
   Object.entries(trauma).forEach(([key, arr]) => {
     const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
@@ -212,10 +212,10 @@ function restorePairState(pairState) {
       character.trauma[key][i] = box.checked;
     });
   });
- 
+
   updateCurrentAptitudes();
 }
- 
+
 /* ================================================
    TABS ROUTING
    ================================================ */
@@ -223,10 +223,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', (evt) => {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
- 
+
     document.getElementById(btn.dataset.tab).classList.add('active-tab');
     evt.currentTarget.classList.add('active');
- 
+
     const isGearTab = btn.dataset.tab === 'tab-2';
     const sheet = document.getElementById('character-sheet');
     if (isGearTab) {
@@ -234,7 +234,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     } else {
       sheet.classList.remove('gear-active');
     }
- 
+
     document.getElementById('xp-header').style.display    = isGearTab ? 'none'  : 'block';
     document.getElementById('xp-body').style.display      = isGearTab ? 'none'  : 'flex';
     document.getElementById('bulk-header').style.display  = isGearTab ? 'block' : 'none';
@@ -242,7 +242,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.getElementById('bulk-penalty').style.display = isGearTab ? 'block' : 'none';
   });
 });
- 
+
 /* ================================================
    BULK CALCULATION
    ================================================ */
@@ -252,29 +252,29 @@ function calculateTotalBulk() {
     const val = parseFloat(input.value);
     if (!isNaN(val)) total += val;
   });
- 
+
   let threshold = 20;
   if (total > 20) threshold = Math.ceil((total - 20) / 5) * 5 + 20;
- 
+
   const penalty = total <= 20 ? 0 : Math.ceil((total - 20) / 5);
   const maxed   = penalty >= 6;
- 
+
   const totalEl     = document.getElementById('bulk-total');
   const thresholdEl = document.getElementById('bulk-threshold');
   const penaltyEl   = document.getElementById('bulk-penalty');
- 
+
   if (totalEl)     { totalEl.textContent     = total;     totalEl.style.color     = maxed ? 'red' : '#000'; }
   if (thresholdEl) { thresholdEl.textContent = threshold; thresholdEl.style.color = maxed ? 'red' : '#000'; }
   if (penaltyEl) {
     penaltyEl.textContent = penalty <= 0 ? '' : maxed ? '+6 Difficulty (Max)' : `+${penalty} Difficulty`;
   }
 }
- 
+
 document.getElementById('character-sheet').addEventListener('input', (e) => {
   if (e.target.name?.includes('_bulk')) calculateTotalBulk();
 });
 calculateTotalBulk();
- 
+
 /* ================================================
    ACCORDION TOGGLES
    ================================================ */
@@ -283,7 +283,7 @@ document.querySelectorAll('.acc-header').forEach(button => {
     button.nextElementSibling.classList.toggle('open');
   });
 });
- 
+
 /* ================================================
    WEAPON BLOCK GENERATOR
    ================================================ */
@@ -324,7 +324,7 @@ if (weaponContainer) {
   }
   weaponContainer.innerHTML = html;
 }
- 
+
 /* ================================================
    ARMOR BLOCK GENERATOR
    ================================================ */
@@ -355,12 +355,12 @@ if (armorContainer) {
   }
   armorContainer.innerHTML = html;
 }
- 
+
 /* ================================================
    SPELLS LIST GENERATOR & AUTO-GROW
    ================================================ */
 const spellsContainer = document.getElementById('spells-container');
- 
+
 function createSpellRowHTML(index) {
   return `
     <li class="spell-item-node">
@@ -370,17 +370,17 @@ function createSpellRowHTML(index) {
       </div>
     </li>`;
 }
- 
+
 if (spellsContainer) {
   let html = '';
   for (let i = 1; i <= 10; i++) html += createSpellRowHTML(i);
   spellsContainer.innerHTML = html;
- 
+
   spellsContainer.addEventListener('input', (e) => {
     if (e.target.tagName !== 'TEXTAREA') return;
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
- 
+
     const all  = spellsContainer.querySelectorAll('.spell-item-grid textarea');
     const last = all[all.length - 1];
     if (e.target === last && last.value.trim() !== '') {
@@ -390,12 +390,12 @@ if (spellsContainer) {
     }
   });
 }
- 
+
 /* ================================================
    WOUNDS GENERATOR
    ================================================ */
 const APTITUDES = ['Finesse','Devise','Exert','Adapt','Sense','Resist','Deceive','Relate'];
- 
+
 function createWoundRow(index) {
   const row = document.createElement('div');
   row.className = 'wound-row';
@@ -409,7 +409,7 @@ function createWoundRow(index) {
     <input type="checkbox" class="wound-patch" name="attr_wound_patch_${index}" style="justify-self:end;">`;
   return row;
 }
- 
+
 const woundsContainer = document.getElementById('wounds-container');
 if (woundsContainer) {
   const headers = document.createElement('div');
@@ -421,7 +421,7 @@ if (woundsContainer) {
     <span style="text-align:right;">Patched</span>`;
   woundsContainer.appendChild(headers);
   woundsContainer.appendChild(createWoundRow(1));
- 
+
   woundsContainer.addEventListener('input', (e) => {
     if (!e.target.matches('input[type="text"]')) return;
     const rows    = woundsContainer.querySelectorAll('.wound-row');
@@ -431,19 +431,19 @@ if (woundsContainer) {
     }
   });
 }
- 
+
 /* ================================================
    RELIC GENERATOR
    ================================================ */
 const relicContainer = document.getElementById('relics-container');
- 
+
 function addRelicRow() {
   const row = document.createElement('div');
   row.className = 'relic-row';
   row.innerHTML = `<textarea name="attr_relic_${Date.now()}" rows="1" placeholder="Name, Type, Effect..."></textarea>`;
   if (relicContainer) relicContainer.appendChild(row);
 }
- 
+
 if (relicContainer) {
   for (let i = 0; i < 3; i++) addRelicRow();
   relicContainer.addEventListener('input', (e) => {
@@ -455,7 +455,7 @@ if (relicContainer) {
     if (e.target.closest('.relic-row') === lastRow && e.target.value.trim() !== '') addRelicRow();
   });
 }
- 
+
 /* ================================================
    FEATURES LIST — AUTO GROW + ADD NEW ITEM
    ================================================ */
@@ -465,7 +465,7 @@ if (featuresList) {
     if (e.target.tagName !== 'TEXTAREA') return;
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
- 
+
     const items = featuresList.querySelectorAll('textarea');
     const last  = items[items.length - 1];
     if (e.target === last && last.value.trim() !== '') {
@@ -475,7 +475,7 @@ if (featuresList) {
     }
   });
 }
- 
+
 /* ================================================
    DRIVES LIST — AUTO GROW & SLOTS (MAX 3)
    ================================================ */
@@ -485,7 +485,7 @@ if (drivesList) {
     if (e.target.tagName !== 'TEXTAREA') return;
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
- 
+
     const items = drivesList.querySelectorAll('textarea');
     const last  = items[items.length - 1];
     if (e.target === last && last.value.trim() !== '' && items.length < 3) {
@@ -504,7 +504,7 @@ if (drivesList) {
     }
   });
 }
- 
+
 /* ================================================
    GEAR LIST — AUTO-EXPAND ROWS
    ================================================ */
@@ -530,7 +530,7 @@ if (gearTable) {
     }
   });
 }
- 
+
 /* ================================================
    FLAWS LIST — AUTO GROW & SLOTS (MAX 3)
    ================================================ */
@@ -540,7 +540,7 @@ if (flawsList) {
     if (e.target.tagName !== 'TEXTAREA') return;
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
- 
+
     const items = flawsList.querySelectorAll('textarea');
     const last  = items[items.length - 1];
     if (e.target === last && last.value.trim() !== '' && items.length < 3) {
@@ -551,14 +551,14 @@ if (flawsList) {
     }
   });
 }
- 
+
 /* ================================================
    PORTRAIT UPLOAD
    ================================================ */
 const portraitUpload = document.getElementById('portrait-upload');
 const portraitImg    = document.getElementById('portrait-img');
 const portraitLabel  = document.querySelector('.portrait-upload-label');
- 
+
 if (portraitUpload) {
   portraitUpload.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -572,7 +572,7 @@ if (portraitUpload) {
     reader.readAsDataURL(file);
   });
 }
- 
+
 /* ================================================
    SUMMARY PANEL SYNC
    ================================================ */
@@ -586,7 +586,7 @@ const summaryMap = {
   'sum-momento':    'MOMENTO',
   'sum-event':      'EVENT'
 };
- 
+
 function syncSummary() {
   document.querySelectorAll('.desc-field').forEach(field => {
     const placeholder = field.dataset.placeholder;
@@ -597,10 +597,10 @@ function syncSummary() {
     }
   });
 }
- 
+
 document.querySelector('.desc-panel')?.addEventListener('input', syncSummary);
 syncSummary();
- 
+
 /* ================================================
    STORY FIELDS — AUTO GROW
    ================================================ */
@@ -610,7 +610,7 @@ document.querySelectorAll('.story-field').forEach(field => {
     field.style.height = field.scrollHeight + 'px';
   });
 });
- 
+
 /* ================================================
    PAIR-BASED STRESS / TRAUMA ENGINE
    ================================================ */
@@ -620,7 +620,7 @@ const PAIR_MAP = {
   sr: { key: "sense_resist",   apt1: "sense",   apt2: "resist" },
   dr: { key: "deceive_relate", apt1: "deceive", apt2: "relate" }
 };
- 
+
 function updateCurrentAptitudes() {
   Object.values(PAIR_MAP).forEach(({ key, apt1, apt2 }) => {
     const traumaCount = character.trauma[key].filter(v => v).length;
@@ -639,18 +639,18 @@ function updateCurrentAptitudes() {
     });
   });
 }
- 
+
 function updateStressTrauma(prefix) {
   const { key, apt1, apt2 } = PAIR_MAP[prefix];
- 
+
   const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
   const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
- 
+
   const stressCap       = Math.min(val1, val2);
   const traumaCap       = Math.max(val1, val2);
   const condBox         = document.getElementById(`cond-${key.replace("_", "-")}`);
   const conditionActive = condBox?.checked ?? false;
- 
+
   document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, i) => {
     const allowed      = i < stressCap;
     box.disabled       = !allowed || conditionActive;
@@ -658,22 +658,22 @@ function updateStressTrauma(prefix) {
     if (!allowed) box.checked = false;
     character.stress[key][i] = box.checked;
   });
- 
+
   document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, i) => {
     const allowed = i < traumaCap;
     box.disabled  = !allowed;
     if (!allowed) box.checked = false;
     character.trauma[key][i] = box.checked;
   });
- 
+
   character.pairConditions[key] = conditionActive;
   updateCurrentAptitudes();
 }
- 
+
 function updateAllPairs() {
   Object.keys(PAIR_MAP).forEach(prefix => updateStressTrauma(prefix));
 }
- 
+
 // Aptitude input listeners
 Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
   [apt1, apt2].forEach(apt => {
@@ -681,13 +681,13 @@ Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
       ?.addEventListener("input", updateAllPairs);
   });
 });
- 
+
 // Pair condition listeners
 Object.values(PAIR_MAP).forEach(({ key }) => {
   document.getElementById(`cond-${key.replace("_", "-")}`)
     ?.addEventListener("change", updateAllPairs);
 });
- 
+
 // Stress + trauma box listeners
 document.addEventListener("change", (e) => {
   if (e.target.classList.contains("stress-box") ||
@@ -696,19 +696,22 @@ document.addEventListener("change", (e) => {
     if (prefix) updateStressTrauma(prefix);
   }
 });
- 
+
 /* ================================================
    INIT
    ================================================ */
 document.addEventListener("DOMContentLoaded", () => {
- 
+
+  // Clean up the old index-based save format — no console needed.
+  localStorage.removeItem("fromRuinCharacter_v1");
+
   const saved = loadSheet();
   if (saved) {
     restoreSheet(saved);
   } else {
     updateAllPairs();
   }
- 
+
   // Autosave — delegate to document so dynamic rows are always covered
   document.getElementById("character-sheet").addEventListener("input",  saveSheet);
   document.getElementById("character-sheet").addEventListener("change", saveSheet);
@@ -717,7 +720,7 @@ document.addEventListener("DOMContentLoaded", () => {
     el.addEventListener("blur",  saveSheet);
   });
 });
- 
+
 /* ================================================
    OBR
    ================================================ */
