@@ -27,7 +27,7 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v10";
+const STORAGE_KEY = "fromRuinCharacter_v6";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
@@ -54,10 +54,11 @@ function saveSheet() {
   const checks = {};
   const desc   = [];
 
-  // Named inputs & textareas — skip wound fields (handled by wounds array below)
+  // Named inputs & textareas — skip wound and relic fields (handled separately)
   root.querySelectorAll("input[name], textarea[name]").forEach(el => {
     if (isPairEngineCheckbox(el)) return;
     if (el.name.startsWith("attr_wound_")) return;
+    if (el.name.startsWith("attr_relic_")) return;
     if (el.type === "checkbox") named[el.name] = el.checked;
     else named[el.name] = el.value;
   });
@@ -95,6 +96,10 @@ function saveSheet() {
     if (apt || sev || dsc || patched) wounds.push({ apt, sev, dsc, patched });
   });
 
+  // Relics — saved by position, name is unstable (index-based)
+  const relics = [];
+  root.querySelectorAll(".relic-row textarea").forEach(el => relics.push(el.value));
+
   // Pair engine state from model, not DOM
   const pairState = {
     stress:         character.stress,
@@ -103,7 +108,7 @@ function saveSheet() {
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    named, checks, desc, features, drives, flaws, wounds, pairState
+    named, checks, desc, features, drives, flaws, relics, wounds, pairState
   }));
 }
 
@@ -204,7 +209,25 @@ function restoreSheet(saved) {
     }
   }
 
-  // 7. Wounds
+  // 7. Relics
+  if (saved.relics?.length) {
+    const rows = root.querySelectorAll(".relic-row");
+    saved.relics.forEach((text, i) => {
+      let row = rows[i];
+      if (!row) {
+        addRelicRow();
+        row = relicContainer.querySelectorAll(".relic-row")[i];
+      }
+      const ta = row?.querySelector("textarea");
+      if (ta) {
+        ta.value = text;
+        ta.style.height = "auto";
+        ta.style.height = ta.scrollHeight + "px";
+      }
+    });
+  }
+
+  // 9. Wounds
   if (saved.wounds?.length) {
     const container = root.querySelector("#wounds-container");
     if (container) {
@@ -224,10 +247,10 @@ function restoreSheet(saved) {
     }
   }
 
-  // 8. Pair state — aptitudes are in DOM so caps calculate correctly
+  // 10. Pair state — aptitudes are in DOM so caps calculate correctly
   restorePairState(saved.pairState);
 
-  // 9. Re-sync derived UI
+  // 11. Re-sync derived UI
   syncSummary();
   calculateTotalBulk();
 }
@@ -508,10 +531,13 @@ if (woundsContainer) {
    ================================================ */
 const relicContainer = document.getElementById('relics-container');
 
+let relicCount = 0;
+
 function addRelicRow() {
+  relicCount++;
   const row = document.createElement('div');
   row.className = 'relic-row';
-  row.innerHTML = `<textarea name="attr_relic_${Date.now()}" rows="1" placeholder="Name, Type, Effect..."></textarea>`;
+  row.innerHTML = `<textarea name="attr_relic_${relicCount}" rows="1" placeholder="Name, Type, Effect..."></textarea>`;
   if (relicContainer) relicContainer.appendChild(row);
 }
 
@@ -805,6 +831,7 @@ document.addEventListener("DOMContentLoaded", () => {
   localStorage.removeItem("fromRuinCharacter_v2");
   localStorage.removeItem("fromRuinCharacter_v3");
   localStorage.removeItem("fromRuinCharacter_v4");
+  localStorage.removeItem("fromRuinCharacter_v5");
 
   const saved = loadSheet();
   if (saved) {
