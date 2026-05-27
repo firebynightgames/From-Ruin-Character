@@ -526,87 +526,125 @@ document.querySelectorAll('.story-field').forEach(field => {
 });
 
 /* ================================================
-   DYNAMIC HEALTH LIMITER & CURRENT APTITUDES
+   NEW PAIR-BASED STRESS / TRAUMA ENGINE
    ================================================ */
-function updateCurrentAptitudes() {
-  const pairs = [
-    ['finesse', 'devise',  1],
-    ['exert',   'adapt',   2],
-    ['sense',   'resist',  3],
-    ['deceive', 'relate',  4]
-  ];
 
-  pairs.forEach(([apt1, apt2, rowIndex]) => {
-    const traumaChecked = document.querySelectorAll(
-      `.track.trauma.row-${rowIndex}:checked`
-    ).length;
+// Map prefixes → pair keys → aptitude names
+const PAIR_MAP = {
+  fd: { key: "finesse_devise", apt1: "finesse", apt2: "devise" },
+  ea: { key: "exert_adapt",    apt1: "exert",   apt2: "adapt" },
+  sr: { key: "sense_resist",   apt1: "sense",   apt2: "resist" },
+  dr: { key: "deceive_relate", apt1: "deceive", apt2: "relate" }
+};
+
+/* -----------------------------------------------
+   Update CURRENT aptitude values (red numbers)
+   ----------------------------------------------- */
+function updateCurrentAptitudes() {
+  Object.values(PAIR_MAP).forEach(({ key, apt1, apt2 }) => {
+    const traumaCount = character.trauma[key].filter(v => v).length;
 
     [apt1, apt2].forEach(apt => {
       const base = parseInt(document.querySelector(`input[name="attr_${apt}"]`)?.value) || 0;
-      const current = Math.max(0, base - traumaChecked);
+      const current = Math.max(0, base - traumaCount);
       const el = document.getElementById(`cur-${apt}`);
+
       if (el) {
-        if (traumaChecked > 0 && base > 0) {
+        if (traumaCount > 0 && base > 0) {
           el.textContent = current;
-          el.style.color = current === 0 ? 'red' : 'rgba(255,0,0,0.7)';
+          el.style.color = current === 0 ? "red" : "rgba(255,0,0,0.7)";
         } else {
-          el.textContent = '';
+          el.textContent = "";
         }
       }
     });
   });
 }
 
-function updateAllHealthLimits() {
-  const rows = [
-    ['finesse', 'devise', 1, 'hungry'],
-    ['exert',   'adapt',  2, 'thirsty'],
-    ['sense',   'resist', 3, 'exposed'],
-    ['deceive', 'relate', 4, 'tired']
-  ];
+/* -----------------------------------------------
+   Enforce caps + update model for a single pair
+   ----------------------------------------------- */
+function updateStressTrauma(prefix) {
+  const { key, apt1, apt2 } = PAIR_MAP[prefix];
 
-  rows.forEach(([apt1, apt2, rowIndex, condId]) => {
-    const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
-    const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
-    const isConditionActive = document.getElementById(`cond-${condId}`)?.checked;
-    const stressLimit = Math.min(val1, val2);
-    const traumaLimit = Math.max(val1, val2);
+  const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
+  const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
 
-    document.querySelectorAll(`.track.stress.row-${rowIndex}`).forEach((box, index) => {
-      box.style.visibility = (index < stressLimit) ? 'visible' : 'hidden';
-      box.disabled = (index >= stressLimit) || isConditionActive;
-      box.style.opacity = isConditionActive ? '0.5' : '1';
-    });
+  const stressCap = Math.min(val1, val2);
+  const traumaCap = Math.max(val1, val2);
 
-    document.querySelectorAll(`.track.trauma.row-${rowIndex}`).forEach((box, index) => {
-      box.style.visibility = (index < traumaLimit) ? 'visible' : 'hidden';
-      box.disabled = (index >= traumaLimit);
-      if (box.disabled) box.checked = false;
-    });
+  const condBox = document.getElementById(`cond-${key.replace("_", "-")}`);
+  const conditionActive = condBox?.checked;
+
+  // Update STRESS boxes
+  document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, index) => {
+    const allowed = index < stressCap;
+
+    box.disabled = !allowed || conditionActive;
+    box.style.opacity = conditionActive ? "0.5" : "1";
+
+    if (!allowed) box.checked = false;
+
+    character.stress[key][index] = box.checked;
   });
+
+  // Update TRAUMA boxes
+  document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, index) => {
+    const allowed = index < traumaCap;
+
+    box.disabled = !allowed;
+    if (!allowed) box.checked = false;
+
+    character.trauma[key][index] = box.checked;
+  });
+
+  // Update condition in model
+  character.pairConditions[key] = conditionActive;
 
   updateCurrentAptitudes();
 }
 
-const inputsToWatch = [
-  'finesse','devise','exert','adapt','sense','resist','deceive','relate',
-  'cond-hungry','cond-thirsty','cond-exposed','cond-tired'
-];
+/* -----------------------------------------------
+   Update ALL pairs at once
+   ----------------------------------------------- */
+function updateAllPairs() {
+  Object.keys(PAIR_MAP).forEach(prefix => updateStressTrauma(prefix));
+}
 
-inputsToWatch.forEach(name => {
-  const el = document.querySelector(`input[name="attr_${name}"]`) || document.getElementById(name);
-  el?.addEventListener('input', updateAllHealthLimits);
+/* -----------------------------------------------
+   EVENT LISTENERS
+   ----------------------------------------------- */
+
+// Aptitude inputs
+Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
+  [apt1, apt2].forEach(apt => {
+    const el = document.querySelector(`input[name="attr_${apt}"]`);
+    el?.addEventListener("input", updateAllPairs);
+  });
 });
 
-// Also watch trauma checkboxes directly
-document.addEventListener('change', (e) => {
-  if (e.target.classList.contains('track') && e.target.classList.contains('trauma')) {
-    updateCurrentAptitudes();
+// Pair conditions
+Object.values(PAIR_MAP).forEach(({ key }) => {
+  const cond = document.getElementById(`cond-${key.replace("_", "-")}`);
+  cond?.addEventListener("change", updateAllPairs);
+});
+
+// Stress + trauma boxes
+document.addEventListener("change", (e) => {
+  if (e.target.classList.contains("stress-box") ||
+      e.target.classList.contains("trauma-box")) {
+
+    const prefix = [...e.target.classList]
+      .find(c => ["fd","ea","sr","dr"].includes(c));
+
+    if (prefix) updateStressTrauma(prefix);
   }
 });
 
-// Run once on load
-setTimeout(updateAllHealthLimits, 100);
+/* -----------------------------------------------
+   INITIALIZE ON LOAD
+   ----------------------------------------------- */
+setTimeout(updateAllPairs, 50);
 
 document.addEventListener("DOMContentLoaded", () => {
 
