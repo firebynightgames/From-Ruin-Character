@@ -39,35 +39,99 @@ function getAllSheetFields() {
   );
 }
 
+// Pair-engine checkboxes are disabled/enabled dynamically, making DOM-based
+// save/load unreliable. Exclude them from the index scan; save via character model.
+function isPairEngineCheckbox(el) {
+  return el.type === "checkbox" && (
+    el.classList.contains("stress-box") ||
+    el.classList.contains("trauma-box") ||
+    el.id === "cond-finesse-devise" ||
+    el.id === "cond-exert-adapt"    ||
+    el.id === "cond-sense-resist"   ||
+    el.id === "cond-deceive-relate"
+  );
+}
+
 function readSheetState() {
-  const fields = getAllSheetFields();
-  return fields.map(el => {
+  const fields  = getAllSheetFields();
+  const domState = fields.map(el => {
+    if (el.tagName === "INPUT" && isPairEngineCheckbox(el)) return { type: "skip" };
     if (el.tagName === "INPUT") {
       if (el.type === "checkbox") return { type: "checkbox", value: el.checked };
       return { type: "input", value: el.value };
     }
-    if (el.tagName === "TEXTAREA") {
-      return { type: "textarea", value: el.value };
-    }
-    if (el.isContentEditable) {
-      return { type: "contenteditable", value: el.innerHTML };
-    }
+    if (el.tagName === "TEXTAREA")  return { type: "textarea",       value: el.value     };
+    if (el.isContentEditable)       return { type: "contenteditable", value: el.innerHTML };
     return { type: "unknown", value: null };
+  });
+
+  // Save stress/trauma/pair-conditions from the model, not the DOM
+  const pairState = {
+    stress:         character.stress,
+    trauma:         character.trauma,
+    pairConditions: character.pairConditions
+  };
+
+  return { domState, pairState };
+}
+
+function writeSheetState(saved) {
+  if (!saved) return;
+  // Support old plain-array format from before this fix
+  const values = Array.isArray(saved) ? saved : saved.domState;
+  if (!values) return;
+
+  const fields = getAllSheetFields();
+  fields.forEach((el, i) => {
+    const entry = values[i];
+    if (!entry || entry.type === "skip") return;
+
+    if (entry.type === "checkbox" && el.type === "checkbox" && !isPairEngineCheckbox(el)) {
+      el.checked = !!entry.value;
+    }
+    if (entry.type === "input"         && el.tagName === "INPUT"    && el.type !== "checkbox") el.value     = entry.value ?? "";
+    if (entry.type === "textarea"      && el.tagName === "TEXTAREA")                           el.value     = entry.value ?? "";
+    if (entry.type === "contenteditable" && el.isContentEditable)                              el.innerHTML = entry.value ?? "";
   });
 }
 
-function writeSheetState(values) {
-  if (!values) return;
-  const fields = getAllSheetFields();
-  fields.forEach((el, i) => {
-    const saved = values[i];
-    if (!saved) return;
+// Called after writeSheetState so aptitude values are already in the DOM.
+function restorePairState(saved) {
+  if (!saved?.pairState) return;
+  const { stress, trauma, pairConditions } = saved.pairState;
 
-    if (saved.type === "checkbox" && el.type === "checkbox") el.checked = !!saved.value;
-    if (saved.type === "input"    && el.tagName === "INPUT" && el.type !== "checkbox") el.value = saved.value ?? "";
-    if (saved.type === "textarea" && el.tagName === "TEXTAREA") el.value = saved.value ?? "";
-    if (saved.type === "contenteditable" && el.isContentEditable) el.innerHTML = saved.value ?? "";
+  // 1. Restore pair conditions (they affect stress caps)
+  Object.entries(pairConditions).forEach(([key, checked]) => {
+    const el = document.getElementById(`cond-${key.replace("_", "-")}`);
+    if (el) el.checked = checked;
+    character.pairConditions[key] = checked;
   });
+
+  // 2. Run pair engine so caps are correct before restoring checked states
+  updateAllPairs();
+
+  // 3. Restore stress (only tick boxes that are now enabled)
+  Object.entries(stress).forEach(([key, arr]) => {
+    const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
+    if (!prefix) return;
+    document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, i) => {
+      if (!box.disabled) box.checked = !!arr[i];
+      character.stress[key][i] = box.checked;
+    });
+  });
+
+  // 4. Restore trauma
+  Object.entries(trauma).forEach(([key, arr]) => {
+    const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
+    if (!prefix) return;
+    document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, i) => {
+      if (!box.disabled) box.checked = !!arr[i];
+      character.trauma[key][i] = box.checked;
+    });
+  });
+
+  // 5. Sync the red current-aptitude display
+  updateCurrentAptitudes();
 }
 
 const storage = {
@@ -620,14 +684,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const saved = storage.load();
   if (saved) {
+    // 1. Restore all regular fields (aptitudes, text, non-pair checkboxes)
     writeSheetState(saved);
-    // Re-sync derived UI after restoring values
+    // 2. Restore stress/trauma/pair-conditions via the character model
+    //    (aptitude values are now in the DOM so caps calculate correctly)
+    restorePairState(saved);
+    // 3. Re-sync derived UI
     syncSummary();
     calculateTotalBulk();
+  } else {
+    // No save data — still run pair engine to initialise caps
+    updateAllPairs();
   }
-
-  // Run pair engine after values are loaded so caps reflect saved aptitudes
-  updateAllPairs();
 
   // Autosave on every interaction
   function attachSaveListeners() {
