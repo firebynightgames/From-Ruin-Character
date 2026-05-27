@@ -1,6 +1,31 @@
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
 
 /* ================================================
+   CHARACTER MODEL
+   (must be defined before updateStressTrauma uses it)
+   ================================================ */
+const character = {
+  stress: {
+    finesse_devise: Array(6).fill(false),
+    exert_adapt:    Array(6).fill(false),
+    sense_resist:   Array(6).fill(false),
+    deceive_relate: Array(6).fill(false)
+  },
+  trauma: {
+    finesse_devise: Array(6).fill(false),
+    exert_adapt:    Array(6).fill(false),
+    sense_resist:   Array(6).fill(false),
+    deceive_relate: Array(6).fill(false)
+  },
+  pairConditions: {
+    finesse_devise: false,
+    exert_adapt:    false,
+    sense_resist:   false,
+    deceive_relate: false
+  }
+};
+
+/* ================================================
    CHARACTER STORAGE
    ================================================ */
 const STORAGE_KEY = "fromRuinCharacter_v1";
@@ -38,10 +63,10 @@ function writeSheetState(values) {
     const saved = values[i];
     if (!saved) return;
 
-    if (saved.type === "checkbox") el.checked = !!saved.value;
-    if (saved.type === "input") el.value = saved.value ?? "";
-    if (saved.type === "textarea") el.value = saved.value ?? "";
-    if (saved.type === "contenteditable") el.innerHTML = saved.value ?? "";
+    if (saved.type === "checkbox" && el.type === "checkbox") el.checked = !!saved.value;
+    if (saved.type === "input"    && el.tagName === "INPUT" && el.type !== "checkbox") el.value = saved.value ?? "";
+    if (saved.type === "textarea" && el.tagName === "TEXTAREA") el.value = saved.value ?? "";
+    if (saved.type === "contenteditable" && el.isContentEditable) el.innerHTML = saved.value ?? "";
   });
 }
 
@@ -71,16 +96,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
     const isGearTab = btn.dataset.tab === 'tab-2';
     const sheet = document.getElementById('character-sheet');
-   if (isGearTab) {
-  sheet.classList.add('gear-active');
-} else {
-  sheet.classList.remove('gear-active');
-}
+    if (isGearTab) {
+      sheet.classList.add('gear-active');
+    } else {
+      sheet.classList.remove('gear-active');
+    }
 
-    document.getElementById('xp-header').style.display  = isGearTab ? 'none'  : 'block';
-    document.getElementById('xp-body').style.display    = isGearTab ? 'none'  : 'flex';
-    document.getElementById('bulk-header').style.display = isGearTab ? 'block' : 'none';
-    document.getElementById('bulk-body').style.display   = isGearTab ? 'flex'  : 'none';
+    document.getElementById('xp-header').style.display   = isGearTab ? 'none'  : 'block';
+    document.getElementById('xp-body').style.display     = isGearTab ? 'none'  : 'flex';
+    document.getElementById('bulk-header').style.display  = isGearTab ? 'block' : 'none';
+    document.getElementById('bulk-body').style.display    = isGearTab ? 'flex'  : 'none';
     document.getElementById('bulk-penalty').style.display = isGearTab ? 'block' : 'none';
   });
 });
@@ -103,9 +128,9 @@ function calculateTotalBulk() {
   const penalty = total <= 20 ? 0 : Math.ceil((total - 20) / 5);
   const maxed = penalty >= 6;
 
-  const totalEl = document.getElementById('bulk-total');
+  const totalEl     = document.getElementById('bulk-total');
   const thresholdEl = document.getElementById('bulk-threshold');
-  const penaltyEl = document.getElementById('bulk-penalty');
+  const penaltyEl   = document.getElementById('bulk-penalty');
 
   if (totalEl) {
     totalEl.textContent = total;
@@ -132,7 +157,7 @@ document.getElementById('character-sheet').addEventListener('input', (e) => {
 
 calculateTotalBulk();
 
-/*================================================
+/* ================================================
    ACCORDION TOGGLES
    ================================================ */
 document.querySelectorAll('.acc-header').forEach(button => {
@@ -141,29 +166,10 @@ document.querySelectorAll('.acc-header').forEach(button => {
   });
 });
 
-/* ================================================
-   STRESS & TRAUMA GRID GENERATOR
-   ================================================ */
-const panel = document.querySelector('.sheet-panel');
-if (panel) {
-  const fragment = document.createDocumentFragment();
-  for (let row = 1; row <= 4; row++) {
-    for (let col = 1; col <= 6; col++) {
-      const stress = document.createElement('input');
-      stress.type = 'checkbox';
-      stress.id = `stress-${row}-${col}`;
-      stress.className = `track stress row-${row} col-${col}`;
-      fragment.appendChild(stress);
-
-      const trauma = document.createElement('input');
-      trauma.type = 'checkbox';
-      trauma.id = `trauma-${row}-${col}`;
-      trauma.className = `track trauma row-${row} col-${col}`;
-      fragment.appendChild(trauma);
-    }
-  }
-  panel.appendChild(fragment);
-}
+// NOTE: The old stress/trauma grid generator that used to live here has been
+// removed. It was creating duplicate invisible checkboxes inside .sheet-panel
+// that overlapped the visible pair-block checkboxes and corrupted save/load
+// index alignment. The pair blocks in the HTML are the only stress/trauma UI.
 
 /* ================================================
    WEAPON BLOCK GENERATOR
@@ -240,95 +246,6 @@ if (armorContainer) {
 }
 
 /* ================================================
-   FEATURES LIST — AUTO GROW + ADD NEW ITEM
-   ================================================ */
-const list = document.querySelector('.features-list');
-if (list) {
-  list.addEventListener('input', (e) => {
-    if (e.target.tagName !== 'TEXTAREA') return;
-
-    e.target.style.height = 'auto';
-    e.target.style.height = e.target.scrollHeight + 'px';
-
-    const items = list.querySelectorAll('textarea');
-    const lastItem = items[items.length - 1];
-    if (e.target === lastItem && lastItem.value.trim() !== '') {
-      const newItem = document.createElement('li');
-      newItem.innerHTML = '<textarea placeholder="Add a feature..." rows="1"></textarea>';
-      list.appendChild(newItem);
-    }
-  });
-}
-
-/* ================================================
-   DRIVES LIST — AUTO GROW HEIGHT & SLOTS (MAX 3)
-   ================================================ */
-const drivesList = document.querySelector('.drives-list');
-if (drivesList) {
-  drivesList.addEventListener('input', (e) => {
-    // Make sure we are only reacting to typing in the textarea
-    if (e.target.tagName !== 'TEXTAREA') return;
-
-    // Expand height dynamically based on content length
-    e.target.style.height = 'auto';
-    e.target.style.height = e.target.scrollHeight + 'px';
-
-    const items = drivesList.querySelectorAll('textarea');
-    const lastItem = items[items.length - 1];
-    
-    // Generate new row (capped at 3) containing the text area AND the image tracker
-    if (e.target === lastItem && lastItem.value.trim() !== '' && items.length < 3) {
-      const nextIndex = items.length + 1;
-      const newItem = document.createElement('li');
-      
-      // Injects the exact same flexbox layout for rows 2 and 3
-      newItem.innerHTML = `
-        <div class="drive-item">
-          <textarea placeholder="Add a drive..." rows="1" name="attr_drive_${nextIndex}"></textarea>
-          <div class="drive-tracker">
-            <input type="checkbox" name="attr_drive_${nextIndex}_cb_1" class="diamond-box db-1">
-            <input type="checkbox" name="attr_drive_${nextIndex}_cb_2" class="diamond-box db-2">
-            <input type="checkbox" name="attr_drive_${nextIndex}_cb_3" class="diamond-box db-3">
-          </div>
-        </div>
-      `;
-      drivesList.appendChild(newItem);
-    }
-  });
-}
-
-/* ================================================
-   GEAR LIST — AUTO-EXPAND ROWS
-   ================================================ */
-const gearTable = document.querySelector('.sheet-gear-table');
-if (gearTable) {
-  gearTable.addEventListener('input', (e) => {
-    if (!e.target.matches('.gear-row .col-gear-name input')) return;
-
-    const container = gearTable.querySelector('.sheet-gear-container');
-    const allRowInputs = container.querySelectorAll('.gear-row .col-gear-name input');
-    const lastInput = allRowInputs[allRowInputs.length - 1];
-
-    if (e.target === lastInput && lastInput.value.trim() !== '') {
-      const nextIndex = allRowInputs.length + 1;
-      
-      const newRow = document.createElement('div');
-      newRow.className = 'gear-row';
-      newRow.innerHTML = `
-        <div class="field-wrap col-gear-name">
-          <input type="text" name="attr_gear_name_${nextIndex}" placeholder="-">
-        </div>
-        <div class="field-wrap col-gear-bulk">
-          <input type="number" name="attr_gear_bulk_${nextIndex}" placeholder="-">
-        </div>
-      `;
-      
-      container.appendChild(newRow);
-    }
-  });
-}
-
-/* ================================================
    SPELLS LIST — 10 ROW GENERATOR & AUTO-GROW
    ================================================ */
 const spellsContainer = document.getElementById('spells-container');
@@ -362,35 +279,9 @@ if (spellsContainer) {
 
     if (e.target === lastSpell && lastSpell.value.trim() !== '') {
       const nextIndex = allSpells.length + 1;
-      
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = createSpellRowHTML(nextIndex);
       spellsContainer.appendChild(tempDiv.firstElementChild);
-    }
-  });
-}
-
-/* ================================================
-   FLAWS LIST — AUTO GROW HEIGHT & SLOTS (MAX 3)
-   ================================================ */
-const flawsList = document.querySelector('.flaws-list');
-if (flawsList) {
-  flawsList.addEventListener('input', (e) => {
-    if (e.target.tagName !== 'TEXTAREA') return;
-
-    // Expand height dynamically based on content length
-    e.target.style.height = 'auto';
-    e.target.style.height = e.target.scrollHeight + 'px';
-
-    const items = flawsList.querySelectorAll('textarea');
-    const lastItem = items[items.length - 1];
-    
-    // Only generate a new row if we are typing in the current last slot AND we are under the 3-row limit
-if (e.target === lastItem && lastItem.value.trim() !== '' && items.length < 3) {
-      const nextIndex = items.length + 1;
-      const newItem = document.createElement('li');
-      newItem.innerHTML = `<textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_${nextIndex}"></textarea>`;
-      flawsList.appendChild(newItem);
     }
   });
 }
@@ -426,7 +317,6 @@ if (woundsContainer) {
     <span style="text-align: right;">Patched</span>
   `;
   woundsContainer.appendChild(headers);
-
   woundsContainer.appendChild(createWoundRow(1));
 
   woundsContainer.addEventListener('input', (e) => {
@@ -439,9 +329,9 @@ if (woundsContainer) {
   });
 }
 
-/* ====================================================
-   RELIC
-==================================================== */
+/* ================================================
+   RELIC GENERATOR
+   ================================================ */
 const relicContainer = document.getElementById('relics-container');
 
 function addRelicRow() {
@@ -467,11 +357,116 @@ if (relicContainer) {
 }
 
 /* ================================================
+   FEATURES LIST — AUTO GROW + ADD NEW ITEM
+   ================================================ */
+const featuresList = document.querySelector('.features-list');
+if (featuresList) {
+  featuresList.addEventListener('input', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+
+    const items = featuresList.querySelectorAll('textarea');
+    const lastItem = items[items.length - 1];
+    if (e.target === lastItem && lastItem.value.trim() !== '') {
+      const newItem = document.createElement('li');
+      newItem.innerHTML = '<textarea placeholder="Add a feature..." rows="1"></textarea>';
+      featuresList.appendChild(newItem);
+    }
+  });
+}
+
+/* ================================================
+   DRIVES LIST — AUTO GROW HEIGHT & SLOTS (MAX 3)
+   ================================================ */
+const drivesList = document.querySelector('.drives-list');
+if (drivesList) {
+  drivesList.addEventListener('input', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+
+    const items = drivesList.querySelectorAll('textarea');
+    const lastItem = items[items.length - 1];
+
+    if (e.target === lastItem && lastItem.value.trim() !== '' && items.length < 3) {
+      const nextIndex = items.length + 1;
+      const newItem = document.createElement('li');
+      newItem.innerHTML = `
+        <div class="drive-item">
+          <textarea placeholder="Add a drive..." rows="1" name="attr_drive_${nextIndex}"></textarea>
+          <div class="drive-tracker">
+            <input type="checkbox" name="attr_drive_${nextIndex}_cb_1" class="diamond-box db-1">
+            <input type="checkbox" name="attr_drive_${nextIndex}_cb_2" class="diamond-box db-2">
+            <input type="checkbox" name="attr_drive_${nextIndex}_cb_3" class="diamond-box db-3">
+          </div>
+        </div>
+      `;
+      drivesList.appendChild(newItem);
+    }
+  });
+}
+
+/* ================================================
+   GEAR LIST — AUTO-EXPAND ROWS
+   ================================================ */
+const gearTable = document.querySelector('.sheet-gear-table');
+if (gearTable) {
+  gearTable.addEventListener('input', (e) => {
+    if (!e.target.matches('.gear-row .col-gear-name input')) return;
+
+    const container = gearTable.querySelector('.sheet-gear-container');
+    const allRowInputs = container.querySelectorAll('.gear-row .col-gear-name input');
+    const lastInput = allRowInputs[allRowInputs.length - 1];
+
+    if (e.target === lastInput && lastInput.value.trim() !== '') {
+      const nextIndex = allRowInputs.length + 1;
+      const newRow = document.createElement('div');
+      newRow.className = 'gear-row';
+      newRow.innerHTML = `
+        <div class="field-wrap col-gear-name">
+          <input type="text" name="attr_gear_name_${nextIndex}" placeholder="-">
+        </div>
+        <div class="field-wrap col-gear-bulk">
+          <input type="number" name="attr_gear_bulk_${nextIndex}" placeholder="-">
+        </div>
+      `;
+      container.appendChild(newRow);
+    }
+  });
+}
+
+/* ================================================
+   FLAWS LIST — AUTO GROW HEIGHT & SLOTS (MAX 3)
+   ================================================ */
+const flawsList = document.querySelector('.flaws-list');
+if (flawsList) {
+  flawsList.addEventListener('input', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+
+    const items = flawsList.querySelectorAll('textarea');
+    const lastItem = items[items.length - 1];
+
+    if (e.target === lastItem && lastItem.value.trim() !== '' && items.length < 3) {
+      const nextIndex = items.length + 1;
+      const newItem = document.createElement('li');
+      newItem.innerHTML = `<textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_${nextIndex}"></textarea>`;
+      flawsList.appendChild(newItem);
+    }
+  });
+}
+
+/* ================================================
    PORTRAIT UPLOAD
    ================================================ */
 const portraitUpload = document.getElementById('portrait-upload');
-const portraitImg = document.getElementById('portrait-img');
-const portraitLabel = document.querySelector('.portrait-upload-label');
+const portraitImg    = document.getElementById('portrait-img');
+const portraitLabel  = document.querySelector('.portrait-upload-label');
 
 if (portraitUpload) {
   portraitUpload.addEventListener('change', (e) => {
@@ -521,15 +516,13 @@ syncSummary();
 document.querySelectorAll('.story-field').forEach(field => {
   field.addEventListener('input', () => {
     field.style.height = 'auto';
-    field.style.height = field.scrollHeight + 'px';  // remove field.style.
+    field.style.height = field.scrollHeight + 'px';
   });
 });
 
 /* ================================================
-   NEW PAIR-BASED STRESS / TRAUMA ENGINE
+   PAIR-BASED STRESS / TRAUMA ENGINE
    ================================================ */
-
-// Map prefixes → pair keys → aptitude names
 const PAIR_MAP = {
   fd: { key: "finesse_devise", apt1: "finesse", apt2: "devise" },
   ea: { key: "exert_adapt",    apt1: "exert",   apt2: "adapt" },
@@ -537,17 +530,14 @@ const PAIR_MAP = {
   dr: { key: "deceive_relate", apt1: "deceive", apt2: "relate" }
 };
 
-/* -----------------------------------------------
-   Update CURRENT aptitude values (red numbers)
-   ----------------------------------------------- */
 function updateCurrentAptitudes() {
   Object.values(PAIR_MAP).forEach(({ key, apt1, apt2 }) => {
     const traumaCount = character.trauma[key].filter(v => v).length;
 
     [apt1, apt2].forEach(apt => {
-      const base = parseInt(document.querySelector(`input[name="attr_${apt}"]`)?.value) || 0;
+      const base    = parseInt(document.querySelector(`input[name="attr_${apt}"]`)?.value) || 0;
       const current = Math.max(0, base - traumaCount);
-      const el = document.getElementById(`cur-${apt}`);
+      const el      = document.getElementById(`cur-${apt}`);
 
       if (el) {
         if (traumaCount > 0 && base > 0) {
@@ -561,113 +551,111 @@ function updateCurrentAptitudes() {
   });
 }
 
-/* -----------------------------------------------
-   Enforce caps + update model for a single pair
-   ----------------------------------------------- */
 function updateStressTrauma(prefix) {
   const { key, apt1, apt2 } = PAIR_MAP[prefix];
 
   const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
   const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
 
-  const stressCap = Math.min(val1, val2);
-  const traumaCap = Math.max(val1, val2);
-
-  const condBox = document.getElementById(`cond-${key.replace("_", "-")}`);
+  const stressCap       = Math.min(val1, val2);
+  const traumaCap       = Math.max(val1, val2);
+  const condBox         = document.getElementById(`cond-${key.replace("_", "-")}`);
   const conditionActive = condBox?.checked;
 
-  // Update STRESS boxes
   document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, index) => {
-    const allowed = index < stressCap;
-
-    box.disabled = !allowed || conditionActive;
+    const allowed    = index < stressCap;
+    box.disabled     = !allowed || conditionActive;
     box.style.opacity = conditionActive ? "0.5" : "1";
-
     if (!allowed) box.checked = false;
-
     character.stress[key][index] = box.checked;
   });
 
-  // Update TRAUMA boxes
   document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, index) => {
     const allowed = index < traumaCap;
-
-    box.disabled = !allowed;
+    box.disabled  = !allowed;
     if (!allowed) box.checked = false;
-
     character.trauma[key][index] = box.checked;
   });
 
-  // Update condition in model
   character.pairConditions[key] = conditionActive;
-
   updateCurrentAptitudes();
 }
 
-/* -----------------------------------------------
-   Update ALL pairs at once
-   ----------------------------------------------- */
 function updateAllPairs() {
   Object.keys(PAIR_MAP).forEach(prefix => updateStressTrauma(prefix));
 }
 
-/* -----------------------------------------------
-   EVENT LISTENERS
-   ----------------------------------------------- */
-
-// Aptitude inputs
+// Aptitude input listeners
 Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
   [apt1, apt2].forEach(apt => {
-    const el = document.querySelector(`input[name="attr_${apt}"]`);
-    el?.addEventListener("input", updateAllPairs);
+    document.querySelector(`input[name="attr_${apt}"]`)
+      ?.addEventListener("input", updateAllPairs);
   });
 });
 
-// Pair conditions
+// Pair condition listeners
 Object.values(PAIR_MAP).forEach(({ key }) => {
-  const cond = document.getElementById(`cond-${key.replace("_", "-")}`);
-  cond?.addEventListener("change", updateAllPairs);
+  document.getElementById(`cond-${key.replace("_", "-")}`)
+    ?.addEventListener("change", updateAllPairs);
 });
 
-// Stress + trauma boxes
+// Stress + trauma box listeners
 document.addEventListener("change", (e) => {
   if (e.target.classList.contains("stress-box") ||
       e.target.classList.contains("trauma-box")) {
-
     const prefix = [...e.target.classList]
       .find(c => ["fd","ea","sr","dr"].includes(c));
-
     if (prefix) updateStressTrauma(prefix);
   }
 });
 
-/* -----------------------------------------------
-   INITIALIZE ON LOAD
-   ----------------------------------------------- */
-setTimeout(updateAllPairs, 50);
-
+/* ================================================
+   INIT — load saved state AFTER all generators run,
+   then wire up autosave
+   ================================================ */
 document.addEventListener("DOMContentLoaded", () => {
 
-  // 1. Load saved sheet
+  // All dynamic HTML (weapons, armor, spells, wounds, relics) is already
+  // generated above by the time this fires, so field indices are stable.
+
   const saved = storage.load();
-  if (saved) writeSheetState(saved);
+  if (saved) {
+    writeSheetState(saved);
+    // Re-sync derived UI after restoring values
+    syncSummary();
+    calculateTotalBulk();
+  }
 
-  // 2. Attach autosave to all fields
-  getAllSheetFields().forEach(el => {
-    const handler = () => storage.save();
+  // Run pair engine after values are loaded so caps reflect saved aptitudes
+  updateAllPairs();
 
-    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
-      el.addEventListener("input", handler);
-      el.addEventListener("change", handler);
-    } else if (el.isContentEditable) {
-      el.addEventListener("input", handler);
-      el.addEventListener("blur", handler);
-    }
-  });
+  // Autosave on every interaction
+  function attachSaveListeners() {
+    getAllSheetFields().forEach(el => {
+      const save = () => storage.save();
+      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+        el.addEventListener("input",  save);
+        el.addEventListener("change", save);
+      } else if (el.isContentEditable) {
+        el.addEventListener("input", save);
+        el.addEventListener("blur",  save);
+      }
+    });
+  }
 
-  // 3. Your existing JS continues below this line
+  attachSaveListeners();
+
+  // Re-attach listeners when dynamic rows are added (wounds, gear, spells, etc.)
+  // Use a single delegated observer so new fields are always covered
+  const sheet = document.getElementById("character-sheet");
+  new MutationObserver(() => {
+    attachSaveListeners(); // safe to call repeatedly — addEventListener ignores dupes
+  }).observe(sheet, { childList: true, subtree: true });
 });
 
+/* ================================================
+   OBR
+   ================================================ */
 OBR.onReady(() => {
-  OBR.viewport.setHeight(1200); // or any height you want
+  OBR.viewport.setHeight(1200);
 });
