@@ -50,42 +50,52 @@ function isPairEngineCheckbox(el) {
    ================================================ */
 function saveSheet() {
   const root   = document.getElementById("character-sheet");
-  const named  = {};   // name="attr_*" fields  → saved by name
-  const checks = {};   // id'd checkboxes w/o name → saved by id
-  const desc   = [];   // contenteditable desc-fields → saved by order
+  const named  = {};
+  const checks = {};
+  const desc   = [];
 
-  // Named inputs & textareas
+  // Named inputs & textareas — skip wound fields (handled by wounds array below)
   root.querySelectorAll("input[name], textarea[name]").forEach(el => {
     if (isPairEngineCheckbox(el)) return;
-    if (el.type === "checkbox") {
-      named[el.name] = el.checked;
-    } else {
-      named[el.name] = el.value;
-    }
+    if (el.name.startsWith("attr_wound_")) return;
+    if (el.type === "checkbox") named[el.name] = el.checked;
+    else named[el.name] = el.value;
   });
 
-  // Unnamed but id'd checkboxes (edge boxes use name, global conds use id only)
+  // Id-only checkboxes (global conditions)
   root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
     if (isPairEngineCheckbox(el)) return;
     checks[el.id] = el.checked;
   });
 
-  // Contenteditable desc-fields (no name/id — saved by position)
+  // Contenteditable desc-fields
   root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
     desc.push(el.innerHTML);
   });
 
-  // Wounds: save as structured array so row count is preserved
+  // Features — no name attribute, save by position
+  const features = [];
+  root.querySelectorAll(".features-list textarea").forEach(el => features.push(el.value));
+
+  // Drives text — diamond checkboxes already in named scan
+  const drives = [];
+  root.querySelectorAll(".drives-list textarea").forEach(el => drives.push(el.value));
+
+  // Flaws
+  const flaws = [];
+  root.querySelectorAll(".flaws-list textarea").forEach(el => flaws.push(el.value));
+
+  // Wounds — structured array, skip fully-empty rows
   const wounds = [];
   root.querySelectorAll(".wound-row").forEach(row => {
-    const apt      = row.querySelector("select")?.value            ?? "";
-    const severity = row.querySelector("input[name*='severity']")?.value ?? "";
-    const descVal  = row.querySelector("input[name*='desc']")?.value     ?? "";
-    const patched  = row.querySelector("input.wound-patch")?.checked     ?? false;
-    wounds.push({ apt, severity, desc: descVal, patched });
+    const apt     = row.querySelector("select")?.value                  ?? "";
+    const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
+    const dsc     = row.querySelector("input[name*='desc']")?.value     ?? "";
+    const patched = row.querySelector("input.wound-patch")?.checked      ?? false;
+    if (apt || sev || dsc || patched) wounds.push({ apt, sev, dsc, patched });
   });
 
-  // Pair engine state
+  // Pair engine state from model, not DOM
   const pairState = {
     stress:         character.stress,
     trauma:         character.trauma,
@@ -93,7 +103,7 @@ function saveSheet() {
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    named, checks, desc, wounds, pairState
+    named, checks, desc, features, drives, flaws, wounds, pairState
   }));
 }
 
@@ -110,7 +120,7 @@ function restoreSheet(saved) {
   if (!saved) return;
   const root = document.getElementById("character-sheet");
 
-  // 1. Named fields
+  // 1. Named fields (wound fields excluded — rebuilt in step 7)
   if (saved.named) {
     Object.entries(saved.named).forEach(([name, value]) => {
       const el = root.querySelector(`[name="${name}"]`);
@@ -120,7 +130,7 @@ function restoreSheet(saved) {
     });
   }
 
-  // 2. Id'd checkboxes
+  // 2. Id-only checkboxes
   if (saved.checks) {
     Object.entries(saved.checks).forEach(([id, checked]) => {
       const el = root.querySelector(`#${id}`);
@@ -135,13 +145,70 @@ function restoreSheet(saved) {
     });
   }
 
-  // 4. Wounds — generate rows first, then populate
+  // 4. Features
+  if (saved.features?.length) {
+    const list = root.querySelector(".features-list");
+    if (list) {
+      saved.features.forEach((text, i) => {
+        let li = list.querySelectorAll("li")[i];
+        if (!li) {
+          li = document.createElement("li");
+          li.innerHTML = '<textarea placeholder="Add a feature..." rows="1"></textarea>';
+          list.appendChild(li);
+        }
+        const ta = li.querySelector("textarea");
+        if (ta) { ta.value = text; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+      });
+    }
+  }
+
+  // 5. Drives text
+  if (saved.drives?.length) {
+    const list = root.querySelector(".drives-list");
+    if (list) {
+      saved.drives.forEach((text, i) => {
+        let li = list.querySelectorAll("li")[i];
+        if (!li && i < 3) {
+          li = document.createElement("li");
+          li.innerHTML = `
+            <div class="drive-item">
+              <textarea placeholder="Add a drive..." rows="1" name="attr_drive_${i + 1}"></textarea>
+              <div class="drive-tracker">
+                <input type="checkbox" name="attr_drive_${i + 1}_cb_1" class="diamond-box db-1">
+                <input type="checkbox" name="attr_drive_${i + 1}_cb_2" class="diamond-box db-2">
+                <input type="checkbox" name="attr_drive_${i + 1}_cb_3" class="diamond-box db-3">
+              </div>
+            </div>`;
+          list.appendChild(li);
+        }
+        const ta = li?.querySelector("textarea");
+        if (ta) { ta.value = text; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+      });
+    }
+  }
+
+  // 6. Flaws
+  if (saved.flaws?.length) {
+    const list = root.querySelector(".flaws-list");
+    if (list) {
+      saved.flaws.forEach((text, i) => {
+        let li = list.querySelectorAll("li")[i];
+        if (!li && i < 3) {
+          li = document.createElement("li");
+          li.innerHTML = `<textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_${i + 1}"></textarea>`;
+          list.appendChild(li);
+        }
+        const ta = li?.querySelector("textarea");
+        if (ta) { ta.value = text; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+      });
+    }
+  }
+
+  // 7. Wounds
   if (saved.wounds?.length) {
     const container = root.querySelector("#wounds-container");
     if (container) {
-      // Clear all existing wound rows (keep the header)
       container.querySelectorAll(".wound-row").forEach(r => r.remove());
-
       saved.wounds.forEach((w, i) => {
         const row = createWoundRow(i + 1);
         container.appendChild(row);
@@ -149,28 +216,20 @@ function restoreSheet(saved) {
         const sev = row.querySelector("input[name*='severity']");
         const dsc = row.querySelector("input[name*='desc']");
         const pat = row.querySelector("input.wound-patch");
-        if (sev) sev.value      = w.severity ?? "";
-        if (dsc) dsc.value      = w.desc     ?? "";
-        if (pat) pat.checked    = !!w.patched;
+        if (sev) sev.value   = w.sev     ?? "";
+        if (dsc) dsc.value   = w.dsc     ?? "";
+        if (pat) pat.checked = !!w.patched;
       });
-
-      // Always leave one blank row at the end for new entry
       container.appendChild(createWoundRow(saved.wounds.length + 1));
     }
   }
 
-  // 5. Restore pair state — must come after aptitude values are in the DOM
+  // 8. Pair state — aptitudes are in DOM so caps calculate correctly
   restorePairState(saved.pairState);
 
-  // 6. Re-sync derived UI
+  // 9. Re-sync derived UI
   syncSummary();
   calculateTotalBulk();
-
-  // 7. Re-expand textarea heights
-  root.querySelectorAll("textarea").forEach(ta => {
-    ta.style.height = "auto";
-    ta.style.height = ta.scrollHeight + "px";
-  });
 }
 
 /* ================================================
