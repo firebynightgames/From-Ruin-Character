@@ -1,8 +1,7 @@
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
-
+ 
 /* ================================================
    CHARACTER MODEL
-   (must be defined before updateStressTrauma uses it)
    ================================================ */
 const character = {
   stress: {
@@ -24,23 +23,17 @@ const character = {
     deceive_relate: false
   }
 };
-
+ 
 /* ================================================
-   CHARACTER STORAGE
+   STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v1";
-
-function getAllSheetFields() {
-  const root = document.getElementById("character-sheet");
-  return Array.from(
-    root.querySelectorAll(
-      'input, textarea, [contenteditable="true"], [contenteditable=""]'
-    )
-  );
-}
-
-// Pair-engine checkboxes are disabled/enabled dynamically, making DOM-based
-// save/load unreliable. Exclude them from the index scan; save via character model.
+const STORAGE_KEY = "fromRuinCharacter_v2";
+ 
+/* ================================================
+   PAIR-ENGINE CHECKBOX GUARD
+   These are managed by the stress/trauma engine —
+   excluded from the general DOM scan.
+   ================================================ */
 function isPairEngineCheckbox(el) {
   return el.type === "checkbox" && (
     el.classList.contains("stress-box") ||
@@ -51,66 +44,156 @@ function isPairEngineCheckbox(el) {
     el.id === "cond-deceive-relate"
   );
 }
-
-function readSheetState() {
-  const fields  = getAllSheetFields();
-  const domState = fields.map(el => {
-    if (el.tagName === "INPUT" && isPairEngineCheckbox(el)) return { type: "skip" };
-    if (el.tagName === "INPUT") {
-      if (el.type === "checkbox") return { type: "checkbox", value: el.checked };
-      return { type: "input", value: el.value };
+ 
+/* ================================================
+   SAVE — named + indexed hybrid
+   ================================================ */
+function saveSheet() {
+  const root   = document.getElementById("character-sheet");
+  const named  = {};   // name="attr_*" fields  → saved by name
+  const checks = {};   // id'd checkboxes w/o name → saved by id
+  const desc   = [];   // contenteditable desc-fields → saved by order
+ 
+  // Named inputs & textareas
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    if (el.type === "checkbox") {
+      named[el.name] = el.checked;
+    } else {
+      named[el.name] = el.value;
     }
-    if (el.tagName === "TEXTAREA")  return { type: "textarea",       value: el.value     };
-    if (el.isContentEditable)       return { type: "contenteditable", value: el.innerHTML };
-    return { type: "unknown", value: null };
   });
-
-  // Save stress/trauma/pair-conditions from the model, not the DOM
+ 
+  // Unnamed but id'd checkboxes (edge boxes use name, global conds use id only)
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    checks[el.id] = el.checked;
+  });
+ 
+  // Contenteditable desc-fields (no name/id — saved by position)
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    desc.push(el.innerHTML);
+  });
+ 
+  // Wounds: save as structured array so row count is preserved
+  const wounds = [];
+  root.querySelectorAll(".wound-row").forEach(row => {
+    const apt      = row.querySelector("select")?.value            ?? "";
+    const severity = row.querySelector("input[name*='severity']")?.value ?? "";
+    const descVal  = row.querySelector("input[name*='desc']")?.value     ?? "";
+    const patched  = row.querySelector("input.wound-patch")?.checked     ?? false;
+    wounds.push({ apt, severity, desc: descVal, patched });
+  });
+ 
+  // Pair engine state
   const pairState = {
     stress:         character.stress,
     trauma:         character.trauma,
     pairConditions: character.pairConditions
   };
-
-  return { domState, pairState };
+ 
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    named, checks, desc, wounds, pairState
+  }));
 }
-
-function writeSheetState(saved) {
+ 
+/* ================================================
+   LOAD — named + indexed hybrid
+   ================================================ */
+function loadSheet() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+ 
+function restoreSheet(saved) {
   if (!saved) return;
-  // Support old plain-array format from before this fix
-  const values = Array.isArray(saved) ? saved : saved.domState;
-  if (!values) return;
-
-  const fields = getAllSheetFields();
-  fields.forEach((el, i) => {
-    const entry = values[i];
-    if (!entry || entry.type === "skip") return;
-
-    if (entry.type === "checkbox" && el.type === "checkbox" && !isPairEngineCheckbox(el)) {
-      el.checked = !!entry.value;
+  const root = document.getElementById("character-sheet");
+ 
+  // 1. Named fields
+  if (saved.named) {
+    Object.entries(saved.named).forEach(([name, value]) => {
+      const el = root.querySelector(`[name="${name}"]`);
+      if (!el) return;
+      if (el.type === "checkbox") el.checked = !!value;
+      else el.value = value ?? "";
+    });
+  }
+ 
+  // 2. Id'd checkboxes
+  if (saved.checks) {
+    Object.entries(saved.checks).forEach(([id, checked]) => {
+      const el = root.querySelector(`#${id}`);
+      if (el) el.checked = !!checked;
+    });
+  }
+ 
+  // 3. Contenteditable desc-fields
+  if (saved.desc) {
+    root.querySelectorAll(".desc-field[contenteditable]").forEach((el, i) => {
+      if (saved.desc[i] !== undefined) el.innerHTML = saved.desc[i];
+    });
+  }
+ 
+  // 4. Wounds — generate rows first, then populate
+  if (saved.wounds?.length) {
+    const container = root.querySelector("#wounds-container");
+    if (container) {
+      // Clear all existing wound rows (keep the header)
+      container.querySelectorAll(".wound-row").forEach(r => r.remove());
+ 
+      saved.wounds.forEach((w, i) => {
+        const row = createWoundRow(i + 1);
+        container.appendChild(row);
+        row.querySelector("select").value = w.apt ?? "";
+        const sev = row.querySelector("input[name*='severity']");
+        const dsc = row.querySelector("input[name*='desc']");
+        const pat = row.querySelector("input.wound-patch");
+        if (sev) sev.value      = w.severity ?? "";
+        if (dsc) dsc.value      = w.desc     ?? "";
+        if (pat) pat.checked    = !!w.patched;
+      });
+ 
+      // Always leave one blank row at the end for new entry
+      container.appendChild(createWoundRow(saved.wounds.length + 1));
     }
-    if (entry.type === "input"         && el.tagName === "INPUT"    && el.type !== "checkbox") el.value     = entry.value ?? "";
-    if (entry.type === "textarea"      && el.tagName === "TEXTAREA")                           el.value     = entry.value ?? "";
-    if (entry.type === "contenteditable" && el.isContentEditable)                              el.innerHTML = entry.value ?? "";
+  }
+ 
+  // 5. Restore pair state — must come after aptitude values are in the DOM
+  restorePairState(saved.pairState);
+ 
+  // 6. Re-sync derived UI
+  syncSummary();
+  calculateTotalBulk();
+ 
+  // 7. Re-expand textarea heights
+  root.querySelectorAll("textarea").forEach(ta => {
+    ta.style.height = "auto";
+    ta.style.height = ta.scrollHeight + "px";
   });
 }
-
-// Called after writeSheetState so aptitude values are already in the DOM.
-function restorePairState(saved) {
-  if (!saved?.pairState) return;
-  const { stress, trauma, pairConditions } = saved.pairState;
-
-  // 1. Restore pair conditions (they affect stress caps)
+ 
+/* ================================================
+   RESTORE PAIR STATE
+   ================================================ */
+function restorePairState(pairState) {
+  if (!pairState) {
+    updateAllPairs();
+    return;
+  }
+  const { stress, trauma, pairConditions } = pairState;
+ 
+  // Restore pair conditions first (they affect stress caps)
   Object.entries(pairConditions).forEach(([key, checked]) => {
     const el = document.getElementById(`cond-${key.replace("_", "-")}`);
-    if (el) el.checked = checked;
-    character.pairConditions[key] = checked;
+    if (el) el.checked = !!checked;
+    character.pairConditions[key] = !!checked;
   });
-
-  // 2. Run pair engine so caps are correct before restoring checked states
+ 
+  // Set caps based on current aptitude values
   updateAllPairs();
-
-  // 3. Restore stress (only tick boxes that are now enabled)
+ 
+  // Now restore stress boxes (only those still enabled after cap enforcement)
   Object.entries(stress).forEach(([key, arr]) => {
     const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
     if (!prefix) return;
@@ -119,8 +202,8 @@ function restorePairState(saved) {
       character.stress[key][i] = box.checked;
     });
   });
-
-  // 4. Restore trauma
+ 
+  // Restore trauma boxes
   Object.entries(trauma).forEach(([key, arr]) => {
     const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
     if (!prefix) return;
@@ -129,24 +212,10 @@ function restorePairState(saved) {
       character.trauma[key][i] = box.checked;
     });
   });
-
-  // 5. Sync the red current-aptitude display
+ 
   updateCurrentAptitudes();
 }
-
-const storage = {
-  save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(readSheetState()));
-  },
-  load() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  },
-  clear() {
-    localStorage.removeItem(STORAGE_KEY);
-  }
-};
-
+ 
 /* ================================================
    TABS ROUTING
    ================================================ */
@@ -154,10 +223,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', (evt) => {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
+ 
     document.getElementById(btn.dataset.tab).classList.add('active-tab');
     evt.currentTarget.classList.add('active');
-
+ 
     const isGearTab = btn.dataset.tab === 'tab-2';
     const sheet = document.getElementById('character-sheet');
     if (isGearTab) {
@@ -165,15 +234,15 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     } else {
       sheet.classList.remove('gear-active');
     }
-
-    document.getElementById('xp-header').style.display   = isGearTab ? 'none'  : 'block';
-    document.getElementById('xp-body').style.display     = isGearTab ? 'none'  : 'flex';
+ 
+    document.getElementById('xp-header').style.display    = isGearTab ? 'none'  : 'block';
+    document.getElementById('xp-body').style.display      = isGearTab ? 'none'  : 'flex';
     document.getElementById('bulk-header').style.display  = isGearTab ? 'block' : 'none';
     document.getElementById('bulk-body').style.display    = isGearTab ? 'flex'  : 'none';
     document.getElementById('bulk-penalty').style.display = isGearTab ? 'block' : 'none';
   });
 });
-
+ 
 /* ================================================
    BULK CALCULATION
    ================================================ */
@@ -183,44 +252,29 @@ function calculateTotalBulk() {
     const val = parseFloat(input.value);
     if (!isNaN(val)) total += val;
   });
-
+ 
   let threshold = 20;
-  if (total > 20) {
-    threshold = Math.ceil((total - 20) / 5) * 5 + 20;
-  }
-
+  if (total > 20) threshold = Math.ceil((total - 20) / 5) * 5 + 20;
+ 
   const penalty = total <= 20 ? 0 : Math.ceil((total - 20) / 5);
-  const maxed = penalty >= 6;
-
+  const maxed   = penalty >= 6;
+ 
   const totalEl     = document.getElementById('bulk-total');
   const thresholdEl = document.getElementById('bulk-threshold');
   const penaltyEl   = document.getElementById('bulk-penalty');
-
-  if (totalEl) {
-    totalEl.textContent = total;
-    totalEl.style.color = maxed ? 'red' : '#000';
-  }
-  if (thresholdEl) {
-    thresholdEl.textContent = threshold;
-    thresholdEl.style.color = maxed ? 'red' : '#000';
-  }
+ 
+  if (totalEl)     { totalEl.textContent     = total;     totalEl.style.color     = maxed ? 'red' : '#000'; }
+  if (thresholdEl) { thresholdEl.textContent = threshold; thresholdEl.style.color = maxed ? 'red' : '#000'; }
   if (penaltyEl) {
-    if (penalty <= 0) {
-      penaltyEl.textContent = '';
-    } else if (maxed) {
-      penaltyEl.textContent = '+6 Difficulty (Max)';
-    } else {
-      penaltyEl.textContent = `+${penalty} Difficulty`;
-    }
+    penaltyEl.textContent = penalty <= 0 ? '' : maxed ? '+6 Difficulty (Max)' : `+${penalty} Difficulty`;
   }
 }
-
+ 
 document.getElementById('character-sheet').addEventListener('input', (e) => {
   if (e.target.name?.includes('_bulk')) calculateTotalBulk();
 });
-
 calculateTotalBulk();
-
+ 
 /* ================================================
    ACCORDION TOGGLES
    ================================================ */
@@ -229,20 +283,15 @@ document.querySelectorAll('.acc-header').forEach(button => {
     button.nextElementSibling.classList.toggle('open');
   });
 });
-
-// NOTE: The old stress/trauma grid generator that used to live here has been
-// removed. It was creating duplicate invisible checkboxes inside .sheet-panel
-// that overlapped the visible pair-block checkboxes and corrupted save/load
-// index alignment. The pair blocks in the HTML are the only stress/trauma UI.
-
+ 
 /* ================================================
    WEAPON BLOCK GENERATOR
    ================================================ */
 const weaponContainer = document.getElementById('weapons-container');
 if (weaponContainer) {
-  let weaponsHTML = '';
+  let html = '';
   for (let i = 1; i <= 5; i++) {
-    weaponsHTML += `
+    html += `
       <div class="weapon-block slot-${i}">
         <div class="weapon-row">
           <div class="field-wrap col-name">
@@ -271,20 +320,19 @@ if (weaponContainer) {
           <label>Features:</label>
           <input type="text" name="attr_weapon_features_${i}" placeholder="...">
         </div>
-      </div>
-    `;
+      </div>`;
   }
-  weaponContainer.innerHTML = weaponsHTML;
+  weaponContainer.innerHTML = html;
 }
-
+ 
 /* ================================================
    ARMOR BLOCK GENERATOR
    ================================================ */
 const armorContainer = document.getElementById('armor-container');
 if (armorContainer) {
-  let armorHTML = '';
+  let html = '';
   for (let i = 1; i <= 5; i++) {
-    armorHTML += `
+    html += `
       <div class="armor-block armor-slot-${i}">
         <div class="armor-row">
           <div class="field-wrap col-armor-name">
@@ -303,17 +351,16 @@ if (armorContainer) {
             <input type="number" name="attr_armor_bulk_${i}" placeholder="-">
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
   }
-  armorContainer.innerHTML = armorHTML;
+  armorContainer.innerHTML = html;
 }
-
+ 
 /* ================================================
-   SPELLS LIST — 10 ROW GENERATOR & AUTO-GROW
+   SPELLS LIST GENERATOR & AUTO-GROW
    ================================================ */
 const spellsContainer = document.getElementById('spells-container');
-
+ 
 function createSpellRowHTML(index) {
   return `
     <li class="spell-item-node">
@@ -321,40 +368,34 @@ function createSpellRowHTML(index) {
         <textarea name="attr_spell_desc_${index}" placeholder="Add a spell or ritual..." rows="1"></textarea>
         <input type="number" name="attr_spell_difficulty_${index}" placeholder="-">
       </div>
-    </li>
-  `;
+    </li>`;
 }
-
+ 
 if (spellsContainer) {
-  let initialSpells = '';
-  for (let i = 1; i <= 10; i++) {
-    initialSpells += createSpellRowHTML(i);
-  }
-  spellsContainer.innerHTML = initialSpells;
-
+  let html = '';
+  for (let i = 1; i <= 10; i++) html += createSpellRowHTML(i);
+  spellsContainer.innerHTML = html;
+ 
   spellsContainer.addEventListener('input', (e) => {
     if (e.target.tagName !== 'TEXTAREA') return;
-
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
-
-    const allSpells = spellsContainer.querySelectorAll('.spell-item-grid textarea');
-    const lastSpell = allSpells[allSpells.length - 1];
-
-    if (e.target === lastSpell && lastSpell.value.trim() !== '') {
-      const nextIndex = allSpells.length + 1;
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = createSpellRowHTML(nextIndex);
-      spellsContainer.appendChild(tempDiv.firstElementChild);
+ 
+    const all  = spellsContainer.querySelectorAll('.spell-item-grid textarea');
+    const last = all[all.length - 1];
+    if (e.target === last && last.value.trim() !== '') {
+      const div = document.createElement('div');
+      div.innerHTML = createSpellRowHTML(all.length + 1);
+      spellsContainer.appendChild(div.firstElementChild);
     }
   });
 }
-
+ 
 /* ================================================
    WOUNDS GENERATOR
    ================================================ */
 const APTITUDES = ['Finesse','Devise','Exert','Adapt','Sense','Resist','Deceive','Relate'];
-
+ 
 function createWoundRow(index) {
   const row = document.createElement('div');
   row.className = 'wound-row';
@@ -365,11 +406,10 @@ function createWoundRow(index) {
     </select>
     <input type="text" name="attr_wound_severity_${index}" placeholder="Severity">
     <input type="text" name="attr_wound_desc_${index}"     placeholder="Description">
-    <input type="checkbox" class="wound-patch" name="attr_wound_patch_${index}" style="justify-self: end;">
-  `;
+    <input type="checkbox" class="wound-patch" name="attr_wound_patch_${index}" style="justify-self:end;">`;
   return row;
 }
-
+ 
 const woundsContainer = document.getElementById('wounds-container');
 if (woundsContainer) {
   const headers = document.createElement('div');
@@ -378,48 +418,44 @@ if (woundsContainer) {
     <span>Aptitude</span>
     <span>Severity</span>
     <span>Description</span>
-    <span style="text-align: right;">Patched</span>
-  `;
+    <span style="text-align:right;">Patched</span>`;
   woundsContainer.appendChild(headers);
   woundsContainer.appendChild(createWoundRow(1));
-
+ 
   woundsContainer.addEventListener('input', (e) => {
     if (!e.target.matches('input[type="text"]')) return;
-    const rows = woundsContainer.querySelectorAll('.wound-row');
+    const rows    = woundsContainer.querySelectorAll('.wound-row');
     const lastRow = rows[rows.length - 1];
     if (e.target.closest('.wound-row') === lastRow && e.target.value.trim() !== '') {
       woundsContainer.appendChild(createWoundRow(rows.length + 1));
     }
   });
 }
-
+ 
 /* ================================================
    RELIC GENERATOR
    ================================================ */
 const relicContainer = document.getElementById('relics-container');
-
+ 
 function addRelicRow() {
   const row = document.createElement('div');
   row.className = 'relic-row';
   row.innerHTML = `<textarea name="attr_relic_${Date.now()}" rows="1" placeholder="Name, Type, Effect..."></textarea>`;
   if (relicContainer) relicContainer.appendChild(row);
 }
-
+ 
 if (relicContainer) {
   for (let i = 0; i < 3; i++) addRelicRow();
-
   relicContainer.addEventListener('input', (e) => {
     if (e.target.tagName !== 'TEXTAREA') return;
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
-    const rows = relicContainer.querySelectorAll('.relic-row');
+    const rows    = relicContainer.querySelectorAll('.relic-row');
     const lastRow = rows[rows.length - 1];
-    if (e.target.closest('.relic-row') === lastRow && e.target.value.trim() !== '') {
-      addRelicRow();
-    }
+    if (e.target.closest('.relic-row') === lastRow && e.target.value.trim() !== '') addRelicRow();
   });
 }
-
+ 
 /* ================================================
    FEATURES LIST — AUTO GROW + ADD NEW ITEM
    ================================================ */
@@ -427,52 +463,48 @@ const featuresList = document.querySelector('.features-list');
 if (featuresList) {
   featuresList.addEventListener('input', (e) => {
     if (e.target.tagName !== 'TEXTAREA') return;
-
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
-
+ 
     const items = featuresList.querySelectorAll('textarea');
-    const lastItem = items[items.length - 1];
-    if (e.target === lastItem && lastItem.value.trim() !== '') {
-      const newItem = document.createElement('li');
-      newItem.innerHTML = '<textarea placeholder="Add a feature..." rows="1"></textarea>';
-      featuresList.appendChild(newItem);
+    const last  = items[items.length - 1];
+    if (e.target === last && last.value.trim() !== '') {
+      const li = document.createElement('li');
+      li.innerHTML = '<textarea placeholder="Add a feature..." rows="1"></textarea>';
+      featuresList.appendChild(li);
     }
   });
 }
-
+ 
 /* ================================================
-   DRIVES LIST — AUTO GROW HEIGHT & SLOTS (MAX 3)
+   DRIVES LIST — AUTO GROW & SLOTS (MAX 3)
    ================================================ */
 const drivesList = document.querySelector('.drives-list');
 if (drivesList) {
   drivesList.addEventListener('input', (e) => {
     if (e.target.tagName !== 'TEXTAREA') return;
-
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
-
+ 
     const items = drivesList.querySelectorAll('textarea');
-    const lastItem = items[items.length - 1];
-
-    if (e.target === lastItem && lastItem.value.trim() !== '' && items.length < 3) {
-      const nextIndex = items.length + 1;
-      const newItem = document.createElement('li');
-      newItem.innerHTML = `
+    const last  = items[items.length - 1];
+    if (e.target === last && last.value.trim() !== '' && items.length < 3) {
+      const idx = items.length + 1;
+      const li  = document.createElement('li');
+      li.innerHTML = `
         <div class="drive-item">
-          <textarea placeholder="Add a drive..." rows="1" name="attr_drive_${nextIndex}"></textarea>
+          <textarea placeholder="Add a drive..." rows="1" name="attr_drive_${idx}"></textarea>
           <div class="drive-tracker">
-            <input type="checkbox" name="attr_drive_${nextIndex}_cb_1" class="diamond-box db-1">
-            <input type="checkbox" name="attr_drive_${nextIndex}_cb_2" class="diamond-box db-2">
-            <input type="checkbox" name="attr_drive_${nextIndex}_cb_3" class="diamond-box db-3">
+            <input type="checkbox" name="attr_drive_${idx}_cb_1" class="diamond-box db-1">
+            <input type="checkbox" name="attr_drive_${idx}_cb_2" class="diamond-box db-2">
+            <input type="checkbox" name="attr_drive_${idx}_cb_3" class="diamond-box db-3">
           </div>
-        </div>
-      `;
-      drivesList.appendChild(newItem);
+        </div>`;
+      drivesList.appendChild(li);
     }
   });
 }
-
+ 
 /* ================================================
    GEAR LIST — AUTO-EXPAND ROWS
    ================================================ */
@@ -480,72 +512,67 @@ const gearTable = document.querySelector('.sheet-gear-table');
 if (gearTable) {
   gearTable.addEventListener('input', (e) => {
     if (!e.target.matches('.gear-row .col-gear-name input')) return;
-
     const container = gearTable.querySelector('.sheet-gear-container');
-    const allRowInputs = container.querySelectorAll('.gear-row .col-gear-name input');
-    const lastInput = allRowInputs[allRowInputs.length - 1];
-
-    if (e.target === lastInput && lastInput.value.trim() !== '') {
-      const nextIndex = allRowInputs.length + 1;
+    const allInputs = container.querySelectorAll('.gear-row .col-gear-name input');
+    const last      = allInputs[allInputs.length - 1];
+    if (e.target === last && last.value.trim() !== '') {
+      const idx    = allInputs.length + 1;
       const newRow = document.createElement('div');
       newRow.className = 'gear-row';
       newRow.innerHTML = `
         <div class="field-wrap col-gear-name">
-          <input type="text" name="attr_gear_name_${nextIndex}" placeholder="-">
+          <input type="text" name="attr_gear_name_${idx}" placeholder="-">
         </div>
         <div class="field-wrap col-gear-bulk">
-          <input type="number" name="attr_gear_bulk_${nextIndex}" placeholder="-">
-        </div>
-      `;
+          <input type="number" name="attr_gear_bulk_${idx}" placeholder="-">
+        </div>`;
       container.appendChild(newRow);
     }
   });
 }
-
+ 
 /* ================================================
-   FLAWS LIST — AUTO GROW HEIGHT & SLOTS (MAX 3)
+   FLAWS LIST — AUTO GROW & SLOTS (MAX 3)
    ================================================ */
 const flawsList = document.querySelector('.flaws-list');
 if (flawsList) {
   flawsList.addEventListener('input', (e) => {
     if (e.target.tagName !== 'TEXTAREA') return;
-
     e.target.style.height = 'auto';
     e.target.style.height = e.target.scrollHeight + 'px';
-
+ 
     const items = flawsList.querySelectorAll('textarea');
-    const lastItem = items[items.length - 1];
-
-    if (e.target === lastItem && lastItem.value.trim() !== '' && items.length < 3) {
-      const nextIndex = items.length + 1;
-      const newItem = document.createElement('li');
-      newItem.innerHTML = `<textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_${nextIndex}"></textarea>`;
-      flawsList.appendChild(newItem);
+    const last  = items[items.length - 1];
+    if (e.target === last && last.value.trim() !== '' && items.length < 3) {
+      const idx = items.length + 1;
+      const li  = document.createElement('li');
+      li.innerHTML = `<textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_${idx}"></textarea>`;
+      flawsList.appendChild(li);
     }
   });
 }
-
+ 
 /* ================================================
    PORTRAIT UPLOAD
    ================================================ */
 const portraitUpload = document.getElementById('portrait-upload');
 const portraitImg    = document.getElementById('portrait-img');
 const portraitLabel  = document.querySelector('.portrait-upload-label');
-
+ 
 if (portraitUpload) {
   portraitUpload.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      portraitImg.src = ev.target.result;
+      portraitImg.src          = ev.target.result;
       portraitImg.style.display = 'block';
       portraitLabel.style.display = 'none';
     };
     reader.readAsDataURL(file);
   });
 }
-
+ 
 /* ================================================
    SUMMARY PANEL SYNC
    ================================================ */
@@ -559,7 +586,7 @@ const summaryMap = {
   'sum-momento':    'MOMENTO',
   'sum-event':      'EVENT'
 };
-
+ 
 function syncSummary() {
   document.querySelectorAll('.desc-field').forEach(field => {
     const placeholder = field.dataset.placeholder;
@@ -570,10 +597,10 @@ function syncSummary() {
     }
   });
 }
-
+ 
 document.querySelector('.desc-panel')?.addEventListener('input', syncSummary);
 syncSummary();
-
+ 
 /* ================================================
    STORY FIELDS — AUTO GROW
    ================================================ */
@@ -583,26 +610,24 @@ document.querySelectorAll('.story-field').forEach(field => {
     field.style.height = field.scrollHeight + 'px';
   });
 });
-
+ 
 /* ================================================
    PAIR-BASED STRESS / TRAUMA ENGINE
    ================================================ */
 const PAIR_MAP = {
   fd: { key: "finesse_devise", apt1: "finesse", apt2: "devise" },
-  ea: { key: "exert_adapt",    apt1: "exert",   apt2: "adapt" },
+  ea: { key: "exert_adapt",    apt1: "exert",   apt2: "adapt"  },
   sr: { key: "sense_resist",   apt1: "sense",   apt2: "resist" },
   dr: { key: "deceive_relate", apt1: "deceive", apt2: "relate" }
 };
-
+ 
 function updateCurrentAptitudes() {
   Object.values(PAIR_MAP).forEach(({ key, apt1, apt2 }) => {
     const traumaCount = character.trauma[key].filter(v => v).length;
-
     [apt1, apt2].forEach(apt => {
       const base    = parseInt(document.querySelector(`input[name="attr_${apt}"]`)?.value) || 0;
       const current = Math.max(0, base - traumaCount);
       const el      = document.getElementById(`cur-${apt}`);
-
       if (el) {
         if (traumaCount > 0 && base > 0) {
           el.textContent = current;
@@ -614,41 +639,41 @@ function updateCurrentAptitudes() {
     });
   });
 }
-
+ 
 function updateStressTrauma(prefix) {
   const { key, apt1, apt2 } = PAIR_MAP[prefix];
-
+ 
   const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
   const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
-
+ 
   const stressCap       = Math.min(val1, val2);
   const traumaCap       = Math.max(val1, val2);
   const condBox         = document.getElementById(`cond-${key.replace("_", "-")}`);
-  const conditionActive = condBox?.checked;
-
-  document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, index) => {
-    const allowed    = index < stressCap;
-    box.disabled     = !allowed || conditionActive;
-    box.style.opacity = conditionActive ? "0.5" : "1";
+  const conditionActive = condBox?.checked ?? false;
+ 
+  document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, i) => {
+    const allowed      = i < stressCap;
+    box.disabled       = !allowed || conditionActive;
+    box.style.opacity  = conditionActive ? "0.5" : "1";
     if (!allowed) box.checked = false;
-    character.stress[key][index] = box.checked;
+    character.stress[key][i] = box.checked;
   });
-
-  document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, index) => {
-    const allowed = index < traumaCap;
+ 
+  document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, i) => {
+    const allowed = i < traumaCap;
     box.disabled  = !allowed;
     if (!allowed) box.checked = false;
-    character.trauma[key][index] = box.checked;
+    character.trauma[key][i] = box.checked;
   });
-
+ 
   character.pairConditions[key] = conditionActive;
   updateCurrentAptitudes();
 }
-
+ 
 function updateAllPairs() {
   Object.keys(PAIR_MAP).forEach(prefix => updateStressTrauma(prefix));
 }
-
+ 
 // Aptitude input listeners
 Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
   [apt1, apt2].forEach(apt => {
@@ -656,71 +681,43 @@ Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
       ?.addEventListener("input", updateAllPairs);
   });
 });
-
+ 
 // Pair condition listeners
 Object.values(PAIR_MAP).forEach(({ key }) => {
   document.getElementById(`cond-${key.replace("_", "-")}`)
     ?.addEventListener("change", updateAllPairs);
 });
-
+ 
 // Stress + trauma box listeners
 document.addEventListener("change", (e) => {
   if (e.target.classList.contains("stress-box") ||
       e.target.classList.contains("trauma-box")) {
-    const prefix = [...e.target.classList]
-      .find(c => ["fd","ea","sr","dr"].includes(c));
+    const prefix = [...e.target.classList].find(c => ["fd","ea","sr","dr"].includes(c));
     if (prefix) updateStressTrauma(prefix);
   }
 });
-
+ 
 /* ================================================
-   INIT — load saved state AFTER all generators run,
-   then wire up autosave
+   INIT
    ================================================ */
 document.addEventListener("DOMContentLoaded", () => {
-
-  // All dynamic HTML (weapons, armor, spells, wounds, relics) is already
-  // generated above by the time this fires, so field indices are stable.
-
-  const saved = storage.load();
+ 
+  const saved = loadSheet();
   if (saved) {
-    // 1. Restore all regular fields (aptitudes, text, non-pair checkboxes)
-    writeSheetState(saved);
-    // 2. Restore stress/trauma/pair-conditions via the character model
-    //    (aptitude values are now in the DOM so caps calculate correctly)
-    restorePairState(saved);
-    // 3. Re-sync derived UI
-    syncSummary();
-    calculateTotalBulk();
+    restoreSheet(saved);
   } else {
-    // No save data — still run pair engine to initialise caps
     updateAllPairs();
   }
-
-  // Autosave on every interaction
-  function attachSaveListeners() {
-    getAllSheetFields().forEach(el => {
-      const save = () => storage.save();
-      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
-        el.addEventListener("input",  save);
-        el.addEventListener("change", save);
-      } else if (el.isContentEditable) {
-        el.addEventListener("input", save);
-        el.addEventListener("blur",  save);
-      }
-    });
-  }
-
-  attachSaveListeners();
-
-  // Re-attach listeners when dynamic rows are added (wounds, gear, spells, etc.)
-  // Use a single delegated observer so new fields are always covered
-  const sheet = document.getElementById("character-sheet");
-  new MutationObserver(() => {
-    attachSaveListeners(); // safe to call repeatedly — addEventListener ignores dupes
-  }).observe(sheet, { childList: true, subtree: true });
+ 
+  // Autosave — delegate to document so dynamic rows are always covered
+  document.getElementById("character-sheet").addEventListener("input",  saveSheet);
+  document.getElementById("character-sheet").addEventListener("change", saveSheet);
+  document.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    el.addEventListener("input", saveSheet);
+    el.addEventListener("blur",  saveSheet);
+  });
 });
-
+ 
 /* ================================================
    OBR
    ================================================ */
