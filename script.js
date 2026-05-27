@@ -27,7 +27,7 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v4";
+const STORAGE_KEY = "fromRuinCharacter_v5";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
@@ -252,25 +252,37 @@ function restorePairState(pairState) {
   // Set caps based on current aptitude values — caps only, don't wipe checked state
   applyCapsOnly();
 
-  // Now restore stress boxes (only those still enabled after cap enforcement)
+  // Restore stress — write checked state directly based on cap, ignoring
+  // disabled state. Condition disabling is cosmetic and applied afterwards.
   Object.entries(stress).forEach(([key, arr]) => {
     const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
     if (!prefix) return;
+    const { apt1, apt2 } = PAIR_MAP[prefix];
+    const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
+    const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
+    const stressCap = Math.min(val1, val2);
     document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, i) => {
-      if (!box.disabled) box.checked = !!arr[i];
+      box.checked = i < stressCap ? !!arr[i] : false;
       character.stress[key][i] = box.checked;
     });
   });
 
-  // Restore trauma boxes
+  // Restore trauma
   Object.entries(trauma).forEach(([key, arr]) => {
     const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
     if (!prefix) return;
+    const { apt1, apt2 } = PAIR_MAP[prefix];
+    const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
+    const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
+    const traumaCap = Math.max(val1, val2);
     document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, i) => {
-      if (!box.disabled) box.checked = !!arr[i];
+      box.checked = i < traumaCap ? !!arr[i] : false;
       character.trauma[key][i] = box.checked;
     });
   });
+
+  // Apply disabled/opacity on top of the restored checked state
+  updateAllPairs();
 
   updateCurrentAptitudes();
 }
@@ -791,6 +803,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Clean up the old index-based save format — no console needed.
   localStorage.removeItem("fromRuinCharacter_v1");
   localStorage.removeItem("fromRuinCharacter_v2");
+  localStorage.removeItem("fromRuinCharacter_v3");
+  localStorage.removeItem("fromRuinCharacter_v4");
 
   const saved = loadSheet();
   if (saved) {
