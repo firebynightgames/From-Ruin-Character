@@ -27,7 +27,7 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v3";
+const STORAGE_KEY = "fromRuinCharacter_v4";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
@@ -249,8 +249,8 @@ function restorePairState(pairState) {
     character.pairConditions[key] = !!checked;
   });
 
-  // Set caps based on current aptitude values
-  updateAllPairs();
+  // Set caps based on current aptitude values — caps only, don't wipe checked state
+  applyCapsOnly();
 
   // Now restore stress boxes (only those still enabled after cap enforcement)
   Object.entries(stress).forEach(([key, arr]) => {
@@ -733,6 +733,33 @@ function updateAllPairs() {
   Object.keys(PAIR_MAP).forEach(prefix => updateStressTrauma(prefix));
 }
 
+// Like updateAllPairs but ONLY sets disabled/opacity — never touches checked
+// state or the character model. Safe to call during restore.
+function applyCapsOnly() {
+  Object.keys(PAIR_MAP).forEach(prefix => {
+    const { key, apt1, apt2 } = PAIR_MAP[prefix];
+    const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
+    const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
+    const stressCap       = Math.min(val1, val2);
+    const traumaCap       = Math.max(val1, val2);
+    const condBox         = document.getElementById(`cond-${key.replace("_", "-")}`);
+    const conditionActive = condBox?.checked ?? false;
+
+    document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, i) => {
+      const allowed     = i < stressCap;
+      box.disabled      = !allowed || conditionActive;
+      box.style.opacity = conditionActive ? "0.5" : "1";
+      if (!allowed) box.checked = false;
+    });
+
+    document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, i) => {
+      const allowed = i < traumaCap;
+      box.disabled  = !allowed;
+      if (!allowed) box.checked = false;
+    });
+  });
+}
+
 // Aptitude input listeners
 Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
   [apt1, apt2].forEach(apt => {
@@ -763,6 +790,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Clean up the old index-based save format — no console needed.
   localStorage.removeItem("fromRuinCharacter_v1");
+  localStorage.removeItem("fromRuinCharacter_v2");
 
   const saved = loadSheet();
   if (saved) {
