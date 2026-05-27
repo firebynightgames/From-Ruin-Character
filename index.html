@@ -73,190 +73,104 @@
         </div>
       </div>
 
-<div class="acc-section">
-  <button class="acc-header">Aptitudes <span class="acc-caret">▼</span></button>
+      <div class="acc-section">
+        <button class="acc-header">Aptitudes <span class="acc-caret">▼</span></button>
+       <div class="acc-body open sheet-panel">
+  <input type="number" id="apt-finesse" class="aptitude-field left-apt  row-1" name="attr_finesse"  placeholder="#">
+  <span class="apt-current left-apt  row-1" id="cur-finesse"></span>
+  <input type="number" id="apt-devise"  class="aptitude-field right-apt row-1" name="attr_devise"   placeholder="#">
+  <span class="apt-current right-apt row-1" id="cur-devise"></span>
 
-  <!-- SHEET PANEL (APTITUDE GRAPHIC + INPUTS ONLY) -->
-  <div class="acc-body open sheet-panel">
+  <input type="number" id="apt-exert"   class="aptitude-field left-apt  row-2" name="attr_exert"    placeholder="#">
+  <span class="apt-current left-apt  row-2" id="cur-exert"></span>
+  <input type="number" id="apt-adapt"   class="aptitude-field right-apt row-2" name="attr_adapt"    placeholder="#">
+  <span class="apt-current right-apt row-2" id="cur-adapt"></span>
 
-    <!-- ========================= -->
-    <!-- Finesse + Devise (Row 1) -->
-    <!-- ========================= -->
-    <input type="number" id="apt-finesse" class="aptitude-field left-apt row-1" name="attr_finesse" placeholder="#">
-    <span class="apt-current left-apt row-1" id="cur-finesse"></span>
+  <input type="number" id="apt-sense"   class="aptitude-field left-apt  row-3" name="attr_sense"    placeholder="#">
+  <span class="apt-current left-apt  row-3" id="cur-sense"></span>
+  <input type="number" id="apt-resist"  class="aptitude-field right-apt row-3" name="attr_resist"   placeholder="#">
+  <span class="apt-current right-apt row-3" id="cur-resist"></span>
 
-    <input type="number" id="apt-devise" class="aptitude-field right-apt row-1" name="attr_devise" placeholder="#">
-    <span class="apt-current right-apt row-1" id="cur-devise"></span>
+  <input type="number" id="apt-deceive" class="aptitude-field left-apt  row-4" name="attr_deceive"  placeholder="#">
+  <span class="apt-current left-apt  row-4" id="cur-deceive"></span>
+  <input type="number" id="apt-relate"  class="aptitude-field right-apt row-4" name="attr_relate"   placeholder="#">
+  <span class="apt-current right-apt row-4" id="cur-relate"></span>
+          <input type="checkbox" id="cond-hungry"  class="condition-checkbox cond-row-1">
+          <input type="checkbox" id="cond-thirsty" class="condition-checkbox cond-row-2">
+          <input type="checkbox" id="cond-exposed" class="condition-checkbox cond-row-3">
+          <input type="checkbox" id="cond-tired"   class="condition-checkbox cond-row-4">
 
-    <!-- ========================= -->
-    <!-- Exert + Adapt (Row 2) -->
-    <!-- ========================= -->
-    <input type="number" id="apt-exert" class="aptitude-field left-apt row-2" name="attr_exert" placeholder="#">
-    <span class="apt-current left-apt row-2" id="cur-exert"></span>
+          <!-- Pair conditions — use condition-checkbox for left position, track for size/colour -->
+          <input type="checkbox" id="cond-finesse-devise" class="track condition-checkbox cond-row-1">
+          <input type="checkbox" id="cond-exert-adapt"    class="track condition-checkbox cond-row-2">
+          <input type="checkbox" id="cond-sense-resist"   class="track condition-checkbox cond-row-3">
+          <input type="checkbox" id="cond-deceive-relate" class="track condition-checkbox cond-row-4">
 
-    <input type="number" id="apt-adapt" class="aptitude-field right-apt row-2" name="attr_adapt" placeholder="#">
-    <span class="apt-current right-apt row-2" id="cur-adapt"></span>
+          <!-- Stress row 1 (Finesse+Devise) -->
+          <input type="checkbox" class="track stress-box fd col-1 stress row-1" data-index="0">
+          <input type="checkbox" class="track stress-box fd col-2 stress row-1" data-index="1">
+          <input type="checkbox" class="track stress-box fd col-3 stress row-1" data-index="2">
+          <input type="checkbox" class="track stress-box fd col-4 stress row-1" data-index="3">
+          <input type="checkbox" class="track stress-box fd col-5 stress row-1" data-index="4">
+          <input type="checkbox" class="track stress-box fd col-6 stress row-1" data-index="5">
 
-    <!-- ========================= -->
-    <!-- Sense + Resist (Row 3) -->
-    <!-- ========================= -->
-    <input type="number" id="apt-sense" class="aptitude-field left-apt row-3" name="attr_sense" placeholder="#">
-    <span class="apt-current left-apt row-3" id="cur-sense"></span>
+          <!-- Trauma row 1 (Finesse+Devise) -->
+          <input type="checkbox" class="track trauma-box fd col-1 trauma row-1" data-index="0">
+          <input type="checkbox" class="track trauma-box fd col-2 trauma row-1" data-index="1">
+          <input type="checkbox" class="track trauma-box fd col-3 trauma row-1" data-index="2">
+          <input type="checkbox" class="track trauma-box fd col-4 trauma row-1" data-index="3">
+          <input type="checkbox" class="track trauma-box fd col-5 trauma row-1" data-index="4">
+          <input type="checkbox" class="track trauma-box fd col-6 trauma row-1" data-index="5">
 
-    <input type="number" id="apt-resist" class="aptitude-field right-apt row-3" name="attr_resist" placeholder="#">
-    <span class="apt-current right-apt row-3" id="cur-resist"></span>
+          <!-- Stress row 2 (Exert+Adapt) -->
+          <input type="checkbox" class="track stress-box ea col-1 stress row-2" data-index="0">
+          <input type="checkbox" class="track stress-box ea col-2 stress row-2" data-index="1">
+          <input type="checkbox" class="track stress-box ea col-3 stress row-2" data-index="2">
+          <input type="checkbox" class="track stress-box ea col-4 stress row-2" data-index="3">
+          <input type="checkbox" class="track stress-box ea col-5 stress row-2" data-index="4">
+          <input type="checkbox" class="track stress-box ea col-6 stress row-2" data-index="5">
 
-    <!-- ========================= -->
-    <!-- Deceive + Relate (Row 4) -->
-    <!-- ========================= -->
-    <input type="number" id="apt-deceive" class="aptitude-field left-apt row-4" name="attr_deceive" placeholder="#">
-    <span class="apt-current left-apt row-4" id="cur-deceive"></span>
+          <!-- Trauma row 2 (Exert+Adapt) -->
+          <input type="checkbox" class="track trauma-box ea col-1 trauma row-2" data-index="0">
+          <input type="checkbox" class="track trauma-box ea col-2 trauma row-2" data-index="1">
+          <input type="checkbox" class="track trauma-box ea col-3 trauma row-2" data-index="2">
+          <input type="checkbox" class="track trauma-box ea col-4 trauma row-2" data-index="3">
+          <input type="checkbox" class="track trauma-box ea col-5 trauma row-2" data-index="4">
+          <input type="checkbox" class="track trauma-box ea col-6 trauma row-2" data-index="5">
 
-    <input type="number" id="apt-relate" class="aptitude-field right-apt row-4" name="attr_relate" placeholder="#">
-    <span class="apt-current right-apt row-4" id="cur-relate"></span>
+          <!-- Stress row 3 (Sense+Resist) -->
+          <input type="checkbox" class="track stress-box sr col-1 stress row-3" data-index="0">
+          <input type="checkbox" class="track stress-box sr col-2 stress row-3" data-index="1">
+          <input type="checkbox" class="track stress-box sr col-3 stress row-3" data-index="2">
+          <input type="checkbox" class="track stress-box sr col-4 stress row-3" data-index="3">
+          <input type="checkbox" class="track stress-box sr col-5 stress row-3" data-index="4">
+          <input type="checkbox" class="track stress-box sr col-6 stress row-3" data-index="5">
 
-  </div> <!-- END sheet-panel -->
+          <!-- Trauma row 3 (Sense+Resist) -->
+          <input type="checkbox" class="track trauma-box sr col-1 trauma row-3" data-index="0">
+          <input type="checkbox" class="track trauma-box sr col-2 trauma row-3" data-index="1">
+          <input type="checkbox" class="track trauma-box sr col-3 trauma row-3" data-index="2">
+          <input type="checkbox" class="track trauma-box sr col-4 trauma row-3" data-index="3">
+          <input type="checkbox" class="track trauma-box sr col-5 trauma row-3" data-index="4">
+          <input type="checkbox" class="track trauma-box sr col-6 trauma row-3" data-index="5">
 
+          <!-- Stress row 4 (Deceive+Relate) -->
+          <input type="checkbox" class="track stress-box dr col-1 stress row-4" data-index="0">
+          <input type="checkbox" class="track stress-box dr col-2 stress row-4" data-index="1">
+          <input type="checkbox" class="track stress-box dr col-3 stress row-4" data-index="2">
+          <input type="checkbox" class="track stress-box dr col-4 stress row-4" data-index="3">
+          <input type="checkbox" class="track stress-box dr col-5 stress row-4" data-index="4">
+          <input type="checkbox" class="track stress-box dr col-6 stress row-4" data-index="5">
 
-  <!-- ========================================= -->
-  <!-- PAIR BLOCKS (MOVED OUTSIDE SHEET-PANEL) -->
-  <!-- ========================================= -->
-
-  <!-- Pair Block: Finesse + Devise -->
-  <div class="pair-block" id="pair-finesse-devise">
-    <div class="pair-title">Finesse + Devise</div>
-    <div class="pair-stress">
-      <label>Stress</label>
-      <div class="stress-row">
-        <input type="checkbox" class="stress-box fd" data-index="0">
-        <input type="checkbox" class="stress-box fd" data-index="1">
-        <input type="checkbox" class="stress-box fd" data-index="2">
-        <input type="checkbox" class="stress-box fd" data-index="3">
-        <input type="checkbox" class="stress-box fd" data-index="4">
-        <input type="checkbox" class="stress-box fd" data-index="5">
+          <!-- Trauma row 4 (Deceive+Relate) -->
+          <input type="checkbox" class="track trauma-box dr col-1 trauma row-4" data-index="0">
+          <input type="checkbox" class="track trauma-box dr col-2 trauma row-4" data-index="1">
+          <input type="checkbox" class="track trauma-box dr col-3 trauma row-4" data-index="2">
+          <input type="checkbox" class="track trauma-box dr col-4 trauma row-4" data-index="3">
+          <input type="checkbox" class="track trauma-box dr col-5 trauma row-4" data-index="4">
+          <input type="checkbox" class="track trauma-box dr col-6 trauma row-4" data-index="5">
+        </div>
       </div>
-    </div>
-    <div class="pair-trauma">
-      <label>Trauma</label>
-      <div class="trauma-row">
-        <input type="checkbox" class="trauma-box fd" data-index="0">
-        <input type="checkbox" class="trauma-box fd" data-index="1">
-        <input type="checkbox" class="trauma-box fd" data-index="2">
-        <input type="checkbox" class="trauma-box fd" data-index="3">
-        <input type="checkbox" class="trauma-box fd" data-index="4">
-        <input type="checkbox" class="trauma-box fd" data-index="5">
-      </div>
-    </div>
-    <div class="pair-condition">
-      <label>Condition</label>
-      <input type="checkbox" id="cond-finesse-devise">
-    </div>
-  </div>
-
-  <!-- Pair Block: Exert + Adapt -->
-  <div class="pair-block" id="pair-exert-adapt">
-    <div class="pair-title">Exert + Adapt</div>
-    <div class="pair-stress">
-      <label>Stress</label>
-      <div class="stress-row">
-        <input type="checkbox" class="stress-box ea" data-index="0">
-        <input type="checkbox" class="stress-box ea" data-index="1">
-        <input type="checkbox" class="stress-box ea" data-index="2">
-        <input type="checkbox" class="stress-box ea" data-index="3">
-        <input type="checkbox" class="stress-box ea" data-index="4">
-        <input type="checkbox" class="stress-box ea" data-index="5">
-      </div>
-    </div>
-    <div class="pair-trauma">
-      <label>Trauma</label>
-      <div class="trauma-row">
-        <input type="checkbox" class="trauma-box ea" data-index="0">
-        <input type="checkbox" class="trauma-box ea" data-index="1">
-        <input type="checkbox" class="trauma-box ea" data-index="2">
-        <input type="checkbox" class="trauma-box ea" data-index="3">
-        <input type="checkbox" class="trauma-box ea" data-index="4">
-        <input type="checkbox" class="trauma-box ea" data-index="5">
-      </div>
-    </div>
-    <div class="pair-condition">
-      <label>Condition</label>
-      <input type="checkbox" id="cond-exert-adapt">
-    </div>
-  </div>
-
-  <!-- Pair Block: Sense + Resist -->
-  <div class="pair-block" id="pair-sense-resist">
-    <div class="pair-title">Sense + Resist</div>
-    <div class="pair-stress">
-      <label>Stress</label>
-      <div class="stress-row">
-        <input type="checkbox" class="stress-box sr" data-index="0">
-        <input type="checkbox" class="stress-box sr" data-index="1">
-        <input type="checkbox" class="stress-box sr" data-index="2">
-        <input type="checkbox" class="stress-box sr" data-index="3">
-        <input type="checkbox" class="stress-box sr" data-index="4">
-        <input type="checkbox" class="stress-box sr" data-index="5">
-      </div>
-    </div>
-    <div class="pair-trauma">
-      <label>Trauma</label>
-      <div class="trauma-row">
-        <input type="checkbox" class="trauma-box sr" data-index="0">
-        <input type="checkbox" class="trauma-box sr" data-index="1">
-        <input type="checkbox" class="trauma-box sr" data-index="2">
-        <input type="checkbox" class="trauma-box sr" data-index="3">
-        <input type="checkbox" class="trauma-box sr" data-index="4">
-        <input type="checkbox" class="trauma-box sr" data-index="5">
-      </div>
-    </div>
-    <div class="pair-condition">
-      <label>Condition</label>
-      <input type="checkbox" id="cond-sense-resist">
-    </div>
-  </div>
-
-  <!-- Pair Block: Deceive + Relate -->
-  <div class="pair-block" id="pair-deceive-relate">
-    <div class="pair-title">Deceive + Relate</div>
-    <div class="pair-stress">
-      <label>Stress</label>
-      <div class="stress-row">
-        <input type="checkbox" class="stress-box dr" data-index="0">
-        <input type="checkbox" class="stress-box dr" data-index="1">
-        <input type="checkbox" class="stress-box dr" data-index="2">
-        <input type="checkbox" class="stress-box dr" data-index="3">
-        <input type="checkbox" class="stress-box dr" data-index="4">
-        <input type="checkbox" class="stress-box dr" data-index="5">
-      </div>
-    </div>
-    <div class="pair-trauma">
-      <label>Trauma</label>
-      <div class="trauma-row">
-        <input type="checkbox" class="trauma-box dr" data-index="0">
-        <input type="checkbox" class="trauma-box dr" data-index="1">
-        <input type="checkbox" class="trauma-box dr" data-index="2">
-        <input type="checkbox" class="trauma-box dr" data-index="3">
-        <input type="checkbox" class="trauma-box dr" data-index="4">
-        <input type="checkbox" class="trauma-box dr" data-index="5">
-      </div>
-    </div>
-    <div class="pair-condition">
-      <label>Condition</label>
-      <input type="checkbox" id="cond-deceive-relate">
-    </div>
-  </div>
-
-  <!-- Global Conditions -->
-  <div class="global-conditions">
-    <input type="checkbox" id="cond-hungry" class="condition-checkbox">
-    <input type="checkbox" id="cond-thirsty" class="condition-checkbox">
-    <input type="checkbox" id="cond-exposed" class="condition-checkbox">
-    <input type="checkbox" id="cond-tired" class="condition-checkbox">
-  </div>
-
-</div>
-
-
 
       <div class="acc-section">
         <button class="acc-header">Features <span class="acc-caret">▼</span></button>
