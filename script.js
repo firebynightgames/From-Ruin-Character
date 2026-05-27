@@ -27,7 +27,7 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v11";
+const STORAGE_KEY = "fromRuinCharacter_v6";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
