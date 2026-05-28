@@ -27,7 +27,7 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v6";
+const STORAGE_KEY = "fromRuinCharacter_v7";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
@@ -48,7 +48,7 @@ function isPairEngineCheckbox(el) {
 /* ================================================
    SAVE — named + indexed hybrid
    ================================================ */
-function saveSheet() {
+async function saveSheet() {
   const root   = document.getElementById("character-sheet");
   const named  = {};
   const checks = {};
@@ -107,15 +107,26 @@ function saveSheet() {
     pairConditions: character.pairConditions
   };
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    named, checks, desc, features, drives, flaws, relics, wounds, pairState
-  }));
+  const data = { named, checks, desc, features, drives, flaws, relics, wounds, pairState };
+
+  try {
+    await OBR.player.setMetadata({ [STORAGE_KEY]: data });
+  } catch {
+    // OBR not available — fall back to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
 }
 
 /* ================================================
    LOAD — named + indexed hybrid
    ================================================ */
-function loadSheet() {
+async function loadSheet() {
+  try {
+    const meta = await OBR.player.getMetadata();
+    if (meta[STORAGE_KEY]) return meta[STORAGE_KEY];
+  } catch {
+    // OBR not available — fall back to localStorage
+  }
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
@@ -824,34 +835,30 @@ document.addEventListener("change", (e) => {
 /* ================================================
    INIT
    ================================================ */
-document.addEventListener("DOMContentLoaded", () => {
+OBR.onReady(async () => {
+  OBR.viewport.setHeight(1200);
 
-  // Clean up the old index-based save format — no console needed.
+  // Clean up old localStorage versions
   localStorage.removeItem("fromRuinCharacter_v1");
   localStorage.removeItem("fromRuinCharacter_v2");
   localStorage.removeItem("fromRuinCharacter_v3");
   localStorage.removeItem("fromRuinCharacter_v4");
   localStorage.removeItem("fromRuinCharacter_v5");
+  localStorage.removeItem("fromRuinCharacter_v6");
+  localStorage.removeItem("fromRuinCharacter_v6");
 
-  const saved = loadSheet();
+  const saved = await loadSheet();
   if (saved) {
     restoreSheet(saved);
   } else {
     updateAllPairs();
   }
 
-  // Autosave — delegate to document so dynamic rows are always covered
+  // Autosave — delegate to sheet so dynamic rows are always covered
   document.getElementById("character-sheet").addEventListener("input",  saveSheet);
   document.getElementById("character-sheet").addEventListener("change", saveSheet);
   document.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
     el.addEventListener("input", saveSheet);
     el.addEventListener("blur",  saveSheet);
   });
-});
-
-/* ================================================
-   OBR
-   ================================================ */
-OBR.onReady(() => {
-  OBR.viewport.setHeight(1200);
 });
