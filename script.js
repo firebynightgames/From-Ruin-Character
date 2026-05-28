@@ -27,7 +27,7 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v7";
+const STORAGE_KEY = "fromRuinCharacter_v12";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
@@ -844,6 +844,11 @@ OBR.onReady(async () => {
   localStorage.removeItem("fromRuinCharacter_v4");
   localStorage.removeItem("fromRuinCharacter_v5");
   localStorage.removeItem("fromRuinCharacter_v6");
+  localStorage.removeItem("fromRuinCharacter_v7");
+  localStorage.removeItem("fromRuinCharacter_v8");
+  localStorage.removeItem("fromRuinCharacter_v9");
+  localStorage.removeItem("fromRuinCharacter_v10");
+  localStorage.removeItem("fromRuinCharacter_v11");
   localStorage.removeItem("fromRuinCharacter_v6");
 
   const saved = await loadSheet();
