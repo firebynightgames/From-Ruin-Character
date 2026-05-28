@@ -836,7 +836,6 @@ document.addEventListener("change", (e) => {
    INIT
    ================================================ */
 OBR.onReady(async () => {
-  OBR.viewport.setHeight(1200);
 
   // Clean up old localStorage versions
   localStorage.removeItem("fromRuinCharacter_v1");
