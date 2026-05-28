@@ -111,8 +111,9 @@ async function saveSheet() {
 
   try {
     await OBR.player.setMetadata({ [STORAGE_KEY]: data });
-  } catch {
-    // OBR not available — fall back to localStorage
+    console.log("[FromRuin] Saved to OBR metadata OK");
+  } catch (err) {
+    console.warn("[FromRuin] OBR save failed, falling back to localStorage:", err);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 }
@@ -123,9 +124,15 @@ async function saveSheet() {
 async function loadSheet() {
   try {
     const meta = await OBR.player.getMetadata();
-    if (meta[STORAGE_KEY]) return meta[STORAGE_KEY];
-  } catch {
-    // OBR not available — fall back to localStorage
+    console.log("[FromRuin] OBR metadata:", meta);
+    if (meta[STORAGE_KEY]) {
+      console.log("[FromRuin] Loaded from OBR metadata OK");
+      return meta[STORAGE_KEY];
+    } else {
+      console.log("[FromRuin] No data found in OBR metadata");
+    }
+  } catch (err) {
+    console.warn("[FromRuin] OBR load failed, falling back to localStorage:", err);
   }
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
