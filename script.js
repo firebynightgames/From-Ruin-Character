@@ -27,7 +27,7 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v13";
+const STORAGE_KEY = "com.firebynightgames.from-ruin/character";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
@@ -111,8 +111,19 @@ async function saveSheet() {
 
   try {
     const playerKey = await getPlayerKey();
-    await OBR.room.setMetadata({ [playerKey]: data });
-    console.log("[FromRuin] Saved to OBR room metadata OK");
+    // Read existing metadata first, then merge — matches OBR extension pattern
+    const existing = await OBR.room.getMetadata();
+    const existingBlock = (existing[STORAGE_KEY] ?? {});
+    const merged = { ...existingBlock, [playerKey]: data };
+    await OBR.room.setMetadata({ [STORAGE_KEY]: merged });
+    // Verify
+    const verify = await OBR.room.getMetadata();
+    const verifyBlock = verify[STORAGE_KEY];
+    if (verifyBlock && verifyBlock[playerKey]) {
+      console.log("[FromRuin] Save verified in room metadata ✓");
+    } else {
+      console.warn("[FromRuin] Save appeared to succeed but read-back found nothing!");
+    }
   } catch (err) {
     console.warn("[FromRuin] OBR save failed, falling back to localStorage:", err);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -124,7 +135,8 @@ async function saveSheet() {
    ================================================ */
 async function getPlayerKey() {
   const id = await OBR.player.getId();
-  return `${STORAGE_KEY}/${id}`;
+  console.log("[FromRuin] Player ID:", id);
+  return `${STORAGE_KEY}.${id}`;
 }
 
 async function loadSheet() {
@@ -132,9 +144,10 @@ async function loadSheet() {
     const playerKey = await getPlayerKey();
     const meta = await OBR.room.getMetadata();
     console.log("[FromRuin] Room metadata keys:", Object.keys(meta));
-    if (meta[playerKey]) {
+    const block = meta[STORAGE_KEY];
+    if (block && block[playerKey]) {
       console.log("[FromRuin] Loaded from OBR room metadata OK");
-      return meta[playerKey];
+      return block[playerKey];
     } else {
       console.log("[FromRuin] No data found in OBR room metadata for this player");
     }
@@ -864,6 +877,7 @@ OBR.onReady(async () => {
   localStorage.removeItem("fromRuinCharacter_v10");
   localStorage.removeItem("fromRuinCharacter_v11");
   localStorage.removeItem("fromRuinCharacter_v12");
+  localStorage.removeItem("fromRuinCharacter_v13");
   localStorage.removeItem("fromRuinCharacter_v6");
 
   const saved = await loadSheet();
