@@ -27,7 +27,7 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "fromRuinCharacter_v12";
+const STORAGE_KEY = "fromRuinCharacter_v13";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
@@ -110,8 +110,9 @@ async function saveSheet() {
   const data = { named, checks, desc, features, drives, flaws, relics, wounds, pairState };
 
   try {
-    await OBR.player.setMetadata({ [STORAGE_KEY]: data });
-    console.log("[FromRuin] Saved to OBR metadata OK");
+    const playerKey = await getPlayerKey();
+    await OBR.room.setMetadata({ [playerKey]: data });
+    console.log("[FromRuin] Saved to OBR room metadata OK");
   } catch (err) {
     console.warn("[FromRuin] OBR save failed, falling back to localStorage:", err);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -121,15 +122,21 @@ async function saveSheet() {
 /* ================================================
    LOAD — named + indexed hybrid
    ================================================ */
+async function getPlayerKey() {
+  const id = await OBR.player.getId();
+  return `${STORAGE_KEY}/${id}`;
+}
+
 async function loadSheet() {
   try {
-    const meta = await OBR.player.getMetadata();
-    console.log("[FromRuin] OBR metadata:", meta);
-    if (meta[STORAGE_KEY]) {
-      console.log("[FromRuin] Loaded from OBR metadata OK");
-      return meta[STORAGE_KEY];
+    const playerKey = await getPlayerKey();
+    const meta = await OBR.room.getMetadata();
+    console.log("[FromRuin] Room metadata keys:", Object.keys(meta));
+    if (meta[playerKey]) {
+      console.log("[FromRuin] Loaded from OBR room metadata OK");
+      return meta[playerKey];
     } else {
-      console.log("[FromRuin] No data found in OBR metadata");
+      console.log("[FromRuin] No data found in OBR room metadata for this player");
     }
   } catch (err) {
     console.warn("[FromRuin] OBR load failed, falling back to localStorage:", err);
@@ -856,6 +863,7 @@ OBR.onReady(async () => {
   localStorage.removeItem("fromRuinCharacter_v9");
   localStorage.removeItem("fromRuinCharacter_v10");
   localStorage.removeItem("fromRuinCharacter_v11");
+  localStorage.removeItem("fromRuinCharacter_v12");
   localStorage.removeItem("fromRuinCharacter_v6");
 
   const saved = await loadSheet();
