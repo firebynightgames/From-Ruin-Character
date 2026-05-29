@@ -120,12 +120,9 @@ async function saveSheet() {
     const verify = await OBR.room.getMetadata();
     const verifyBlock = verify[STORAGE_KEY];
     if (verifyBlock && verifyBlock[playerKey]) {
-      console.log("[FromRuin] Save verified in room metadata ✓");
     } else {
-      console.warn("[FromRuin] Save appeared to succeed but read-back found nothing!");
     }
   } catch (err) {
-    console.warn("[FromRuin] OBR save failed, falling back to localStorage:", err);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 }
@@ -135,7 +132,6 @@ async function saveSheet() {
    ================================================ */
 async function getPlayerKey() {
   const id = await OBR.player.getId();
-  console.log("[FromRuin] Player ID:", id);
   return `${STORAGE_KEY}.${id}`;
 }
 
@@ -143,16 +139,12 @@ async function loadSheet() {
   try {
     const playerKey = await getPlayerKey();
     const meta = await OBR.room.getMetadata();
-    console.log("[FromRuin] Room metadata keys:", Object.keys(meta));
     const block = meta[STORAGE_KEY];
     if (block && block[playerKey]) {
-      console.log("[FromRuin] Loaded from OBR room metadata OK");
       return block[playerKey];
     } else {
-      console.log("[FromRuin] No data found in OBR room metadata for this player");
     }
   } catch (err) {
-    console.warn("[FromRuin] OBR load failed, falling back to localStorage:", err);
   }
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
