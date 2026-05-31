@@ -76,6 +76,16 @@
       <div class="acc-section">
         <button class="acc-header">Aptitudes <span class="acc-caret">▼</span></button>
        <div class="acc-body open sheet-panel">
+  <!-- Aptitude die icons — absolutely positioned over graphic -->
+  <button class="apt-die-icon left-apt  row-1" data-apt="finesse" title="Add Finesse dice">⬡</button>
+  <button class="apt-die-icon right-apt row-1" data-apt="devise"  title="Add Devise dice">⬡</button>
+  <button class="apt-die-icon left-apt  row-2" data-apt="exert"   title="Add Exert dice">⬡</button>
+  <button class="apt-die-icon right-apt row-2" data-apt="adapt"   title="Add Adapt dice">⬡</button>
+  <button class="apt-die-icon left-apt  row-3" data-apt="sense"   title="Add Sense dice">⬡</button>
+  <button class="apt-die-icon right-apt row-3" data-apt="resist"  title="Add Resist dice">⬡</button>
+  <button class="apt-die-icon left-apt  row-4" data-apt="deceive" title="Add Deceive dice">⬡</button>
+  <button class="apt-die-icon right-apt row-4" data-apt="relate"  title="Add Relate dice">⬡</button>
+
   <input type="number" id="apt-finesse" class="aptitude-field left-apt  row-1" name="attr_finesse"  placeholder="#">
   <span class="apt-current left-apt  row-1" id="cur-finesse"></span>
   <input type="number" id="apt-devise"  class="aptitude-field right-apt row-1" name="attr_devise"   placeholder="#">
@@ -341,6 +351,55 @@
     </div>
   </div>
 </div>
+
+  <!-- ================================================
+       DICE TRAY — Sticky pool builder at bottom
+       ================================================ -->
+  <div id="dice-tray" class="dice-tray dice-tray--collapsed" aria-label="Dice Pool Tray">
+
+    <!-- Collapsed handle — click to expand when pool has dice -->
+    <div id="dice-tray-handle" class="dice-tray__handle">
+      <span class="dice-tray__handle-label">DICE POOL</span>
+      <span id="dice-tray-count" class="dice-tray__handle-count"></span>
+      <span class="dice-tray__handle-caret">▲</span>
+    </div>
+
+    <!-- Expanded body -->
+    <div class="dice-tray__body">
+
+      <!-- Pool display — red aptitude chips + yellow gear chips -->
+      <div class="dice-tray__pool" id="dice-pool-display">
+        <!-- Populated dynamically by JS -->
+      </div>
+
+      <!-- Difficulty + modifiers row -->
+      <div class="dice-tray__modifiers">
+        <div class="dice-tray__difficulty">
+          <label class="dice-tray__mod-label" for="dice-difficulty">Difficulty</label>
+          <input type="number" id="dice-difficulty" class="dice-tray__mod-input"
+                 min="0" max="20" placeholder="0">
+        </div>
+        <div class="dice-tray__mod-spacer"></div>
+        <div class="dice-tray__pool-counts">
+          <span id="pool-apt-count"  class="pool-count pool-count--apt"></span>
+          <span id="pool-gear-count" class="pool-count pool-count--gear"></span>
+          <span id="pool-net-count"  class="pool-count pool-count--net"></span>
+        </div>
+      </div>
+
+      <!-- Roll result display -->
+      <div id="dice-tray-result" class="dice-tray__result" style="display:none;"></div>
+
+      <!-- Action buttons -->
+      <div class="dice-tray__actions">
+        <button id="dice-clear-btn" class="dice-tray__btn dice-tray__btn--clear">Clear</button>
+        <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled title="Available after rolling">Push</button>
+        <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">ROLL</button>
+      </div>
+
+    </div>
+  </div>
+
 
 </div>
 </body>
