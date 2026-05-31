@@ -887,3 +887,465 @@ OBR.onReady(async () => {
     el.addEventListener("blur",  saveSheet);
   });
 });
+
+/* ================================================
+   DICE TRAY ENGINE
+   - Aptitude dice: red D6s, max 2 aptitudes selected
+   - Gear dice: yellow D6s, per weapon/armor gear value
+   - Difficulty: removes dice (aptitude first, then gear)
+   - Push: placeholder (future — reroll all except 1s)
+   - Rolls via Dice+ broadcast API
+   ================================================ */
+
+const DICE_SOURCE_ID = "com.firebynightgames.from-ruin";
+
+/* -----------------------------------------------
+   State
+   ----------------------------------------------- */
+// Aptitude selections — ordered queue, max 2
+// Each entry: { apt: "finesse", count: 3 }
+const aptitudeQueue = [];
+
+// Gear selections — map of slotKey → count
+// slotKey e.g. "weapon-1", "armor-2"
+const gearSelections = {};
+
+// Last roll results for Push (future)
+let lastRollResults = null;
+
+/* -----------------------------------------------
+   Get aptitude current value (base minus trauma)
+   ----------------------------------------------- */
+function getAptitudeValue(apt) {
+  const base = parseInt(
+    document.querySelector(`input[name="attr_${apt}"]`)?.value
+  ) || 0;
+  // Use current displayed value if trauma has reduced it
+  const curEl = document.getElementById(`cur-${apt}`);
+  if (curEl && curEl.textContent !== "") {
+    return parseInt(curEl.textContent) || 0;
+  }
+  return base;
+}
+
+/* -----------------------------------------------
+   Toggle aptitude selection (max 2, bumps oldest)
+   ----------------------------------------------- */
+function toggleAptitude(apt) {
+  const existing = aptitudeQueue.findIndex(a => a.apt === apt);
+
+  if (existing !== -1) {
+    // Deselect
+    aptitudeQueue.splice(existing, 1);
+  } else {
+    // If already at 2, bump the oldest
+    if (aptitudeQueue.length >= 2) aptitudeQueue.shift();
+    aptitudeQueue.push({ apt, count: getAptitudeValue(apt) });
+  }
+
+  updateAptitudeIconStates();
+  renderDiceTray();
+  hideDiceResult();
+}
+
+/* -----------------------------------------------
+   Toggle gear selection
+   ----------------------------------------------- */
+function toggleGear(slotKey, count) {
+  if (gearSelections[slotKey]) {
+    delete gearSelections[slotKey];
+  } else {
+    if (count > 0) gearSelections[slotKey] = count;
+  }
+  updateGearIconStates();
+  renderDiceTray();
+  hideDiceResult();
+}
+
+/* -----------------------------------------------
+   Sync aptitude icon selected states
+   ----------------------------------------------- */
+function updateAptitudeIconStates() {
+  const selectedApts = aptitudeQueue.map(a => a.apt);
+  document.querySelectorAll(".apt-die-icon").forEach(btn => {
+    const apt = btn.dataset.apt;
+    btn.classList.toggle("apt-die-icon--selected", selectedApts.includes(apt));
+  });
+}
+
+/* -----------------------------------------------
+   Sync gear icon selected states
+   ----------------------------------------------- */
+function updateGearIconStates() {
+  document.querySelectorAll(".gear-die-icon").forEach(btn => {
+    const key = btn.dataset.slotKey;
+    btn.classList.toggle("gear-die-icon--selected", !!gearSelections[key]);
+  });
+}
+
+/* -----------------------------------------------
+   Raw pool counts (before difficulty)
+   ----------------------------------------------- */
+function rawAptCount() {
+  return aptitudeQueue.reduce((sum, a) => sum + a.count, 0);
+}
+
+function rawGearCount() {
+  return Object.values(gearSelections).reduce((sum, n) => sum + n, 0);
+}
+
+/* -----------------------------------------------
+   Difficulty-adjusted pool
+   Returns { aptDice, gearDice, removed }
+   ----------------------------------------------- */
+function adjustedPool() {
+  const diff = Math.max(0, parseInt(
+    document.getElementById("dice-difficulty")?.value
+  ) || 0);
+
+  let aptDice  = rawAptCount();
+  let gearDice = rawGearCount();
+  let removed  = 0;
+
+  // Remove aptitude dice first
+  const aptRemove  = Math.min(diff, aptDice);
+  aptDice  -= aptRemove;
+  removed  += aptRemove;
+
+  // Then gear dice
+  const gearRemove = Math.min(diff - aptRemove, gearDice);
+  gearDice -= gearRemove;
+  removed  += gearRemove;
+
+  return { aptDice, gearDice, removed, total: aptDice + gearDice };
+}
+
+/* -----------------------------------------------
+   Render the tray
+   ----------------------------------------------- */
+function renderDiceTray() {
+  const tray        = document.getElementById("dice-tray");
+  const display     = document.getElementById("dice-pool-display");
+  const handleCount = document.getElementById("dice-tray-count");
+  const rollBtn     = document.getElementById("dice-roll-btn");
+  const clearBtn    = document.getElementById("dice-clear-btn");
+
+  const rawApt  = rawAptCount();
+  const rawGear = rawGearCount();
+  const total   = rawApt + rawGear;
+  const { aptDice, gearDice, total: netTotal } = adjustedPool();
+
+  // Handle badge
+  handleCount.textContent = total > 0 ? `${netTotal}d6` : "";
+
+  // Auto-expand / collapse
+  if (total > 0) {
+    tray.classList.remove("dice-tray--collapsed");
+  } else {
+    tray.classList.add("dice-tray--collapsed");
+  }
+
+  rollBtn.disabled  = netTotal === 0;
+  clearBtn.disabled = total === 0;
+
+  // Pool chips
+  display.innerHTML = "";
+
+  // Aptitude chips — one per selected aptitude
+  aptitudeQueue.forEach(({ apt, count }) => {
+    const effective = Math.max(0, count - Math.max(0,
+      rawAptCount() - aptDice > 0
+        ? Math.min(count, rawAptCount() - aptDice)
+        : 0
+    ));
+    const chip = document.createElement("div");
+    chip.className = `pool-chip pool-chip--apt${effective === 0 ? " pool-chip--removed" : ""}`;
+    chip.textContent = `${count}× D6 (${apt})`;
+    display.appendChild(chip);
+  });
+
+  // Gear chips — one per selected gear slot
+  Object.entries(gearSelections).forEach(([key, count]) => {
+    const chip = document.createElement("div");
+    chip.className = "pool-chip pool-chip--gear";
+    chip.textContent = `${count}× D6 (${key})`;
+    display.appendChild(chip);
+  });
+
+  // Count badges
+  const aptCountEl  = document.getElementById("pool-apt-count");
+  const gearCountEl = document.getElementById("pool-gear-count");
+  const netCountEl  = document.getElementById("pool-net-count");
+
+  if (aptCountEl) {
+    aptCountEl.textContent = `${aptDice} apt`;
+    aptCountEl.classList.toggle("visible", rawApt > 0);
+  }
+  if (gearCountEl) {
+    gearCountEl.textContent = `${gearDice} gear`;
+    gearCountEl.classList.toggle("visible", rawGear > 0);
+  }
+  if (netCountEl) {
+    const diff = Math.max(0, parseInt(
+      document.getElementById("dice-difficulty")?.value
+    ) || 0);
+    netCountEl.textContent = `= ${netTotal}d6`;
+    netCountEl.classList.toggle("visible", total > 0);
+    netCountEl.style.color = diff > 0 && netTotal < (rawApt + rawGear)
+      ? "#e74c3c" : "#eee";
+  }
+}
+
+/* -----------------------------------------------
+   Clear everything
+   ----------------------------------------------- */
+function clearDiceTray() {
+  aptitudeQueue.length = 0;
+  Object.keys(gearSelections).forEach(k => delete gearSelections[k]);
+  const diffInput = document.getElementById("dice-difficulty");
+  if (diffInput) diffInput.value = "";
+  lastRollResults = null;
+  updateAptitudeIconStates();
+  updateGearIconStates();
+  renderDiceTray();
+  hideDiceResult();
+  document.getElementById("dice-push-btn").disabled = true;
+}
+
+/* -----------------------------------------------
+   Result display
+   ----------------------------------------------- */
+function showDiceResult(text) {
+  const el = document.getElementById("dice-tray-result");
+  if (el) { el.textContent = text; el.style.display = "block"; }
+}
+
+function hideDiceResult() {
+  const el = document.getElementById("dice-tray-result");
+  if (el) el.style.display = "none";
+}
+
+/* -----------------------------------------------
+   Dice+ ready check
+   ----------------------------------------------- */
+async function checkDicePlusReady() {
+  const requestId = crypto.randomUUID();
+  return new Promise((resolve) => {
+    const unsub = OBR.broadcast.onMessage("dice-plus/isReady", (event) => {
+      const data = event.data;
+      if ("ready" in data && data.requestId === requestId) {
+        unsub();
+        resolve(true);
+      }
+    });
+    OBR.broadcast.sendMessage(
+      "dice-plus/isReady",
+      { requestId, timestamp: Date.now() },
+      { destination: "ALL" }
+    );
+    setTimeout(() => { unsub(); resolve(false); }, 1500);
+  });
+}
+
+/* -----------------------------------------------
+   Build dice notation from adjusted pool
+   ----------------------------------------------- */
+function buildNotation() {
+  const { aptDice, gearDice } = adjustedPool();
+  const parts = [];
+  if (aptDice  > 0) parts.push(`${aptDice}d6`);
+  if (gearDice > 0) parts.push(`${gearDice}d6`);
+  // Combine — Dice+ will treat as one pool
+  const total = aptDice + gearDice;
+  return total > 0 ? `${total}d6` : "";
+}
+
+/* -----------------------------------------------
+   Roll
+   ----------------------------------------------- */
+async function triggerRoll() {
+  const notation = buildNotation();
+  if (!notation) return;
+
+  const rollBtn = document.getElementById("dice-roll-btn");
+  rollBtn.disabled  = true;
+  rollBtn.textContent = "Checking…";
+
+  const isReady = await checkDicePlusReady();
+  if (!isReady) {
+    rollBtn.disabled = false;
+    rollBtn.textContent = "ROLL";
+    showDiceResult("⚠ Dice+ not found. Install it from the OBR store.");
+    return;
+  }
+
+  const rollId = `roll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  rollBtn.textContent = "Rolling…";
+
+  const resultUnsub = OBR.broadcast.onMessage(
+    `${DICE_SOURCE_ID}/roll-result`,
+    (event) => {
+      const data = event.data;
+      if (data.rollId !== rollId) return;
+      resultUnsub();
+      errorUnsub();
+
+      lastRollResults = data.result;
+      const summary = data.result?.rollSummary ?? `Total: ${data.result?.totalValue}`;
+      showDiceResult(`🎲 ${summary}`);
+      rollBtn.textContent = "ROLL";
+
+      // Enable Push for future use
+      // document.getElementById("dice-push-btn").disabled = false;
+
+      clearDiceTray();
+    }
+  );
+
+  const errorUnsub = OBR.broadcast.onMessage(
+    `${DICE_SOURCE_ID}/roll-error`,
+    (event) => {
+      const data = event.data;
+      if (data.rollId !== rollId) return;
+      resultUnsub();
+      errorUnsub();
+      showDiceResult(`⚠ Roll error: ${data.error}`);
+      rollBtn.disabled = false;
+      rollBtn.textContent = "ROLL";
+    }
+  );
+
+  try {
+    const playerId   = await OBR.player.getId();
+    const playerName = await OBR.player.getName();
+    await OBR.broadcast.sendMessage(
+      "dice-plus/roll-request",
+      {
+        rollId,
+        playerId,
+        playerName,
+        rollTarget:   "everyone",
+        diceNotation: notation,
+        showResults:  true,
+        timestamp:    Date.now(),
+        source:       DICE_SOURCE_ID
+      },
+      { destination: "ALL" }
+    );
+  } catch (err) {
+    resultUnsub();
+    errorUnsub();
+    showDiceResult(`⚠ Broadcast error: ${err.message}`);
+    rollBtn.disabled = false;
+    rollBtn.textContent = "ROLL";
+  }
+
+  // Safety timeout
+  setTimeout(() => {
+    try { resultUnsub(); } catch {}
+    try { errorUnsub();  } catch {}
+    if (rollBtn.textContent === "Rolling…") {
+      rollBtn.disabled = false;
+      rollBtn.textContent = "ROLL";
+    }
+  }, 15000);
+}
+
+/* -----------------------------------------------
+   Push — placeholder for future implementation
+   Reroll all dice except 1s
+   ----------------------------------------------- */
+function triggerPush() {
+  // TODO: implement push roll using lastRollResults
+  showDiceResult("⚠ Push coming soon.");
+}
+
+/* -----------------------------------------------
+   Wire up aptitude die icons
+   ----------------------------------------------- */
+document.querySelectorAll(".apt-die-icon").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation(); // don't bubble to sheet autosave
+    toggleAptitude(btn.dataset.apt);
+  });
+});
+
+/* -----------------------------------------------
+   Wire up tray controls
+   ----------------------------------------------- */
+document.getElementById("dice-roll-btn")
+  .addEventListener("click", triggerRoll);
+
+document.getElementById("dice-clear-btn")
+  .addEventListener("click", clearDiceTray);
+
+document.getElementById("dice-push-btn")
+  .addEventListener("click", triggerPush);
+
+document.getElementById("dice-difficulty")
+  .addEventListener("input", () => renderDiceTray());
+
+document.getElementById("dice-tray-handle")
+  .addEventListener("click", () => {
+    const tray = document.getElementById("dice-tray");
+    if (rawAptCount() + rawGearCount() > 0) {
+      tray.classList.toggle("dice-tray--collapsed");
+    }
+  });
+
+/* -----------------------------------------------
+   Inject gear die icons into weapon blocks
+   Called after weapon/armor HTML is generated
+   ----------------------------------------------- */
+function injectGearDieIcons() {
+  // Weapons
+  document.querySelectorAll(".weapon-block").forEach((block, i) => {
+    const slotKey  = `weapon-${i + 1}`;
+    const gearInput = block.querySelector(`input[name="attr_weapon_gear_a_${i + 1}"]`);
+    const nameCell  = block.querySelector(".col-name");
+    if (!nameCell || block.querySelector(".gear-die-icon")) return;
+
+    const btn = document.createElement("button");
+    btn.className   = "gear-die-icon";
+    btn.dataset.slotKey = slotKey;
+    btn.title       = "Add gear dice";
+    btn.textContent = "⬡";
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const count = parseInt(gearInput?.value) || 0;
+      toggleGear(slotKey, count);
+    });
+
+    nameCell.style.position = "relative";
+    nameCell.appendChild(btn);
+  });
+
+  // Armor
+  document.querySelectorAll(".armor-block").forEach((block, i) => {
+    const slotKey   = `armor-${i + 1}`;
+    const gearInput = block.querySelector(`input[name="attr_armor_gear_a_${i + 1}"]`);
+    const nameCell  = block.querySelector(".col-armor-name");
+    if (!nameCell || block.querySelector(".gear-die-icon")) return;
+
+    const btn = document.createElement("button");
+    btn.className   = "gear-die-icon";
+    btn.dataset.slotKey = slotKey;
+    btn.title       = "Add gear dice";
+    btn.textContent = "⬡";
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const count = parseInt(gearInput?.value) || 0;
+      toggleGear(slotKey, count);
+    });
+
+    nameCell.style.position = "relative";
+    nameCell.appendChild(btn);
+  });
+}
+
+// Run after weapon/armor generators have fired
+// (they run synchronously above so this is safe)
+injectGearDieIcons();
+
+// Initial render
+renderDiceTray();
