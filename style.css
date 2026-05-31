@@ -1285,3 +1285,319 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   box-sizing: border-box;
   margin-bottom: 0;
 }
+/* ================================================
+   APTITUDE DIE ICONS
+   Absolutely positioned inside .sheet-panel,
+   matching the same coordinate system as everything else.
+   ================================================ */
+.apt-die-icon {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: #555;
+  transition: color 0.15s, transform 0.1s;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apt-die-icon:hover {
+  color: #e74c3c;
+  transform: scale(1.2);
+}
+
+/* Selected state — red glow */
+.apt-die-icon.apt-die-icon--selected {
+  color: #e74c3c;
+  filter: drop-shadow(0 0 3px rgba(231,76,60,0.8));
+}
+
+/* Position die icons in upper-left of each aptitude field */
+/* Left aptitudes sit at left: 9.6%, icon offset slightly left+up */
+.apt-die-icon.left-apt  { left: 8%;   }
+.apt-die-icon.right-apt { left: 74.5%; }
+
+.apt-die-icon.row-1 { top: 9%;    }
+.apt-die-icon.row-2 { top: 31.5%; }
+.apt-die-icon.row-3 { top: 54%;   }
+.apt-die-icon.row-4 { top: 76.5%; }
+
+/* ================================================
+   DICE TRAY
+   ================================================ */
+
+.dice-tray {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 200;
+  box-sizing: border-box;
+  font-family: "Century Gothic", sans-serif;
+  background: #111;
+  border-top: 2px solid #333;
+  overflow: hidden;
+}
+
+.dice-tray--collapsed .dice-tray__body {
+  display: none;
+}
+
+.dice-tray--collapsed .dice-tray__handle-caret {
+  transform: rotate(180deg);
+}
+
+/* Handle */
+.dice-tray__handle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: #1a1a1a;
+}
+
+.dice-tray__handle:hover { background: #222; }
+
+.dice-tray__handle-label {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  color: #888;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.dice-tray__handle-count {
+  font-size: 11px;
+  font-weight: bold;
+  color: #e74c3c;
+  min-width: 20px;
+}
+
+.dice-tray__handle-caret {
+  font-size: 9px;
+  color: #555;
+  transition: transform 0.2s ease;
+}
+
+/* Body */
+.dice-tray__body {
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Pool display */
+.dice-tray__pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 28px;
+  align-items: center;
+}
+
+.dice-tray__pool:empty::before {
+  content: "Click aptitude or gear icons to build a pool";
+  font-size: 10px;
+  color: #444;
+  font-style: italic;
+}
+
+/* Pool chip — base */
+.pool-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* Red = aptitude dice */
+.pool-chip--apt {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+}
+
+/* Yellow = gear dice */
+.pool-chip--gear {
+  background: rgba(241, 196, 15, 0.12);
+  border: 1px solid #f1c40f;
+  color: #f1c40f;
+}
+
+/* Greyed out = removed by difficulty */
+.pool-chip--removed {
+  opacity: 0.3;
+  text-decoration: line-through;
+}
+
+/* Modifiers row */
+.dice-tray__modifiers {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dice-tray__difficulty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dice-tray__mod-label {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.dice-tray__mod-input {
+  width: 40px;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: "Century Gothic", sans-serif;
+  text-align: center;
+  padding: 3px 4px;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.dice-tray__mod-input::-webkit-outer-spin-button,
+.dice-tray__mod-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.dice-tray__mod-input:focus { border-color: #666; }
+
+.dice-tray__mod-spacer { flex: 1; }
+
+/* Pool count badges */
+.dice-tray__pool-counts {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pool-count {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: none;
+}
+
+.pool-count--apt  { color: #e74c3c; border: 1px solid #e74c3c; background: rgba(231,76,60,0.1); }
+.pool-count--gear { color: #f1c40f; border: 1px solid #f1c40f; background: rgba(241,196,15,0.1); }
+.pool-count--net  { color: #eee;    border: 1px solid #555;    background: #1a1a1a; }
+
+.pool-count.visible { display: inline-block; }
+
+/* Result */
+.dice-tray__result {
+  padding: 5px 10px;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #2ecc71;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Actions */
+.dice-tray__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.dice-tray__btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: "Century Gothic", sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.dice-tray__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dice-tray__btn--clear {
+  background: #1e1e1e;
+  color: #777;
+  border: 1px solid #333;
+  flex: 0 0 auto;
+}
+
+.dice-tray__btn--clear:hover:not(:disabled) {
+  background: #2a2a2a;
+  color: #aaa;
+}
+
+.dice-tray__btn--push {
+  background: #1e1e1e;
+  color: #e67e22;
+  border: 1px solid #e67e22;
+  flex: 0 0 auto;
+}
+
+.dice-tray__btn--push:hover:not(:disabled) {
+  background: rgba(230,126,34,0.15);
+}
+
+.dice-tray__btn--roll {
+  background: #e74c3c;
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.dice-tray__btn--roll:hover:not(:disabled) { background: #c0392b; }
+.dice-tray__btn--roll:active:not(:disabled) { background: #a93226; }
+
+/* Gear die icon — injected by JS into weapon/armor rows */
+.gear-die-icon {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1;
+  z-index: 5;
+  transition: color 0.15s, transform 0.1s;
+}
+
+.gear-die-icon:hover { color: #f1c40f; transform: translateY(-50%) scale(1.2); }
+
+.gear-die-icon--selected {
+  color: #f1c40f;
+  filter: drop-shadow(0 0 3px rgba(241,196,15,0.8));
+}
