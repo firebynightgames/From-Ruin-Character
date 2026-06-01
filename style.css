@@ -14,7 +14,7 @@ html, body {
   height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
-  padding-bottom: 80px;
+  padding-bottom: 220px;
   box-sizing: border-box;
 }
 
@@ -676,23 +676,14 @@ input.single-digit {
   width: 100%;
 }
 
-.weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;   width: 40%; }
+.weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;    width: 37%; }
 .weapons-headers .hdr-name                            { text-align: left !important; padding-left: 6px; }
-.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 43.75%; width: 14%; }
-.weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 58%;  width: 9%; }
-.weapon-row .col-size, .weapons-headers .hdr-size     { left: 69.2%;  width: 9%; }
-.weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%;  width: 9%; }
-.weapon-row .col-bulk, .weapons-headers .hdr-bulk     { left: 88.5%;  width: 8.5%; }
-
-/* col-gear holds die icon + gear-double-input side by side */
-.weapon-row .col-gear,
-.armor-row .col-armor-gear {
-  display: flex !important;
-  flex-direction: row;
-  align-items: center;
-  gap: 2px;
-  overflow: visible;
-}
+.weapon-row .col-die                                  { left: 40%;   width: 4%;  }
+.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 44%;   width: 14%; }
+.weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 59%;   width: 9%; }
+.weapon-row .col-size, .weapons-headers .hdr-size     { left: 69%;   width: 9%; }
+.weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%; width: 9%; }
+.weapon-row .col-bulk, .weapons-headers .hdr-bulk     { left: 88.5%; width: 8.5%; }
 
 /* ================================================
    WOUNDS ACCORDION
@@ -873,10 +864,11 @@ input.single-digit {
   white-space: nowrap;        
 }
 
-.col-armor-name, .hdr-armor-name         { left: 2%;    width: 48%; }
-.col-armor-gear, .hdr-armor-gear         { left: 43.75%; width: 14%; }
-.col-armor-features, .hdr-armor-features { left: 59%;    width: 28%; }
-.col-armor-bulk, .hdr-armor-bulk         { left: 88%;    width: 10%; }
+.col-armor-name, .hdr-armor-name         { left: 2%;    width: 37%; }
+.armor-row .col-die                      { left: 40%;   width: 4%;  }
+.col-armor-gear, .hdr-armor-gear         { left: 44%;   width: 14%; }
+.col-armor-features, .hdr-armor-features { left: 59%;   width: 28%; }
+.col-armor-bulk, .hdr-armor-bulk         { left: 88%;   width: 10%; }
 
 .hdr-armor-name { text-align: left !important; padding-left: 6px; }
 .col-armor-name input { text-align: left !important; padding-left: 6px; }
@@ -1298,11 +1290,11 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 .apt-die-icon.row-4 { top: 78.5%; }
 
 /* ================================================
-   DICE TRAY
+   DICE TRAY — Fixed at viewport bottom
    ================================================ */
 
 .dice-tray {
-  position: sticky;
+  position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -1311,11 +1303,6 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   font-family: "Century Gothic", sans-serif;
   background: #111;
   border-top: 2px solid #333;
-  overflow: hidden;
-}
-
-.dice-tray--collapsed .dice-tray__body {
-  display: none;
 }
 
 .dice-tray--collapsed .dice-tray__handle-caret {
@@ -1364,7 +1351,6 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   flex-direction: column;
   gap: 7px;
 }
-
 /* Pool display */
 .dice-tray__pool {
   display: flex;
@@ -1455,26 +1441,61 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 
 .dice-tray__mod-spacer { flex: 1; }
 
-/* Pool count badges */
-.dice-tray__pool-counts {
+/* Threshold selector */
+.dice-tray__threshold {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 6px;
 }
 
-.pool-count {
+.threshold-btns {
+  display: flex;
+  gap: 3px;
+}
+
+.threshold-btn {
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #666;
   font-size: 10px;
   font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 3px;
-  display: none;
+  font-family: "Century Gothic", sans-serif;
+  letter-spacing: 0.5px;
+  padding: 3px 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.pool-count--apt  { color: #e74c3c; border: 1px solid #e74c3c; background: rgba(231,76,60,0.1); }
-.pool-count--gear { color: #f1c40f; border: 1px solid #f1c40f; background: rgba(241,196,15,0.1); }
-.pool-count--net  { color: #eee;    border: 1px solid #555;    background: #1a1a1a; }
+.threshold-btn:hover { background: #252525; color: #aaa; border-color: #666; }
 
-.pool-count.visible { display: inline-block; }
+.threshold-btn--active {
+  background: rgba(46, 204, 113, 0.15);
+  border-color: #2ecc71;
+  color: #2ecc71;
+}
+
+/* Success banner */
+.dice-tray__success-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: rgba(46, 204, 113, 0.08);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #2ecc71;
+  letter-spacing: 0.5px;
+}
+
+.success-banner__zero {
+  color: #e74c3c;
+  border-color: rgba(231, 76, 60, 0.3);
+  background: rgba(231, 76, 60, 0.08);
+}
 
 /* Result */
 .dice-tray__result {
@@ -1566,17 +1587,23 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   flex-shrink: 0;
 }
 
-/* Weapon/armor — inline inside col-gear, sits left of the inputs */
-.gear-die-icon--inline {
-  display: inline-flex;
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-  margin-right: 3px;
-  vertical-align: middle;
+/* col-die — icon column between name and gear on weapon/armor rows */
+.col-die {
+  position: absolute;
+  bottom: 16px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.gear-die-icon--inline:hover { transform: scale(1.15); }
+/* Row die icon — sits in col-die, vertically centered */
+.gear-die-icon--row {
+  width: 14px;
+  height: 14px;
+}
+
+.gear-die-icon--row:hover { transform: scale(1.2); }
 
 /* General gear — absolutely positioned to the left of the gear-val cell */
 .gear-die-icon--general {
@@ -1750,6 +1777,20 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   color: #e74c3c !important;
 }
 
+/* Successes — bright green glow */
+.result-pip--success {
+  border-color: #2ecc71 !important;
+  color: #2ecc71 !important;
+  background: rgba(46, 204, 113, 0.12) !important;
+}
+
+/* 1 always overrides success styling */
+.result-pip--one.result-pip--success {
+  border-color: #e74c3c !important;
+  color: #e74c3c !important;
+  background: rgba(231, 76, 60, 0.25) !important;
+}
+
 /* ================================================
    GEAR VALUE COLUMN (general gear table)
    ================================================ */
@@ -1761,9 +1802,8 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 .hdr-gear-bulk { text-align: center !important; }
 
 /* ================================================
-   DICE TRAY — CLOSE BUTTON & INIT HIDDEN
+   DICE TRAY — CLOSE BUTTON
    ================================================ */
-#dice-tray { display: none; }
 
 .dice-tray__close {
   background: transparent;
