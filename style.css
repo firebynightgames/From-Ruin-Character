@@ -1,11 +1,48 @@
 /* ================================================
-   GLOBAL
+   ROOT & GLOBAL
    ================================================ */
-html, body {
+:root {
+  --font-main: "Century Gothic", AppleGothic, sans-serif;
+  --c-bg: #ffffff;
+  --c-dark-0: #000;
+  --c-dark-1: #111;
+  --c-dark-2: #222;
+  --c-dark-3: #333;
+  --c-dark-4: #444;
+  --c-dark-5: #555;
+  --c-dark-6: #666;
+  --c-dark-9: #999;
+  --c-accent-red: #e74c3c;
+  --c-accent-red-deep: #c0392b;
+  --c-accent-red-darker: #a93226;
+  --c-accent-green: #2ecc71;
+  --c-accent-yellow: #f1c40f;
+  --c-soft-border: #ccc;
+  --c-soft-border-2: #e0e0e0;
+
+  --fs-9: 9px;
+  --fs-10: 10px;
+  --fs-11: 11px;
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-20: 20px;
+
+  --pad-xs: 2px;
+  --pad-sm: 4px;
+  --pad-md: 6px;
+  --pad-lg: 8px;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
   overflow: hidden;
+  font-family: var(--font-main);
 }
 
 #character-sheet {
@@ -20,18 +57,30 @@ html, body {
 
 #character-sheet,
 #character-sheet * {
-  font-family: "Century Gothic", sans-serif;
+  font-family: var(--font-main);
 }
 
 /* ================================================
-   HEADER AREA & PERFECT LOGO CROP
+   HEADER AREA & LOGO
    ================================================ */
+.sheet-combined-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--c-bg);
+  box-shadow: 0 6px 8px -6px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
 .sheet-header-area {
   display: flex !important;
   justify-content: space-between !important;
-  align-items: center !important; 
+  align-items: center !important;
   width: 420px !important;
-  height: 65px !important; /* Set back to 65px to perfectly match the tracker box height */
+  height: 65px !important;
   position: relative !important;
   background: transparent !important;
   box-sizing: border-box;
@@ -39,37 +88,35 @@ html, body {
   overflow: visible !important;
 }
 
-/* Left Side: Container acting as the exact window for your logo */
 .header-logo-container {
-  width: 225px; 
-  height: 85px; /* Slices the window vertically to hide the rest of the file */
+  width: 225px;
+  height: 85px;
   overflow: hidden;
 }
 
 .header-logo-container .sheet-logo-img {
-  width: 420px; /* Scales the original image back to its native sheet width */
+  width: 420px;
   height: auto;
-  object-fit: fill; 
-  object-position: left top; /* Locks the alignment to the far top left corner */
+  object-fit: fill;
+  object-position: left top;
 }
 
-/* Right Side: Tracker Box matching the height beautifully */
+/* Counter box */
 .header-counter-box {
   display: flex;
   flex-direction: column;
-  width: 140px; 
-  height: 65px; 
-  border: 2px solid #000;
+  width: 140px;
+  height: 65px;
+  border: 2px solid var(--c-dark-0);
   background: #fff;
   box-sizing: border-box;
 }
 
-/* Black Box Header (Accordion Style) */
 .counter-header-title {
-  background-color: #000;
+  background-color: var(--c-dark-0);
   color: #fff;
   text-transform: uppercase;
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: bold;
   letter-spacing: 1px;
   text-align: center;
@@ -77,7 +124,6 @@ html, body {
   line-height: 1;
 }
 
-/* Content Area inside the border */
 .counter-body {
   display: flex;
   align-items: center;
@@ -90,8 +136,7 @@ html, body {
   border: none;
   background: transparent;
   text-align: center;
-  font-size: 16px;
-  font-family: "Century Gothic", sans-serif;
+  font-size: var(--fs-16);
   font-weight: bold;
 }
 
@@ -100,29 +145,10 @@ html, body {
 }
 
 .box-slash {
-  font-size: 16px;
+  font-size: var(--fs-16);
   font-weight: bold;
   margin: 0 4px;
-  color: #000;
-}
-
-
-
-
-/* ================================================
-   HEADER, TABS & ACCORDION FLUSH STACKING
-   ================================================ */
-.sheet-combined-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: #ffffff;
-  box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  margin-bottom: 0;
+  color: var(--c-dark-0);
 }
 
 /* ================================================
@@ -130,16 +156,39 @@ html, body {
    ================================================ */
 .tab-menu {
   display: flex;
-  background: #222;
+  background: var(--c-dark-2);
   width: 100%;
   margin-top: 5px;
   margin-bottom: 0 !important;
   box-sizing: border-box;
 }
 
+.tab-btn {
+  flex: 1;
+  background: #fff;
+  color: var(--c-dark-0);
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tab-btn:hover {
+  background: #444;
+  color: #fff;
+}
+
+.tab-btn.active {
+  background: var(--c-dark-2);
+  color: #fff;
+  font-weight: bold;
+}
+
 #accordion,
 #accordion-gear,
-#accordion-spells {
+#accordion-spells,
+#accordion-story {
   width: 100%;
   margin-top: 0 !important;
   box-sizing: border-box;
@@ -151,26 +200,9 @@ html, body {
   padding-top: 0 !important;
 }
 
-/* First accordion header sits flush under the tabs */
-.tab-content.active-tab .acc-section:first-child .acc-header {
-  margin-top: 0 !important;
-  border-top: none;
+.tab-content.active-tab {
+  display: block;
 }
-
-.tab-btn {
-  flex: 1;
-  background: #fff;
-  color: #000;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
-}
-
-.tab-btn:hover       { background: #444; color: #fff; }
-.tab-btn.active      { background: #222; color: #fff; font-weight: bold; }
-.tab-content.active-tab { display: block; }
 
 /* ================================================
    EDGE TRACK
@@ -178,18 +210,18 @@ html, body {
 .edge-track {
   display: flex;
   align-items: center;
-  gap: 6px;                  
-  padding: 6px 8px;          
+  gap: 6px;
+  padding: 6px 8px;
   background: #fff;
   box-sizing: border-box;
 }
 
 .edge-label {
-  color: #000;
-  font-size: 18px;
+  color: var(--c-dark-0);
+  font-size: var(--fs-18);
   font-weight: bold;
   text-transform: uppercase;
-  margin-right: 6px;         
+  margin-right: 6px;
   white-space: nowrap;
 }
 
@@ -197,18 +229,18 @@ html, body {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  width: 22px !important;     
-  height: 22px !important;    
+  width: 22px !important;
+  height: 22px !important;
   display: inline-block;
-  position: relative !important; 
+  position: relative !important;
   background-color: transparent !important;
-  border: 1px solid #333333 !important; 
+  border: 1px solid #333 !important;
   cursor: pointer;
   transition: all 0.15s ease;
   margin: 0;
   box-sizing: border-box;
   flex-shrink: 0;
-  border-radius: 2px;         
+  border-radius: 2px;
 }
 
 .edge-box:not(:checked):hover {
@@ -217,30 +249,25 @@ html, body {
 }
 
 .edge-box:checked {
-  background-color: #2ecc71 !important; 
+  background-color: #2ecc71 !important;
   border-color: #6cc6a0 !important;
 }
 
 .edge-box:checked:hover {
-  background-color: #27ae60 !important; 
+  background-color: #27ae60 !important;
   border-color: #1e8449 !important;
 }
 
 /* ================================================
    ACCORDION
    ================================================ */
-#accordion, #accordion-gear {
-  width: 100%;
-  box-sizing: border-box;
-}
-
 .acc-header {
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   width: 100%;
   padding: 6px 10px;
-  background: #222;
+  background: var(--c-dark-2);
   color: #fff;
   border: 1px solid #444;
   cursor: pointer;
@@ -250,7 +277,9 @@ html, body {
   box-sizing: border-box;
 }
 
-.acc-header:hover { background: #444; }
+.acc-header:hover {
+  background: #444;
+}
 
 .acc-caret {
   font-size: 9px;
@@ -266,23 +295,66 @@ html, body {
   display: none;
   padding: 8px;
   background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ccc;
+  border: 1px solid var(--c-soft-border);
   border-top: none;
   font-size: 11px;
   color: #333;
   box-sizing: border-box;
+  padding-bottom: 1px !important;
 }
 
-.acc-body.open { display: block; }
+.acc-body.open {
+  display: block;
+}
 
 .acc-body.weapons-body,
 .acc-body.armor-body {
-  padding-top: 0;
-  padding-bottom: 0;
+  padding: 10px !important;
+}
+
+/* First accordion header flush under tabs */
+.tab-content.active-tab .acc-section:first-child .acc-header {
+  margin-top: 0 !important;
+  border-top: none;
 }
 
 /* ================================================
-   APTITUDES PANEL (RESERVED GRAPHIC & POSITIONING)
+   DESCRIPTION PANEL
+   ================================================ */
+.desc-text {
+  white-space: normal;
+  line-height: 1.6;
+  font-size: var(--fs-20);
+  color: #222;
+}
+
+.desc-field {
+  display: inline-block;
+  min-width: 40px;
+  max-width: 100%;
+  padding: 2px 4px;
+  border-bottom: 2px dashed #222;
+  font-size: var(--fs-20);
+  line-height: 1.2;
+  outline: none;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.desc-field:empty::before {
+  content: attr(data-placeholder);
+  color: #999;
+  font-weight: bold;
+}
+
+.desc-text,
+.desc-field,
+.desc-field::before {
+  font-family: var(--font-main) !important;
+}
+
+/* ================================================
+   APTITUDES PANEL
    ================================================ */
 .sheet-panel {
   position: relative !important;
@@ -290,10 +362,18 @@ html, body {
   height: 524px !important;
   padding: 0 !important;
   border: none !important;
-  background: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_aptitudes.jpg") no-repeat center / 100% 100% !important;
+  background: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_aptitudes.jpg")
+    no-repeat center / 100% 100% !important;
   box-sizing: border-box;
 }
 
+.acc-body.sheet-panel {
+  border: 1px solid var(--c-soft-border) !important;
+  border-top: none !important;
+  background-color: #ffffff !important;
+}
+
+/* Aptitude fields */
 .aptitude-field {
   position: absolute;
   height: 11%;
@@ -302,40 +382,72 @@ html, body {
   background: transparent !important;
   text-align: center;
   outline: none;
-}
-
-.aptitude-field {
   -moz-appearance: textfield;
 }
 
-.left-apt  { left: 9.6%;   width: 12.6%; }
-.right-apt { left: 76.5%;  width: 12.6%; }
+.left-apt {
+  left: 9.6%;
+  width: 12.6%;
+}
 
-.row-1 { top: 11%; }
-.row-2 { top: 33.175%; }
-.row-3 { top: 55.75%; }
-.row-4 { top: 78%; }
+.right-apt {
+  left: 76.5%;
+  width: 12.6%;
+}
 
+.row-1 {
+  top: 11%;
+}
+
+.row-2 {
+  top: 33.175%;
+}
+
+.row-3 {
+  top: 55.75%;
+}
+
+.row-4 {
+  top: 78%;
+}
+
+/* Current value overlay */
 .apt-current {
   position: absolute;
   font-size: 16px;
   font-weight: bold;
-  color: #C0392B;
+  color: #c0392b;
   text-align: center;
   pointer-events: none;
   width: 12.6%;
 }
 
-.apt-current.left-apt  { left: 15%; }
-.apt-current.right-apt { left: 82%; }
+.apt-current.left-apt {
+  left: 15%;
+}
 
-.apt-current.row-1 { top: 11.5%; }
-.apt-current.row-2 { top: 34%; }
-.apt-current.row-3 { top: 56.5%; }
-.apt-current.row-4 { top: 79%; }
+.apt-current.right-apt {
+  left: 82%;
+}
+
+.apt-current.row-1 {
+  top: 11.5%;
+}
+
+.apt-current.row-2 {
+  top: 34%;
+}
+
+.apt-current.row-3 {
+  top: 56.5%;
+}
+
+.apt-current.row-4 {
+  top: 79%;
+}
 
 /* ================================================
-   CHECKBOXES — CONDITIONS, STRESS, TRAUMA
+   CONDITIONS, STRESS, TRAUMA
    ================================================ */
 .condition-checkbox,
 .track {
@@ -350,102 +462,120 @@ html, body {
 }
 
 .condition-checkbox:hover,
-.track:hover                  { background: rgba(244, 162, 89, 0.5); }
+.track:hover {
+  background: rgba(244, 162, 89, 0.5);
+}
+
 .condition-checkbox:checked,
-.track:checked                { background: #f4a259 !important; }
+.track:checked {
+  background: #f4a259 !important;
+}
+
 .condition-checkbox:checked:hover,
-.track:checked:hover          { background: #d9823f !important; }
+.track:checked:hover {
+  background: #d9823f !important;
+}
 
-.condition-checkbox { left: 37.75%; }
-.cond-row-1 { top: 5.95%; }
-.cond-row-2 { top: 28.35%; }
-.cond-row-3 { top: 50.65%; }
-.cond-row-4 { top: 73.15%; }
+.condition-checkbox {
+  left: 37.75%;
+}
 
-.col-1 { left: 42.8%; }
-.col-2 { left: 47.7%; }
-.col-3 { left: 52.675%; }
-.col-4 { left: 57.5%; }
-.col-5 { left: 62.5%; }
-.col-6 { left: 67.5%; }
+.cond-row-1 {
+  top: 5.95%;
+}
 
-.stress.row-1 { top: 12.25%; }
-.stress.row-2 { top: 34.75%; }
-.stress.row-3 { top: 56.9%; }
-.stress.row-4 { top: 79.4%; }
+.cond-row-2 {
+  top: 28.35%;
+}
 
-.trauma.row-1 { top: 17%; }
-.trauma.row-2 { top: 39.25%; }
-.trauma.row-3 { top: 61.5%; }
-.trauma.row-4 { top: 83.95%; }
+.cond-row-3 {
+  top: 50.65%;
+}
+
+.cond-row-4 {
+  top: 73.15%;
+}
+
+.col-1 {
+  left: 42.8%;
+}
+
+.col-2 {
+  left: 47.7%;
+}
+
+.col-3 {
+  left: 52.675%;
+}
+
+.col-4 {
+  left: 57.5%;
+}
+
+.col-5 {
+  left: 62.5%;
+}
+
+.col-6 {
+  left: 67.5%;
+}
+
+.stress.row-1 {
+  top: 12.25%;
+}
+
+.stress.row-2 {
+  top: 34.75%;
+}
+
+.stress.row-3 {
+  top: 56.9%;
+}
+
+.stress.row-4 {
+  top: 79.4%;
+}
+
+.trauma.row-1 {
+  top: 17%;
+}
+
+.trauma.row-2 {
+  top: 39.25%;
+}
+
+.trauma.row-3 {
+  top: 61.5%;
+}
+
+.trauma.row-4 {
+  top: 83.95%;
+}
 
 /* ================================================
-   DESCRIPTION PANEL
+   FEATURES, DRIVES, FLAWS
    ================================================ */
-.desc-text {
-  white-space: normal;
-  line-height: 1.6;
-  font-size: 20px;
-  color: #222;
-}
-
-.desc-field {
-  display: inline-block;
-  min-width: 40px;
-  max-width: 100%;
-  padding: 2px 4px;
-  border-bottom: 2px dashed #222;
-  font-size: 20px;
-  line-height: 1.2;
-  outline: none;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.desc-field:empty::before {
-  content: attr(data-placeholder);
-  color: #999;
-  font-weight: bold;
-}
-
-/* ================================================
-   FEATURES LIST
-   ================================================ */
-.features-list {
+.features-list,
+.drives-list,
+.flaws-list {
   padding-left: 24px;
   margin: 0;
+  padding-right: 15px;
   list-style: disc;
 }
 
-.features-list li {
+.features-list {
+  margin-bottom: 10px !important;
+}
+
+.features-list li,
+.flaws-list li {
   margin-bottom: 12px;
   vertical-align: top;
 }
 
-.features-list textarea {
-  width: 100%;
-  border: none;
-  border-bottom: 1px dashed #666;
-  background: transparent;
-  padding: 0 0 0 6px;
-  font-size: 16px;
-  font-weight: bold;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  vertical-align: top;
-  line-height: 24px;
-  background-size: 100% 24px;
-}
-
-/* ================================================
-   DRIVES LIST & DIAMOND TRACKER ENGINE
-   ================================================ */
 .drives-list {
-  padding-left: 24px;
-  margin: 0;
   margin-bottom: 10px !important;
-  padding-right: 15px;
   list-style: disc;
 }
 
@@ -453,39 +583,45 @@ html, body {
   margin-bottom: 8px;
 }
 
-/* Flexbox to keep the text line and the image sitting side-by-side */
-.drive-item {
-  display: flex;
-  align-items: flex-end; 
-  gap: 15px;
-  width: 100%;
-}
-
+.features-list textarea,
+.flaws-list textarea,
 .drive-item textarea {
-  flex: 1;
+  width: 100%;
   border: none;
   border-bottom: 1px dashed #666;
   background: transparent;
   padding: 0 0 0 6px;
-  font-family: "Century Gothic", AppleGothic, sans-serif !important;
   font-size: 16px;
   font-weight: bold;
   outline: none;
   resize: none;
   overflow: hidden;
+  vertical-align: top;
   line-height: 24px;
+  font-family: var(--font-main) !important;
 }
 
-/* The Graphic Container */
+.features-list li textarea {
+  margin-bottom: 4px;
+}
+
+/* Drives */
+.drive-item {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  width: 100%;
+}
+
 .drive-tracker {
   position: relative;
-  width: 80px;  /* Scaled down proportion of 133 */
-  height: 58px; /* Scaled down proportion of 97 */
-  background: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_drive.jpg') no-repeat center center / contain;
+  width: 80px;
+  height: 58px;
+  background: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_drive.jpg")
+    no-repeat center center / contain;
   flex-shrink: 0;
 }
 
-/* Turns standard checkboxes into diamonds */
 .diamond-box {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -496,197 +632,43 @@ html, body {
   border: 1px solid #333;
   background-color: transparent;
   cursor: pointer;
-  transform: rotate(45deg); /* The magic diamond rotation */
+  transform: rotate(45deg);
   transition: all 0.15s ease;
   margin: 0;
 }
 
-.diamond-box:checked {background-color: #6cc6a0; border-color: #27ae60;
+.diamond-box:checked {
+  background-color: #6cc6a0;
+  border-color: #27ae60;
 }
 
-.diamond-box:hover {border-color: #27ae60; background-color: #1e8449;
+.diamond-box:hover {
+  border-color: #27ae60;
+  background-color: #1e8449;
 }
 
-.diamond-box:checked:hover {background-color: #1e8449; border-color: #27ae60;
+.diamond-box:checked:hover {
+  background-color: #1e8449;
+  border-color: #27ae60;
 }
 
-/* --- Diamond Positions (Adjust these % values to fit your graphic perfectly!) --- */
-.db-1 { left: 6%; top: 45%; }
-.db-2 { left: 35%; top: 45%; }
-.db-3 { left: 64.25%; top: 45%; }
-
-/* ================================================
-   FLAWS LIST STYLES (CAPPED AT 3)
-   ================================================ */
-.flaws-list {
-  padding-left: 24px;
-  margin: 0;
-  margin-bottom: 10px !important;
-  padding-right: 15px;
-  list-style: disc;
+.db-1 {
+  left: 6%;
+  top: 45%;
 }
 
-.flaws-list li {
-  margin-bottom: 12px;
-  vertical-align: top;
+.db-2 {
+  left: 35%;
+  top: 45%;
 }
 
-.flaws-list textarea {
-  width: 100%;
-  border: none;
-  border-bottom: 1px dashed #666;
-  background: transparent;
-  padding: 0 0 0 6px;
-  font-family: "Century Gothic", AppleGothic, sans-serif !important;
-  font-size: 16px;
-  font-weight: bold;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  vertical-align: top;
-  line-height: 24px;
+.db-3 {
+  left: 64.25%;
+  top: 45%;
 }
 
 /* ================================================
-   WEAPONS ACCORDION CONTENT & DYNAMIC ENGINE
-   ================================================ */
-.weapons-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;                 
-  padding: 4px 0;           
-  background-color: #ffffff;
-  box-sizing: border-box;
-}
-
-.weapon-block {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;                                           
-  width: 100%;
-  transition: all 0.25s ease-in-out; 
-  border-bottom: 1px solid #e0e0e0;  
-  padding-bottom: 4px;      
-}
-
-.weapons-headers {
-  display: block;
-  position: relative;
-  width: 100%;
-  height: 18px;
-  margin-bottom: 4px;
-  box-sizing: border-box;
-}
-
-.weapons-headers span {
-  position: absolute;
-  bottom: 2px;
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #111111;              
-  text-align: center;
-  white-space: nowrap;        
-}
-
-.weapon-row {
-  position: relative;
-  width: 100%;
-  height: 49px;            
-  background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_weapon.jpg');
-  background-size: 100% 100%; 
-  background-repeat: no-repeat;
-}
-
-.weapon-features-row {
-  display: flex;
-  align-items: center;
-  width: 98%;                
-  padding-left: 28px;        
-  box-sizing: border-box;
-}
-
-.weapon-features-row label {
-  font-size: 11px;
-  font-weight: bold;
-  color: #555;
-  text-transform: uppercase;
-  margin-right: 6px;
-  white-space: nowrap;
-}
-
-.weapon-features-row input {
-  flex: 1;
-  border: none !important;
-  border-bottom: 1px dashed #999 !important; 
-  background: transparent !important;
-  font-size: 12px;
-  font-family: inherit;
-  font-weight: normal;
-  color: #111;
-  padding: 1px 4px;
-  outline: none;
-}
-
-.weapon-features-row input:focus {
-  border-bottom-color: #222 !important;
-}
-
-.field-wrap {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  bottom: 16px;              
-  height: 18px;            
-}
-
-.field-wrap label {
-  display: none !important;
-}
-
-.field-wrap input {
-  width: 100%;
-  height: 100%;
-  border: none !important;
-  background: transparent !important;
-  font-size: 14px;
-  font-family: inherit;
-  font-weight: bold;
-  color: #111;
-  padding: 0 2px;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.weapon-row .col-name input {
-  text-align: left;
-  padding-left: 6px;
-}
-
-.gear-double-input {
-  display: flex;
-  gap: 6px; 
-  width: 100%;
-  height: 100%;
-}
-
-input.single-digit {
-  text-align: center;
-  padding: 0;
-  width: 100%;
-}
-
-.weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;    width: 37%; }
-.weapons-headers .hdr-name                            { text-align: left !important; padding-left: 6px; }
-.weapon-row .col-die                                  { left: 40%;   width: 4%;  }
-.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 44%;   width: 14%; }
-.weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 59%;   width: 9%; }
-.weapon-row .col-size, .weapons-headers .hdr-size     { left: 69%;   width: 9%; }
-.weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%; width: 9%; }
-.weapon-row .col-bulk, .weapons-headers .hdr-bulk     { left: 88.5%; width: 8.5%; }
-
-/* ================================================
-   WOUNDS ACCORDION
+   WOUNDS
    ================================================ */
 .wounds-container {
   display: flex;
@@ -707,7 +689,7 @@ input.single-digit {
 }
 
 .wounds-column-headers span {
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: bold;
   text-transform: uppercase;
   color: #111;
@@ -723,7 +705,9 @@ input.single-digit {
   border-bottom: 1px dashed #ccc;
 }
 
-.wounds-container .wound-row:last-child { border-bottom: none; }
+.wounds-container .wound-row:last-child {
+  border-bottom: none;
+}
 
 .wound-row select,
 .wound-row input[type="text"] {
@@ -731,7 +715,7 @@ input.single-digit {
   border: none;
   border-bottom: 1px dashed #666;
   background: transparent;
-  font-family: "Century Gothic", sans-serif;
+  font-family: var(--font-main);
   font-size: 13px;
   color: #111;
   padding: 2px 4px;
@@ -759,23 +743,204 @@ input.single-digit {
   transition: background 0.15s ease;
 }
 
-.wound-patch:checked {background-color: #6cc6a0; border-color: #27ae60;
+.wound-patch:checked {
+  background-color: #6cc6a0;
+  border-color: #27ae60;
 }
 
-.wound-patch:hover {border-color: #27ae60; background-color: #1e8449;
+.wound-patch:hover {
+  border-color: #27ae60;
+  background-color: #1e8449;
 }
 
-.wound-patch:checked:hover  {border-color: #27ae60; background-color: #1e8449;
+.wound-patch:checked:hover {
+  border-color: #27ae60;
+  background-color: #1e8449;
 }
 
 /* ================================================
-   ARMOR ACCORDION CONTENT
+   WEAPONS
+   ================================================ */
+.weapons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.weapon-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  transition: all 0.25s ease-in-out;
+  border-bottom: 1px solid var(--c-soft-border-2);
+  padding-bottom: 4px;
+}
+
+.weapons-headers {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+.weapons-headers span {
+  position: absolute;
+  bottom: 2px;
+  font-size: var(--fs-11);
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.weapon-row {
+  position: relative;
+  width: 100%;
+  height: 49px;
+  background-image: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_weapon.jpg");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.weapon-features-row {
+  display: flex;
+  align-items: center;
+  width: 98%;
+  padding-left: 28px;
+  box-sizing: border-box;
+}
+
+.weapon-features-row label {
+  font-size: var(--fs-11);
+  font-weight: bold;
+  color: #555;
+  text-transform: uppercase;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.weapon-features-row input {
+  flex: 1;
+  border: none !important;
+  border-bottom: 1px dashed #999 !important;
+  background: transparent !important;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: normal;
+  color: #111;
+  padding: 1px 4px;
+  outline: none;
+}
+
+.weapon-features-row input:focus {
+  border-bottom-color: #222 !important;
+}
+
+.field-wrap {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  bottom: 16px;
+  height: 18px;
+}
+
+.field-wrap label {
+  display: none !important;
+}
+
+.field-wrap input {
+  width: 100%;
+  height: 100%;
+  border: none !important;
+  background: transparent !important;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: bold;
+  color: #111;
+  padding: 0 2px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.weapon-row .col-name input {
+  text-align: left;
+  padding-left: 6px;
+}
+
+.gear-double-input {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+}
+
+input.single-digit {
+  text-align: center;
+  padding: 0;
+  width: 100%;
+}
+
+/* Column positions (weapons) */
+.weapon-row .col-name,
+.weapons-headers .hdr-name {
+  left: 2%;
+  width: 37%;
+}
+
+.weapons-headers .hdr-name {
+  text-align: left !important;
+  padding-left: 6px;
+}
+
+.weapon-row .col-die {
+  left: 40%;
+  width: 4%;
+}
+
+.weapon-row .col-gear,
+.weapons-headers .hdr-gear {
+  left: 44%;
+  width: 14%;
+}
+
+.weapon-row .col-hand,
+.weapons-headers .hdr-hand {
+  left: 59%;
+  width: 9%;
+}
+
+.weapon-row .col-size,
+.weapons-headers .hdr-size {
+  left: 69%;
+  width: 9%;
+}
+
+.weapon-row .col-damage,
+.weapons-headers .hdr-dmg {
+  left: 78.5%;
+  width: 9%;
+}
+
+.weapon-row .col-bulk,
+.weapons-headers .hdr-bulk {
+  left: 88.5%;
+  width: 8.5%;
+}
+
+/* ================================================
+   ARMOR
    ================================================ */
 .armor-container {
   display: flex;
   flex-direction: column;
-  gap: 2px;                 
-  padding: 4px 0;           
+  gap: 2px;
+  padding: 4px 0;
   background-color: #ffffff;
   box-sizing: border-box;
 }
@@ -785,20 +950,20 @@ input.single-digit {
   flex-direction: column;
   gap: 2px;
   width: 100%;
-  border-bottom: 1px solid #e0e0e0;  
-  padding-bottom: 4px;      
+  border-bottom: 1px solid var(--c-soft-border-2);
+  padding-bottom: 4px;
 }
 
 .armor-features-row {
   display: flex;
   align-items: center;
-  width: 98%;                
-  padding-left: 28px;        
+  width: 98%;
+  padding-left: 28px;
   box-sizing: border-box;
 }
 
 .armor-features-row label {
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: bold;
   color: #555;
   text-transform: uppercase;
@@ -809,7 +974,7 @@ input.single-digit {
 .armor-features-row input {
   flex: 1;
   border: none !important;
-  border-bottom: 1px dotted #999 !important; 
+  border-bottom: 1px dotted #999 !important;
   background: transparent !important;
   font-size: 14px;
   font-family: inherit;
@@ -823,29 +988,40 @@ input.single-digit {
 }
 
 /* Visibility engines */
-.slot-2, .slot-3, .slot-4, .slot-5 { display: none; opacity: 0; }
-.slot-1:not(:has(input[name="attr_weapon_name_1"]:placeholder-shown)) ~ .slot-2 { display: flex; opacity: 1; }
-.slot-2:not(:has(input[name="attr_weapon_name_2"]:placeholder-shown)) ~ .slot-3 { display: flex; opacity: 1; }
-.slot-3:not(:has(input[name="attr_weapon_name_3"]:placeholder-shown)) ~ .slot-4 { display: flex; opacity: 1; }
-.slot-4:not(:has(input[name="attr_weapon_name_4"]:placeholder-shown)) ~ .slot-5 { display: flex; opacity: 1; }
+.slot-2,
+.slot-3,
+.slot-4,
+.slot-5,
+.armor-slot-2,
+.armor-slot-3,
+.armor-slot-4,
+.armor-slot-5 {
+  display: none;
+  opacity: 0;
+}
 
-.armor-slot-2, .armor-slot-3, .armor-slot-4, .armor-slot-5 { display: none; opacity: 0; }
-.armor-slot-1:not(:has(input[name="attr_armor_name_1"]:placeholder-shown)) ~ .armor-slot-2 { display: flex; opacity: 1; }
-.armor-slot-2:not(:has(input[name="attr_armor_name_2"]:placeholder-shown)) ~ .armor-slot-3 { display: flex; opacity: 1; }
-.armor-slot-3:not(:has(input[name="attr_armor_name_3"]:placeholder-shown)) ~ .armor-slot-4 { display: flex; opacity: 1; }
-.armor-slot-4:not(:has(input[name="attr_armor_name_4"]:placeholder-shown)) ~ .armor-slot-5 { display: flex; opacity: 1; }
+.slot-1:not(:has(input[name="attr_weapon_name_1"]:placeholder-shown)) ~ .slot-2,
+.slot-2:not(:has(input[name="attr_weapon_name_2"]:placeholder-shown)) ~ .slot-3,
+.slot-3:not(:has(input[name="attr_weapon_name_3"]:placeholder-shown)) ~ .slot-4,
+.slot-4:not(:has(input[name="attr_weapon_name_4"]:placeholder-shown)) ~ .slot-5,
+.armor-slot-1:not(:has(input[name="attr_armor_name_1"]:placeholder-shown)) ~ .armor-slot-2,
+.armor-slot-2:not(:has(input[name="attr_armor_name_2"]:placeholder-shown)) ~ .armor-slot-3,
+.armor-slot-3:not(:has(input[name="attr_armor_name_3"]:placeholder-shown)) ~ .armor-slot-4,
+.armor-slot-4:not(:has(input[name="attr_armor_name_4"]:placeholder-shown)) ~ .armor-slot-5 {
+  display: flex;
+  opacity: 1;
+}
 
 .armor-row {
   position: relative;
   width: 100%;
   height: 49px;
-  background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_armor.jpg');
+  background-image: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_armor.jpg");
   background-size: 100% 100%;
   background-repeat: no-repeat;
 }
 
 .armor-headers {
-  display: block;
   position: relative;
   width: 100%;
   height: 18px;
@@ -856,29 +1032,59 @@ input.single-digit {
 .armor-headers span {
   position: absolute;
   bottom: 2px;
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: bold;
   text-transform: uppercase;
   color: #111;
   text-align: center;
-  white-space: nowrap;        
+  white-space: nowrap;
 }
 
-.col-armor-name, .hdr-armor-name         { left: 2%;    width: 37%; }
-.armor-row .col-die                      { left: 40%;   width: 4%;  }
-.col-armor-gear, .hdr-armor-gear         { left: 44%;   width: 14%; }
-.col-armor-features, .hdr-armor-features { left: 59%;   width: 28%; }
-.col-armor-bulk, .hdr-armor-bulk         { left: 88%;   width: 10%; }
+.col-armor-name,
+.hdr-armor-name {
+  left: 2%;
+  width: 37%;
+}
 
-.hdr-armor-name { text-align: left !important; padding-left: 6px; }
-.col-armor-name input { text-align: left !important; padding-left: 6px; }
+.armor-row .col-die {
+  left: 40%;
+  width: 4%;
+}
+
+.col-armor-gear,
+.hdr-armor-gear {
+  left: 44%;
+  width: 14%;
+}
+
+.col-armor-features,
+.hdr-armor-features {
+  left: 59%;
+  width: 28%;
+}
+
+.col-armor-bulk,
+.hdr-armor-bulk {
+  left: 88%;
+  width: 10%;
+}
+
+.hdr-armor-name {
+  text-align: left !important;
+  padding-left: 6px;
+}
+
+.col-armor-name input {
+  text-align: left !important;
+  padding-left: 6px;
+}
 
 .armor-row .col-armor-bulk input {
   -moz-appearance: textfield;
 }
 
-/* ================================================ 
-   GEAR ACCORDION TABLE & DIMENSIONS
+/* ================================================
+   GEAR TABLE
    ================================================ */
 .sheet-gear-container {
   background-color: #ffffff;
@@ -889,21 +1095,22 @@ input.single-digit {
   box-sizing: border-box;
 }
 
-.gear-headers, .gear-row {
+.gear-headers,
+.gear-row {
   position: relative;
   width: 100%;
   height: 24px;
 }
 
-.gear-headers span, .gear-row .field-wrap {
+.gear-headers span,
+.gear-row .field-wrap {
   position: absolute;
   height: 20px;
   top: 2px;
 }
 
 .gear-headers span {
-  font-family: inherit;
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: bold;
   color: #111;
   text-align: center;
@@ -912,21 +1119,43 @@ input.single-digit {
 }
 
 .sheet-gear-container .gear-row {
-  border-bottom: 1px dashed #cccccc;
-  height: 24px; 
+  border-bottom: 1px dashed #ccc;
+  height: 24px;
 }
 
-.col-gear-name, .hdr-gear-name { 
-  left: 2%; 
-  width: 75%; 
-}
-.col-gear-bulk, .hdr-gear-bulk { 
-  left: 88%; 
-  width: 10%; 
+.col-gear-name,
+.hdr-gear-name {
+  left: 2%;
+  width: 60%;
 }
 
-.hdr-gear-name { text-align: left !important; padding-left: 6px; }
-.col-gear-name input { text-align: left !important; padding-left: 6px; }
+.col-gear-val,
+.hdr-gear-val {
+  left: 74%;
+  width: 12%;
+  text-align: center;
+}
+
+.col-gear-bulk,
+.hdr-gear-bulk {
+  left: 88%;
+  width: 10%;
+}
+
+.hdr-gear-name {
+  text-align: left !important;
+  padding-left: 6px;
+}
+
+.col-gear-name input {
+  text-align: left !important;
+  padding-left: 6px;
+}
+
+.hdr-gear-val,
+.hdr-gear-bulk {
+  text-align: center !important;
+}
 
 .sheet-gear-container .gear-row input {
   width: 100%;
@@ -935,7 +1164,7 @@ input.single-digit {
   border: none;
   background: transparent;
   padding: 0;
-  font-size: 11px;
+  font-size: var(--fs-11);
   line-height: 1;
 }
 
@@ -944,24 +1173,33 @@ input.single-digit {
   -moz-appearance: textfield;
 }
 
-/* Relics - Grid Headers */
-.relics-headers { 
-  display: flex; 
-  width: 100%; 
-  margin-bottom: 5px; 
-}
-.relics-headers span { 
-  font-size: 11px; 
-  font-weight: bold; 
-  text-transform: uppercase; 
-}
-.hdr-rel-name { width: 30%; }
-.hdr-rel-type { width: 20%; }
-.hdr-rel-effect { width: 50%; }
-
 /* ================================================
-   RELICS-Auto Expand
+   RELICS
    ================================================ */
+.relics-headers {
+  display: flex;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.relics-headers span {
+  font-size: var(--fs-11);
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.hdr-rel-name {
+  width: 30%;
+}
+
+.hdr-rel-type {
+  width: 20%;
+}
+
+.hdr-rel-effect {
+  width: 50%;
+}
+
 .relic-row {
   width: 100%;
   margin-bottom: 5px;
@@ -983,9 +1221,8 @@ input.single-digit {
   min-height: 30px;
 }
 
-
 /* ================================================
-   SPELLS & RITUALS LIST (FEATURES STYLE)
+   SPELLS
    ================================================ */
 #accordion-spells {
   width: 100%;
@@ -995,12 +1232,12 @@ input.single-digit {
 .spells-table-header {
   display: grid;
   grid-template-columns: 83% 17%;
-  padding: 4px 12px 4px 28px; 
+  padding: 4px 12px 4px 28px;
   box-sizing: border-box;
 }
 
 .spells-table-header span {
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: bold;
   text-transform: uppercase;
   color: #111;
@@ -1061,14 +1298,6 @@ input.single-digit {
 
 /* ================================================
    STORY TAB
-   ================================================ */
-#accordion-story {
-  width: 100%;
-  margin-top: 0 !important;
-  box-sizing: border-box;
-}
-/* ================================================
-   PORTRAIT & SUMMARY
    ================================================ */
 .portrait-summary-row {
   display: flex;
@@ -1141,7 +1370,7 @@ input.single-digit {
   border: none !important;
   border-bottom: 1px dashed #666 !important;
   background: transparent !important;
-  font-family: "Century Gothic", sans-serif !important;
+  font-family: var(--font-main) !important;
   font-size: 14px;
   line-height: 1.6;
   color: #222;
@@ -1154,94 +1383,46 @@ input.single-digit {
 }
 
 /* ================================================
-   ACCORDION COHESION FIXES
+   GLOBAL NUMBER SPINNER REMOVAL
    ================================================ */
-/* Adds a matching border and background structure to the Aptitudes panel */
-.acc-body.sheet-panel {
-  border: 1px solid #ccc !important;
-  border-top: none !important; /* Matches the seamless header connection */
-  background-color: #ffffff !important; /* Fills behind the graphic if it scales */
-  box-sizing: border-box;
-}
-
-/* Prevents specialized padding overrides from breaking the uniform edge alignment */
-.acc-body.weapons-body,
-.acc-body.armor-body {
-  padding: 10px !important;
-}
-
-/* ================================================
-   GLOBAL SPINNER REMOVAL (ALL FIELDS)
-   ================================================ */
-/* Removes up/down spin arrows for Chrome, Safari, Edge, and Opera */
 #character-sheet input[type="number"]::-webkit-outer-spin-button,
 #character-sheet input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none !important;
   margin: 0 !important;
 }
 
-/* Removes up/down spin arrows for Firefox */
 #character-sheet input[type="number"] {
   -moz-appearance: textfield !important;
 }
 
 /* ================================================
-   FEATURES BOTTOM PADDING FIX
-   ================================================ */
-/* Adds safety padding to the bottom of all accordion bodies */
-.acc-body {
-  padding-bottom: 1px !important;
-}
-
-/* Fixes the features list spacing so it doesn't clip the bottom edge */
-.features-list {
-  margin-bottom: 10px !important;
-  padding-right: 15px; /* Gives a right-side safety buffer for typing */
-}
-
-.features-list li textarea {
-  margin-bottom: 4px;
-}
-
-/* ================================================
-   RESPONSIVE SCALING ENGINE
+   RESPONSIVE SCALING
    ================================================ */
 @media (max-width: 470px) {
-  #character-sheet { 
-    transform: scale(0.92); 
+  #character-sheet {
+    transform: scale(0.92);
     left: 15px;
     top: 15px;
   }
 }
 
 @media (max-width: 410px) {
-  #character-sheet { 
-    transform: scale(0.82); 
+  #character-sheet {
+    transform: scale(0.82);
     left: 10px;
     top: 10px;
   }
 }
 
 @media (max-width: 350px) {
-  #character-sheet { 
-    transform: scale(0.70); 
+  #character-sheet {
+    transform: scale(0.7);
     left: 5px;
   }
 }
 
 /* ================================================
-   FORCE PARAGRAPH & EDITABLE FIELD TYPOGRAPHY
-   ================================================ */
-.desc-text,
-.desc-field,
-.desc-field::before {
-font-family: "Century Gothic", AppleGothic, sans-serif !important;
-}
-
-/* ================================================
    APTITUDE DIE ICONS
-   Absolutely positioned inside .sheet-panel,
-   matching the same coordinate system as everything else.
    ================================================ */
 .apt-die-icon {
   position: absolute;
@@ -1259,40 +1440,52 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   justify-content: center;
 }
 
-/* Unselected — black, dim */
 .apt-die-icon:not(.apt-die-icon--selected) .die-icon-img {
   opacity: 0.4;
-  filter: brightness(0);        /* forces to pure black */
+  filter: brightness(0);
 }
 
-/* Hover — red */
 .apt-die-icon:hover .die-icon-img {
   opacity: 1;
-  filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
-          saturate(600%) hue-rotate(330deg) brightness(1.1);
+  filter: brightness(0) saturate(100%) invert(27%) sepia(90%) saturate(600%)
+    hue-rotate(330deg) brightness(1.1);
   transform: scale(1.15);
 }
 
-/* Selected — full red #C0392B glow */
 .apt-die-icon.apt-die-icon--selected .die-icon-img {
   opacity: 1;
-  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
-          saturate(700%) hue-rotate(340deg) brightness(1.0)
-          drop-shadow(0 0 3px rgba(192,57,43,0.9));
+  filter: brightness(0) saturate(100%) invert(18%) sepia(96%) saturate(700%)
+    hue-rotate(340deg) brightness(1)
+    drop-shadow(0 0 3px rgba(192, 57, 43, 0.9));
 }
 
-.apt-die-icon.left-apt  { left: 10%;   }
-.apt-die-icon.right-apt { left: 77%; }
+.apt-die-icon.left-apt {
+  left: 10%;
+}
 
-.apt-die-icon.row-1 { top: 11.5%;    }
-.apt-die-icon.row-2 { top: 33.75%; }
-.apt-die-icon.row-3 { top: 56.25%;   }
-.apt-die-icon.row-4 { top: 78.5%; }
+.apt-die-icon.right-apt {
+  left: 77%;
+}
+
+.apt-die-icon.row-1 {
+  top: 11.5%;
+}
+
+.apt-die-icon.row-2 {
+  top: 33.75%;
+}
+
+.apt-die-icon.row-3 {
+  top: 56.25%;
+}
+
+.apt-die-icon.row-4 {
+  top: 78.5%;
+}
 
 /* ================================================
-   DICE TRAY — Fixed at viewport bottom
+   DICE TRAY
    ================================================ */
-
 .dice-tray {
   position: fixed;
   bottom: 0;
@@ -1300,16 +1493,11 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   width: 100%;
   z-index: 200;
   box-sizing: border-box;
-  font-family: "Century Gothic", sans-serif;
+  font-family: var(--font-main);
   background: #111;
   border-top: 2px solid #333;
 }
 
-.dice-tray--collapsed .dice-tray__handle-caret {
-  transform: rotate(180deg);
-}
-
-/* Handle */
 .dice-tray__handle {
   display: flex;
   align-items: center;
@@ -1320,10 +1508,12 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   background: #1a1a1a;
 }
 
-.dice-tray__handle:hover { background: #222; }
+.dice-tray__handle:hover {
+  background: #222;
+}
 
 .dice-tray__handle-label {
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: bold;
   letter-spacing: 1.5px;
   color: #888;
@@ -1332,9 +1522,9 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 }
 
 .dice-tray__handle-count {
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: bold;
-  color: #e74c3c;
+  color: var(--c-accent-red);
   min-width: 20px;
 }
 
@@ -1344,6 +1534,27 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   transition: transform 0.2s ease;
 }
 
+.dice-tray--collapsed .dice-tray__handle-caret {
+  transform: rotate(180deg);
+}
+
+/* Close button */
+.dice-tray__close {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+
+.dice-tray__close:hover {
+  color: var(--c-accent-red);
+}
+
 /* Body */
 .dice-tray__body {
   padding: 8px 12px 10px;
@@ -1351,11 +1562,12 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   flex-direction: column;
   gap: 7px;
 }
+
 /* Pool display */
 .dice-tray__pool {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   min-height: 28px;
   align-items: center;
 }
@@ -1367,7 +1579,7 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   font-style: italic;
 }
 
-/* Pool chip — base */
+/* Pool chips */
 .pool-chip {
   display: flex;
   align-items: center;
@@ -1378,21 +1590,18 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   font-weight: bold;
 }
 
-/* Red = aptitude dice */
 .pool-chip--apt {
   background: rgba(231, 76, 60, 0.15);
-  border: 1px solid #e74c3c;
-  color: #e74c3c;
+  border: 1px solid var(--c-accent-red);
+  color: var(--c-accent-red);
 }
 
-/* Yellow = gear dice */
 .pool-chip--gear {
   background: rgba(241, 196, 15, 0.12);
-  border: 1px solid #f1c40f;
-  color: #f1c40f;
+  border: 1px solid var(--c-accent-yellow);
+  color: var(--c-accent-yellow);
 }
 
-/* Greyed out = removed by difficulty */
 .pool-chip--removed {
   opacity: 0.3;
   text-decoration: line-through;
@@ -1405,7 +1614,8 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   gap: 10px;
 }
 
-.dice-tray__difficulty {
+.dice-tray__difficulty,
+.dice-tray__threshold {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1427,7 +1637,7 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   color: #ccc;
   font-size: 13px;
   font-weight: bold;
-  font-family: "Century Gothic", sans-serif;
+  font-family: var(--font-main);
   text-align: center;
   padding: 3px 4px;
   outline: none;
@@ -1435,19 +1645,19 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 }
 
 .dice-tray__mod-input::-webkit-outer-spin-button,
-.dice-tray__mod-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-.dice-tray__mod-input:focus { border-color: #666; }
-
-.dice-tray__mod-spacer { flex: 1; }
-
-/* Threshold selector */
-.dice-tray__threshold {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.dice-tray__mod-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
 }
 
+.dice-tray__mod-input:focus {
+  border-color: #666;
+}
+
+.dice-tray__mod-spacer {
+  flex: 1;
+}
+
+/* Threshold buttons */
 .threshold-btns {
   display: flex;
   gap: 3px;
@@ -1460,19 +1670,23 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   color: #666;
   font-size: 10px;
   font-weight: bold;
-  font-family: "Century Gothic", sans-serif;
+  font-family: var(--font-main);
   letter-spacing: 0.5px;
   padding: 3px 6px;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.threshold-btn:hover { background: #252525; color: #aaa; border-color: #666; }
+.threshold-btn:hover {
+  background: #252525;
+  color: #aaa;
+  border-color: #666;
+}
 
 .threshold-btn--active {
   background: rgba(46, 204, 113, 0.15);
-  border-color: #2ecc71;
-  color: #2ecc71;
+  border-color: var(--c-accent-green);
+  color: var(--c-accent-green);
 }
 
 /* Success banner */
@@ -1485,27 +1699,38 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   background: rgba(46, 204, 113, 0.08);
   border: 1px solid rgba(46, 204, 113, 0.3);
   border-radius: 4px;
-  color: #2ecc71;
+  color: var(--c-accent-green);
   letter-spacing: 0.5px;
   text-align: center;
 }
 
 .success-banner__zero {
-  color: #e74c3c;
+  color: var(--c-accent-red);
   border-color: rgba(231, 76, 60, 0.3);
   background: rgba(231, 76, 60, 0.08);
 }
 
-/* Result */
+/* Result container */
 .dice-tray__result {
-  padding: 5px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
   background: #0d0d0d;
   border: 1px solid #333;
-  border-radius: 3px;
+  border-radius: 4px;
   font-size: 12px;
-  color: #2ecc71;
+  color: var(--c-accent-green);
   font-weight: bold;
   text-align: center;
+}
+
+/* Breakdown */
+.dice-tray__breakdown {
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 0.5px;
+  min-height: 14px;
 }
 
 /* Actions */
@@ -1521,7 +1746,7 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   border-radius: 3px;
   font-size: 11px;
   font-weight: bold;
-  font-family: "Century Gothic", sans-serif;
+  font-family: var(--font-main);
   letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
@@ -1553,22 +1778,26 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 }
 
 .dice-tray__btn--push:hover:not(:disabled) {
-  background: rgba(230,126,34,0.15);
+  background: rgba(230, 126, 34, 0.15);
 }
 
 .dice-tray__btn--roll {
-  background: #e74c3c;
+  background: var(--c-accent-red);
   color: #fff;
   font-size: 13px;
   letter-spacing: 2px;
 }
 
-.dice-tray__btn--roll:hover:not(:disabled) { background: #c0392b; }
-.dice-tray__btn--roll:active:not(:disabled) { background: #a93226; }
+.dice-tray__btn--roll:hover:not(:disabled) {
+  background: var(--c-accent-red-deep);
+}
 
-/* Gear die icon — sits above weapon/armor row or left of general gear row */
+.dice-tray__btn--roll:active:not(:disabled) {
+  background: var(--c-accent-red-darker);
+}
+
 /* ================================================
-   GEAR DIE ICONS — shared base
+   GEAR DIE ICONS
    ================================================ */
 .gear-die-icon {
   background: transparent;
@@ -1586,7 +1815,7 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   flex-shrink: 0;
 }
 
-/* col-die — icon column between name and gear on weapon/armor rows */
+/* col-die column */
 .col-die {
   position: absolute;
   bottom: 16px;
@@ -1596,15 +1825,17 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   justify-content: center;
 }
 
-/* Row die icon — sits in col-die, vertically centered */
+/* Row icon */
 .gear-die-icon--row {
   width: 14px;
   height: 14px;
 }
 
-.gear-die-icon--row:hover { transform: scale(1.2); }
+.gear-die-icon--row:hover {
+  transform: scale(1.2);
+}
 
-/* General gear — absolutely positioned to the left of the gear-val cell */
+/* General gear icon */
 .gear-die-icon--general {
   position: absolute;
   left: -1px;
@@ -1614,37 +1845,39 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   height: 16px;
 }
 
-.gear-die-icon--general:hover { transform: translateY(-50%) scale(1.15); }
+.gear-die-icon--general:hover {
+  transform: translateY(-50%) scale(1.15);
+}
 
-/* Unselected — black dim */
+/* Icon states */
 .gear-die-icon:not(.gear-die-icon--selected) .die-icon-img {
   opacity: 0.4;
   filter: brightness(0);
 }
 
-/* Hover — yellow */
 .gear-die-icon:hover .die-icon-img {
   opacity: 1;
-  filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
-          saturate(600%) hue-rotate(5deg) brightness(1.1);
+  filter: brightness(0) saturate(100%) invert(85%) sepia(80%) saturate(600%)
+    hue-rotate(5deg) brightness(1.1);
 }
 
-/* Selected — full yellow #F1C40F glow */
 .gear-die-icon--selected .die-icon-img {
   opacity: 1;
-  filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
-          saturate(600%) hue-rotate(5deg) brightness(1.1)
-          drop-shadow(0 0 3px rgba(241,196,15,0.9));
+  filter: brightness(0) saturate(100%) invert(85%) sepia(80%) saturate(600%)
+    hue-rotate(5deg) brightness(1.1)
+    drop-shadow(0 0 3px rgba(241, 196, 15, 0.9));
+}
+
+/* Shared die icon img */
+.die-icon-img {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* ================================================
-   POOL DIE ICONS (visual pool in tray)
+   POOL DICE ICONS
    ================================================ */
-.dice-tray__pool {
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
 .pool-die {
   width: 22px;
   height: 22px;
@@ -1660,19 +1893,16 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   height: 20px;
 }
 
-/* Red — aptitude pool dice */
 .pool-die--apt .pool-die__img {
-  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
-          saturate(700%) hue-rotate(340deg) brightness(1.0);
+  filter: brightness(0) saturate(100%) invert(18%) sepia(96%) saturate(700%)
+    hue-rotate(340deg) brightness(1);
 }
 
-/* Yellow — gear pool dice */
 .pool-die--gear .pool-die__img {
-  filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
-          saturate(600%) hue-rotate(5deg) brightness(1.1);
+  filter: brightness(0) saturate(100%) invert(85%) sepia(80%) saturate(600%)
+    hue-rotate(5deg) brightness(1.1);
 }
 
-/* Removed by difficulty — crossed out */
 .pool-die--removed {
   opacity: 0.2;
   position: relative;
@@ -1685,53 +1915,24 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   left: 0;
   width: 100%;
   height: 2px;
-  background: #e74c3c;
+  background: var(--c-accent-red);
   transform: rotate(-45deg);
   border-radius: 1px;
 }
 
-/* Shared die icon img sizing */
-.die-icon-img {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
 /* ================================================
-   BREAKDOWN LABEL
+   RESULT GROUPS
    ================================================ */
-.dice-tray__breakdown {
-  font-size: 10px;
-  color: #666;
-  letter-spacing: 0.5px;
-  min-height: 14px;
-}
-
-/* ================================================
-   RESULT GROUPS — apt and gear dice shown separately
-   ================================================ */
-.dice-tray__result {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 10px;
-  background: #0d0d0d;
-  border: 1px solid #333;
-  border-radius: 4px;
-}
-
-/* Success / failure headline inside the banner */
 .result-headline {
   font-size: 13px;
   font-weight: bold;
   letter-spacing: 0.5px;
 }
 
-/* Ones warning line */
 .result-ones-summary {
   font-size: 10px;
   font-weight: bold;
-  color: #e74c3c;
+  color: var(--c-accent-red);
   letter-spacing: 0.3px;
 }
 
@@ -1741,7 +1942,6 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   gap: 5px;
 }
 
-/* Header row: label left, ones-count right */
 .result-group-header {
   display: flex;
   justify-content: space-between;
@@ -1756,14 +1956,13 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   color: #555;
 }
 
-/* Ones count badge in group header */
 .result-group-ones {
   font-size: 9px;
   font-weight: bold;
   letter-spacing: 0.5px;
-  color: #e74c3c;
-  background: rgba(231,76,60,0.12);
-  border: 1px solid rgba(231,76,60,0.4);
+  color: var(--c-accent-red);
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid rgba(231, 76, 60, 0.4);
   border-radius: 3px;
   padding: 1px 5px;
 }
@@ -1774,7 +1973,7 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   gap: 5px;
 }
 
-/* Base pip */
+/* Pips */
 .result-pip {
   display: inline-flex;
   align-items: center;
@@ -1790,87 +1989,71 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   transition: opacity 0.15s;
 }
 
-/* Fail state — dim */
 .result-pip--fail {
   opacity: 0.45;
 }
 
-/* Aptitude dice — red tint base */
-.result-pip--apt        { border-color: rgba(192,57,43,0.35); color: #a0706b; }
-.result-pip--apt.result-pip--fail { border-color: rgba(192,57,43,0.2); }
+.result-pip--apt {
+  border-color: rgba(192, 57, 43, 0.35);
+  color: #a0706b;
+}
 
-/* Gear dice — yellow tint base */
-.result-pip--gear        { border-color: rgba(241,196,15,0.35); color: #a09030; }
-.result-pip--gear.result-pip--fail { border-color: rgba(241,196,15,0.2); }
+.result-pip--apt.result-pip--fail {
+  border-color: rgba(192, 57, 43, 0.2);
+}
 
-/* 1s — always bright red, never dimmed */
+.result-pip--gear {
+  border-color: rgba(241, 196, 15, 0.35);
+  color: #a09030;
+}
+
+.result-pip--gear.result-pip--fail {
+  border-color: rgba(241, 196, 15, 0.2);
+}
+
+/* Ones */
 .result-pip--one {
-  background: rgba(231,76,60,0.2) !important;
-  border-color: #e74c3c !important;
-  color: #e74c3c !important;
+  background: rgba(231, 76, 60, 0.2) !important;
+  border-color: var(--c-accent-red) !important;
+  color: var(--c-accent-red) !important;
   opacity: 1 !important;
   font-weight: 900;
 }
 
-/* Successes — bright green, never dimmed */
+/* Success */
 .result-pip--success {
-  border-color: #2ecc71 !important;
-  color: #2ecc71 !important;
-  background: rgba(46,204,113,0.12) !important;
+  border-color: var(--c-accent-green) !important;
+  color: var(--c-accent-green) !important;
+  background: rgba(46, 204, 113, 0.12) !important;
   opacity: 1 !important;
 }
 
-/* 1 always overrides success */
+/* 1 overrides success */
 .result-pip--one.result-pip--success {
-  border-color: #e74c3c !important;
-  color: #e74c3c !important;
-  background: rgba(231,76,60,0.2) !important;
+  border-color: var(--c-accent-red) !important;
+  color: var(--c-accent-red) !important;
+  background: rgba(231, 76, 60, 0.2) !important;
 }
 
-/* Pushed dice — dashed border to show they were re-rolled */
+/* Pushed / kept */
 .result-pip--pushed {
   border-style: dashed !important;
   opacity: 1;
 }
 
-/* Kept dice (not re-rolled on push) — solid, slightly faded */
 .result-pip--kept {
   opacity: 0.75;
 }
 
-/* Error string */
+/* Error */
 .result-error {
-  color: #e74c3c;
+  color: var(--c-accent-red);
   font-size: 12px;
 }
 
 /* ================================================
-   GEAR VALUE COLUMN (general gear table)
+   MISC
    ================================================ */
-.col-gear-name, .hdr-gear-name { left: 2%;  width: 60%; }
-.col-gear-val,  .hdr-gear-val  { left: 74%; width: 12%; text-align: center; }
-.col-gear-bulk, .hdr-gear-bulk { left: 88%; width: 10%; }
-
-.hdr-gear-val  { text-align: center !important; }
-.hdr-gear-bulk { text-align: center !important; }
-
-/* ================================================
-   DICE TRAY — CLOSE BUTTON
-   ================================================ */
-
-.dice-tray__close {
-  background: transparent;
-  border: none;
-  color: #666;
-  font-size: 14px;
-  cursor: pointer;
-  padding: 0 2px;
-  line-height: 1;
-  transition: color 0.15s;
-  font-family: inherit;
+.dice-tray--collapsed .dice-tray__handle-caret {
+  display: none;
 }
-
-.dice-tray__close:hover { color: #e74c3c; }
-
-/* Remove the old caret styles since handle no longer has one */
-.dice-tray--collapsed .dice-tray__handle-caret { display: none; }
