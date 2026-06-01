@@ -942,7 +942,7 @@ function toggleAptitude(apt) {
   } else {
     if (aptitudeQueue.length >= 2) aptitudeQueue.shift();
     const count = getAptitudeValue(apt);
-    if (count > 0) aptitudeQueue.push({ apt, count });
+    aptitudeQueue.push({ apt, count }); // 0 is valid — shows 0d6
   }
   updateAptitudeIconStates();
   renderDiceTray();
@@ -1393,13 +1393,14 @@ function injectGearDieIcons() {
     if (row) block.insertBefore(btn, row);
   });
 
-  // General Gear rows — die icon sits left of name cell
+  // General Gear rows — die icon sits upper-left of the gear-val cell
   document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
     const n        = i + 1;
     const slotKey  = `gear-${n}`;
     const label    = `Gear ${n}`;
     const valInput = row.querySelector(`input[name="attr_gear_val_${n}"]`);
-    if (row.querySelector(".gear-die-icon")) return;
+    const valCell  = row.querySelector(".col-gear-val");
+    if (!valCell || row.querySelector(".gear-die-icon")) return;
 
     const btn = document.createElement("button");
     btn.className       = "gear-die-icon gear-die-icon--general";
@@ -1418,8 +1419,9 @@ function injectGearDieIcons() {
       toggleGear(slotKey, label, count);
     });
 
-    row.style.position = "relative";
-    row.insertBefore(btn, row.firstChild);
+    // Position icon upper-left of the val cell
+    valCell.style.position = "relative";
+    valCell.insertBefore(btn, valCell.firstChild);
   });
 }
 
