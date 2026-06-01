@@ -141,16 +141,20 @@ async function getPlayerKey() {
 }
 
 async function loadSheet() {
+  // Try OBR cloud storage first
   try {
     const playerKey = await getPlayerKey();
     const meta = await OBR.room.getMetadata();
     const block = meta[STORAGE_KEY];
-    if (block && block[playerKey]) {
+    if (block && typeof block === "object" && block[playerKey]) {
+      // Found cloud data — also refresh localStorage backup
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(block[playerKey]));
       return block[playerKey];
     }
   } catch (err) {
     // OBR unavailable — fall through to localStorage
   }
+  // Fallback: localStorage (survives hard reloads when OBR context is briefly lost)
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
@@ -771,9 +775,11 @@ function updateCurrentAptitudes() {
       const current = Math.max(0, base - traumaCount);
       const el      = document.getElementById(`cur-${apt}`);
       if (el) {
-        if (traumaCount > 0 && base > 0) {
+        if (base > 0) {
           el.textContent = current;
-          el.style.color = current === 0 ? "red" : "rgba(255,0,0,0.7)";
+          el.style.color = traumaCount > 0
+            ? (current === 0 ? "red" : "rgba(255,0,0,0.7)")
+            : "#555";
         } else {
           el.textContent = "";
         }
@@ -876,6 +882,16 @@ document.addEventListener("change", (e) => {
     // Check all boxes before this one too
     boxes.forEach((b, i) => { if (i < idx && !b.disabled) b.checked = true; });
   } else {
+    // If this is a stress box and condition is active, prevent unchecking (locked)
+    if (isStress) {
+      const condKey  = PAIR_MAP[prefix].key;
+      const condId   = `cond-${condKey.replace("_", "-")}`;
+      const condBox  = document.getElementById(condId);
+      if (condBox?.checked) {
+        e.target.checked = true; // revert — stress is locked by condition
+        return;
+      }
+    }
     // Uncheck all boxes after this one too
     boxes.forEach((b, i) => { if (i > idx) b.checked = false; });
   }
@@ -1077,26 +1093,21 @@ function renderDiceTray() {
   const clearBtn    = document.getElementById("dice-clear-btn");
 
   const rawTotal         = rawAptCount() + rawGearCount();
+  const selectionCount   = aptitudeQueue.length + (activeGear ? 1 : 0); // selections, not dice
   const { aptDice, gearDice, total: netTotal } = adjustedPool();
 
   // Handle badge
-  handleCount.textContent = netTotal > 0 ? buildBreakdownLabel() : "";
+  handleCount.textContent = selectionCount > 0 ? (buildBreakdownLabel() || "0d6") : "";
 
-  // Show the tray always; open body when pool has dice, close when empty
+  // Show tray always; open body whenever something is selected (even 0 dice)
   tray.style.display = "block";
   const body = tray.querySelector(".dice-tray__body");
   if (body) {
-    // If new dice were just added (rawTotal > 0) always open the body,
-    // regardless of whether user had manually collapsed it.
-    if (rawTotal > 0) {
-      body.style.display = "flex";
-    } else {
-      body.style.display = "none";
-    }
+    body.style.display = selectionCount > 0 ? "flex" : "none";
   }
 
   rollBtn.disabled  = netTotal === 0;
-  clearBtn.disabled = rawTotal === 0;
+  clearBtn.disabled = selectionCount === 0;
 
   // Pool display — individual SVG die icons
   display.innerHTML = "";
@@ -1473,9 +1484,10 @@ document.getElementById("dice-tray-close")
     clearDiceTray();
   });
 
-// Handle click — toggle body open/closed
+// Handle click — collapse/expand body, but NOT when close button was clicked
 document.getElementById("dice-tray-handle")
-  .addEventListener("click", () => {
+  .addEventListener("click", (e) => {
+    if (e.target.closest("#dice-tray-close")) return; // close btn handled separately
     const body = document.querySelector(".dice-tray__body");
     if (body) body.style.display = body.style.display === "none" ? "flex" : "none";
   });
