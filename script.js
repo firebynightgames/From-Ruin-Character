@@ -956,8 +956,23 @@ const aptitudeQueue = [];
 // { slotKey: "weapon-1", label: "Weapon 1", count: 2 }
 let activeGear = null;
 
-// Last roll results for Push (future)
+// Last roll results for Push
 let lastRollResults = null;
+
+/* -----------------------------------------------
+   Push button state helper
+   ----------------------------------------------- */
+function updatePushState() {
+  const pushBtn = document.getElementById("dice-push-btn");
+  if (!pushBtn) return;
+
+  const hasResults =
+    lastRollResults &&
+    (Array.isArray(lastRollResults.apt) || Array.isArray(lastRollResults.gear));
+
+  pushBtn.disabled    = !hasResults;
+  pushBtn.textContent = hasResults ? "Push" : "Push";
+}
 
 /* -----------------------------------------------
    Get aptitude value (trauma-adjusted if shown)
@@ -1168,13 +1183,13 @@ function clearDiceTray() {
   lastRollResults      = null;
   const diffInput = document.getElementById("dice-difficulty");
   if (diffInput) diffInput.value = "";
-  document.getElementById("dice-push-btn").disabled = true;
   const banner = document.getElementById("dice-success-banner");
   if (banner) { banner.style.display = "none"; banner.innerHTML = ""; }
   updateAptitudeIconStates();
   updateGearIconStates();
   renderDiceTray();
   hideDiceResult();
+  updatePushState();
 }
 
 /* -----------------------------------------------
@@ -1337,7 +1352,11 @@ async function checkDicePlusReady() {
    ----------------------------------------------- */
 function rollLocal() {
   const { aptDice, gearDice } = adjustedPool();
-  if (aptDice + gearDice <= 0) return;
+  if (aptDice + gearDice <= 0) {
+    lastRollResults = null;
+    updatePushState();
+    return;
+  }
 
   const rollDie = () => Math.ceil(Math.random() * 6);
   const aptResults  = Array.from({ length: aptDice  }, rollDie);
@@ -1346,10 +1365,11 @@ function rollLocal() {
   lastRollResults = { apt: aptResults, gear: gearResults };
   showDiceResult(lastRollResults);
 
-  document.getElementById("dice-roll-btn").disabled    = false;
-  document.getElementById("dice-roll-btn").textContent = "ROLL ALL";
-  document.getElementById("dice-push-btn").disabled    = false;
-  document.getElementById("dice-push-btn").textContent = "Push";
+  const rollBtn = document.getElementById("dice-roll-btn");
+  rollBtn.disabled    = false;
+  rollBtn.textContent = "ROLL ALL";
+
+  updatePushState();
 }
 
 /* -----------------------------------------------
@@ -1398,6 +1418,7 @@ async function triggerRoll() {
         };
         lastRollResults = splitResults;
         showDiceResult(splitResults);
+        updatePushState();
       } else if (data.result?.totalValue !== undefined) {
         // Ignore totalValue — we want individual die results only
         // Fall back to local roll to get proper per-die display
@@ -1407,8 +1428,6 @@ async function triggerRoll() {
 
       rollBtn.disabled    = false;
       rollBtn.textContent = "ROLL ALL";
-      document.getElementById("dice-push-btn").disabled    = false;
-      document.getElementById("dice-push-btn").textContent = "Push";
     }
   );
 
@@ -1471,8 +1490,12 @@ async function triggerRoll() {
 function triggerPush() {
   const pushBtn = document.getElementById("dice-push-btn");
 
+  const hasResults =
+    lastRollResults &&
+    (Array.isArray(lastRollResults.apt) || Array.isArray(lastRollResults.gear));
+
   // Guard: need results to push
-  if (!lastRollResults) {
+  if (!hasResults) {
     pushBtn.disabled = true;
     return;
   }
@@ -1719,3 +1742,4 @@ function injectGearDieIcons() {
 injectGearDieIcons();
 wireRowDieIcons();
 renderDiceTray();
+updatePushState();
