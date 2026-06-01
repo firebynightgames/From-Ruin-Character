@@ -116,12 +116,7 @@ async function saveSheet() {
     const existingBlock = (existing[STORAGE_KEY] ?? {});
     const merged = { ...existingBlock, [playerKey]: data };
     await OBR.room.setMetadata({ [STORAGE_KEY]: merged });
-    // Verify
-    const verify = await OBR.room.getMetadata();
-    const verifyBlock = verify[STORAGE_KEY];
-    if (verifyBlock && verifyBlock[playerKey]) {
-    } else {
-    }
+
   } catch (err) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
@@ -873,8 +868,6 @@ OBR.onReady(async () => {
   localStorage.removeItem("fromRuinCharacter_v11");
   localStorage.removeItem("fromRuinCharacter_v12");
   localStorage.removeItem("fromRuinCharacter_v13");
-  localStorage.removeItem("fromRuinCharacter_v6");
-
   const saved = await loadSheet();
   if (saved) {
     restoreSheet(saved);
@@ -1188,7 +1181,23 @@ async function checkDicePlusReady() {
 }
 
 /* -----------------------------------------------
-   Roll
+   Local roll fallback — used when Dice+ is unavailable
+   ----------------------------------------------- */
+function rollLocal() {
+  const { total } = adjustedPool();
+  if (total <= 0) return;
+  const results = Array.from({ length: total }, () => Math.ceil(Math.random() * 6));
+  lastRollResults = results;
+  showDiceResult(results);
+
+  const rollBtn = document.getElementById("dice-roll-btn");
+  rollBtn.disabled    = false;
+  rollBtn.textContent = "ROLL ALL";
+  clearDiceTray();
+}
+
+/* -----------------------------------------------
+   Roll — tries Dice+ first, falls back to local
    ----------------------------------------------- */
 async function triggerRoll() {
   const notation = buildNotation();
@@ -1200,9 +1209,10 @@ async function triggerRoll() {
 
   const isReady = await checkDicePlusReady();
   if (!isReady) {
+    // Dice+ not available — roll locally instead
     rollBtn.disabled    = false;
     rollBtn.textContent = "ROLL ALL";
-    showDiceResult("⚠ Dice+ not found. Install it from the OBR store.");
+    rollLocal();
     return;
   }
 
@@ -1219,7 +1229,6 @@ async function triggerRoll() {
 
       lastRollResults = data.result;
 
-      // Extract individual die values for display
       const individualValues = data.result?.dice?.map(d => d.value)
         ?? data.result?.rolls
         ?? [];
@@ -1227,7 +1236,6 @@ async function triggerRoll() {
       if (individualValues.length > 0) {
         showDiceResult(individualValues);
       } else if (data.result?.totalValue !== undefined) {
-        // Fallback if individual values not provided
         showDiceResult(`Total: ${data.result.totalValue}`);
       }
 
@@ -1244,9 +1252,10 @@ async function triggerRoll() {
       if (data.rollId !== rollId) return;
       resultUnsub();
       errorUnsub();
-      showDiceResult(`⚠ Roll error: ${data.error}`);
+      // Fall back to local on error
       rollBtn.disabled    = false;
       rollBtn.textContent = "ROLL ALL";
+      rollLocal();
     }
   );
 
@@ -1270,18 +1279,20 @@ async function triggerRoll() {
   } catch (err) {
     resultUnsub();
     errorUnsub();
-    showDiceResult(`⚠ Broadcast error: ${err.message}`);
+    // Fall back to local on broadcast error
     rollBtn.disabled    = false;
     rollBtn.textContent = "ROLL ALL";
+    rollLocal();
   }
 
-  // Safety timeout
+  // Safety timeout — fall back to local if no response
   setTimeout(() => {
     try { resultUnsub(); } catch {}
     try { errorUnsub();  } catch {}
     if (rollBtn.textContent === "Rolling…") {
       rollBtn.disabled    = false;
       rollBtn.textContent = "ROLL ALL";
+      rollLocal();
     }
   }, 15000);
 }
