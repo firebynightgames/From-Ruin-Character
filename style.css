@@ -1330,15 +1330,13 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
           drop-shadow(0 0 3px rgba(192,57,43,0.9));
 }
 
-/* Position die icons in upper-left of each aptitude field */
-/* Left aptitudes sit at left: 9.6%, icon offset slightly left+up */
-.apt-die-icon.left-apt  { left: 8%;   }
-.apt-die-icon.right-apt { left: 74.5%; }
+.apt-die-icon.left-apt  { left: 10%;   }
+.apt-die-icon.right-apt { left: 77%; }
 
-.apt-die-icon.row-1 { top: 9%;    }
-.apt-die-icon.row-2 { top: 31.5%; }
-.apt-die-icon.row-3 { top: 54%;   }
-.apt-die-icon.row-4 { top: 76.5%; }
+.apt-die-icon.row-1 { top: 11.5%;    }
+.apt-die-icon.row-2 { top: 33.75%; }
+.apt-die-icon.row-3 { top: 56.25%;   }
+.apt-die-icon.row-4 { top: 78.5%; }
 
 /* ================================================
    DICE TRAY
