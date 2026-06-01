@@ -1346,12 +1346,10 @@ function rollLocal() {
   lastRollResults = { apt: aptResults, gear: gearResults };
   showDiceResult(lastRollResults);
 
-  const rollBtn  = document.getElementById("dice-roll-btn");
-  const pushBtn  = document.getElementById("dice-push-btn");
-  rollBtn.disabled    = false;
-  rollBtn.textContent = "ROLL ALL";
-  pushBtn.disabled    = false;  // enable Push after every fresh roll
-  pushBtn.textContent = "Push";
+  document.getElementById("dice-roll-btn").disabled    = false;
+  document.getElementById("dice-roll-btn").textContent = "ROLL ALL";
+  document.getElementById("dice-push-btn").disabled    = false;
+  document.getElementById("dice-push-btn").textContent = "Push";
 }
 
 /* -----------------------------------------------
@@ -1401,14 +1399,16 @@ async function triggerRoll() {
         lastRollResults = splitResults;
         showDiceResult(splitResults);
       } else if (data.result?.totalValue !== undefined) {
-        showDiceResult(`Total: ${data.result.totalValue}`);
+        // Ignore totalValue — we want individual die results only
+        // Fall back to local roll to get proper per-die display
+        rollLocal();
+        return;
       }
 
       rollBtn.disabled    = false;
       rollBtn.textContent = "ROLL ALL";
-      const pb = document.getElementById("dice-push-btn");
-      pb.disabled    = false;
-      pb.textContent = "Push";
+      document.getElementById("dice-push-btn").disabled    = false;
+      document.getElementById("dice-push-btn").textContent = "Push";
     }
   );
 
@@ -1465,35 +1465,46 @@ async function triggerRoll() {
 }
 
 /* -----------------------------------------------
-   Push — reroll non-1 failures, keep 1s and successes
-   Rerolled dice are flagged so they render differently.
+   Push — reroll non-1 failures; keep successes and 1s.
+   One-shot per roll. Re-rolled dice shown with dashed border.
    ----------------------------------------------- */
 function triggerPush() {
-  if (!lastRollResults) return;
+  const pushBtn = document.getElementById("dice-push-btn");
+
+  // Guard: need results to push
+  if (!lastRollResults) {
+    pushBtn.disabled = true;
+    return;
+  }
+
   const threshold = getThreshold();
   const rollDie   = () => Math.ceil(Math.random() * 6);
 
-  // Returns array of { val, pushed: bool }
+  // Map each value: keep if success or 1, else reroll
   function pushGroup(values) {
+    if (!Array.isArray(values)) return [];
     return values.map(v => {
       const kept = (v >= threshold || v === 1);
       return { val: kept ? v : rollDie(), pushed: !kept };
     });
   }
 
-  const pushedApt  = pushGroup(lastRollResults.apt  || []);
-  const pushedGear = pushGroup(lastRollResults.gear || []);
+  const aptVals  = Array.isArray(lastRollResults.apt)  ? lastRollResults.apt  : [];
+  const gearVals = Array.isArray(lastRollResults.gear) ? lastRollResults.gear : [];
 
-  // Store flat values for future push checks (push is one-shot so this is informational)
+  const pushedApt  = pushGroup(aptVals);
+  const pushedGear = pushGroup(gearVals);
+
+  // Update lastRollResults to the new flat values
   lastRollResults = {
     apt:  pushedApt.map(d => d.val),
     gear: pushedGear.map(d => d.val)
   };
 
+  // Render
   showDiceResultPushed({ apt: pushedApt, gear: pushedGear });
 
-  // One-shot
-  const pushBtn = document.getElementById("dice-push-btn");
+  // One-shot disable
   pushBtn.disabled    = true;
   pushBtn.textContent = "Pushed";
 }
@@ -1645,14 +1656,17 @@ function wireRowDieIcons() {
   document.querySelectorAll(".gear-die-icon--row").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const slotKey = btn.dataset.slotKey;
-      const n       = slotKey.split("-")[1];
-      const label   = slotKey.startsWith("weapon") ? `Weapon ${n}` : `Armor ${n}`;
-      const inputName = slotKey.startsWith("weapon")
-        ? `attr_weapon_gear_a_${n}`
-        : `attr_armor_gear_a_${n}`;
-      const input = document.querySelector(`input[name="${inputName}"]`);
-      const count = parseInt(input?.value) || 0;
+      const slotKey    = btn.dataset.slotKey;
+      const n          = slotKey.split("-")[1];
+      const isWeapon   = slotKey.startsWith("weapon");
+      const nameName   = isWeapon ? `attr_weapon_name_${n}` : `attr_armor_name_${n}`;
+      const gearName   = isWeapon ? `attr_weapon_gear_a_${n}` : `attr_armor_gear_a_${n}`;
+      const nameInput  = document.querySelector(`input[name="${nameName}"]`);
+      const gearInput  = document.querySelector(`input[name="${gearName}"]`);
+      const rawLabel   = nameInput?.value?.trim();
+      const fallback   = isWeapon ? `Weapon ${n}` : `Armor ${n}`;
+      const label      = rawLabel || fallback;
+      const count      = parseInt(gearInput?.value) || 0;
       toggleGear(slotKey, label, count);
     });
   });
@@ -1684,8 +1698,11 @@ function injectGearDieIcons() {
 
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const count = parseInt(valInput?.value) || 0;
-      toggleGear(slotKey, label, count);
+      const nameInput = row.querySelector(`input[name="attr_gear_name_${n}"]`);
+      const rawLabel  = nameInput?.value?.trim();
+      const liveLabel = rawLabel || label;     // fallback to "Gear N"
+      const count     = parseInt(valInput?.value) || 0;
+      toggleGear(slotKey, liveLabel, count);
     });
 
     // Position at right edge of name cell
