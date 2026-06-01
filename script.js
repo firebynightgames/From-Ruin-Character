@@ -986,7 +986,7 @@ function toggleAptitude(apt) {
   }
   updateAptitudeIconStates();
   renderDiceTray();
-  hideDiceResult();
+  // Results intentionally NOT cleared here — dice persist until explicit Clear
 }
 
 /* -----------------------------------------------
@@ -994,15 +994,13 @@ function toggleAptitude(apt) {
    ----------------------------------------------- */
 function toggleGear(slotKey, label, count) {
   if (activeGear?.slotKey === slotKey) {
-    // Deselect
     activeGear = null;
   } else {
-    // Replace previous (or set first)
     if (count > 0) activeGear = { slotKey, label, count };
   }
   updateGearIconStates();
   renderDiceTray();
-  hideDiceResult();
+  // Results intentionally NOT cleared here — dice persist until explicit Clear
 }
 
 /* -----------------------------------------------
@@ -1195,57 +1193,105 @@ function countSuccesses(values, threshold) {
 }
 
 /* -----------------------------------------------
-   Result display — individual die results + success banner
+   Result display
    showDiceResult({ apt: [...], gear: [...] })
-   or showDiceResult("error string")
+   Dice persist until Clear is pressed.
+   Layout:
+     ┌─ SUCCESS HEADLINE ──────────────────────────┐
+     │  X Successes (threshold+)   [push available] │
+     └──────────────────────────────────────────────┘
+     APTITUDE DICE  [pip] [pip] [pip] …   Ones: N
+     GEAR DICE      [pip] [pip] …         Ones: N
    ----------------------------------------------- */
 function showDiceResult(results) {
   const el     = document.getElementById("dice-tray-result");
   const banner = document.getElementById("dice-success-banner");
   if (!el) return;
-  el.innerHTML = "";
-  el.style.display = "flex";
 
+  // --- string fallback (error) ---
   if (typeof results === "string") {
-    el.textContent = results;
+    el.innerHTML     = `<span class="result-error">${results}</span>`;
+    el.style.display = "flex";
     if (banner) banner.style.display = "none";
     return;
   }
 
-  const threshold = getThreshold();
-  const allValues = [...(results.apt || []), ...(results.gear || [])];
-  const successes = countSuccesses(allValues, threshold);
+  const threshold  = getThreshold();
+  const aptVals    = results.apt  || [];
+  const gearVals   = results.gear || [];
+  const allValues  = [...aptVals, ...gearVals];
+  const successes  = countSuccesses(allValues, threshold);
+  const aptOnes    = aptVals.filter(v => v === 1).length;
+  const gearOnes   = gearVals.filter(v => v === 1).length;
 
-  // Success banner
+  // --- Success headline banner ---
   if (banner) {
     banner.innerHTML = "";
     banner.style.display = "flex";
-    banner.className = "dice-tray__success-banner" + (successes === 0 ? " success-banner__zero" : "");
-    const label = document.createElement("span");
-    label.textContent = successes === 0
-      ? `No successes (${threshold}+ to hit)`
-      : `${successes} Success${successes !== 1 ? "es" : ""} on ${threshold}+`;
-    banner.appendChild(label);
+    const isZero = successes === 0;
+    banner.className = "dice-tray__success-banner" + (isZero ? " success-banner__zero" : "");
+
+    const headline = document.createElement("span");
+    headline.className   = "result-headline";
+    headline.textContent = isZero
+      ? `✗  No Successes  (need ${threshold}+)`
+      : `✔  ${successes} Success${successes !== 1 ? "es" : ""}  on ${threshold}+`;
+    banner.appendChild(headline);
+
+    // Ones summary line — only if any 1s rolled
+    const totalOnes = aptOnes + gearOnes;
+    if (totalOnes > 0) {
+      const onesLine = document.createElement("span");
+      onesLine.className = "result-ones-summary";
+      const parts = [];
+      if (aptOnes  > 0) parts.push(`${aptOnes} apt`);
+      if (gearOnes > 0) parts.push(`${gearOnes} gear`);
+      onesLine.textContent = `⚠ ${totalOnes} one${totalOnes !== 1 ? "s" : ""} (${parts.join(" + ")})`;
+      banner.appendChild(onesLine);
+    }
   }
 
-  // Die pip groups
+  // --- Die pip groups ---
+  el.innerHTML     = "";
+  el.style.display = "flex";
+
   function renderGroup(values, groupLabel, pipClass) {
     if (!values || values.length === 0) return;
+    const ones = values.filter(v => v === 1).length;
+
     const group = document.createElement("div");
     group.className = "result-group";
+
+    // Header row: label + ones count
+    const header = document.createElement("div");
+    header.className = "result-group-header";
 
     const lbl = document.createElement("span");
     lbl.className   = "result-group-label";
     lbl.textContent = groupLabel;
-    group.appendChild(lbl);
+    header.appendChild(lbl);
 
+    if (ones > 0) {
+      const onesTag = document.createElement("span");
+      onesTag.className   = "result-group-ones";
+      onesTag.textContent = `${ones} × 1`;
+      header.appendChild(onesTag);
+    }
+    group.appendChild(header);
+
+    // Pip row
     const pips = document.createElement("div");
     pips.className = "result-group-pips";
     values.forEach(val => {
-      const pip = document.createElement("span");
+      const pip       = document.createElement("span");
       const isSuccess = val >= threshold;
       const isOne     = val === 1;
-      pip.className = `result-pip ${pipClass}${isSuccess ? " result-pip--success" : ""}${isOne ? " result-pip--one" : ""}`;
+      pip.className   = [
+        "result-pip",
+        pipClass,
+        isOne     ? "result-pip--one"     : "",
+        isSuccess ? "result-pip--success" : "result-pip--fail"
+      ].filter(Boolean).join(" ");
       pip.textContent = val;
       pips.appendChild(pip);
     });
@@ -1253,13 +1299,16 @@ function showDiceResult(results) {
     el.appendChild(group);
   }
 
-  renderGroup(results.apt,  "Aptitude", "result-pip--apt");
-  renderGroup(results.gear, "Gear",     "result-pip--gear");
+  renderGroup(aptVals,  "Aptitude Dice", "result-pip--apt");
+  renderGroup(gearVals, "Gear Dice",     "result-pip--gear");
 }
 
 function hideDiceResult() {
+  // Only called on explicit Clear — don't call on toggle or re-roll
   const el = document.getElementById("dice-tray-result");
   if (el) { el.innerHTML = ""; el.style.display = "none"; }
+  const banner = document.getElementById("dice-success-banner");
+  if (banner) { banner.innerHTML = ""; banner.style.display = "none"; }
 }
 
 /* -----------------------------------------------
@@ -1301,7 +1350,8 @@ function rollLocal() {
   const pushBtn  = document.getElementById("dice-push-btn");
   rollBtn.disabled    = false;
   rollBtn.textContent = "ROLL ALL";
-  pushBtn.disabled    = false;
+  pushBtn.disabled    = false;  // enable Push after every fresh roll
+  pushBtn.textContent = "Push";
 }
 
 /* -----------------------------------------------
@@ -1356,7 +1406,9 @@ async function triggerRoll() {
 
       rollBtn.disabled    = false;
       rollBtn.textContent = "ROLL ALL";
-      document.getElementById("dice-push-btn").disabled = false;
+      const pb = document.getElementById("dice-push-btn");
+      pb.disabled    = false;
+      pb.textContent = "Push";
     }
   );
 
@@ -1414,30 +1466,124 @@ async function triggerRoll() {
 
 /* -----------------------------------------------
    Push — reroll non-1 failures, keep 1s and successes
+   Rerolled dice are flagged so they render differently.
    ----------------------------------------------- */
 function triggerPush() {
   if (!lastRollResults) return;
   const threshold = getThreshold();
   const rollDie   = () => Math.ceil(Math.random() * 6);
 
+  // Returns array of { val, pushed: bool }
   function pushGroup(values) {
     return values.map(v => {
-      // Keep: successes (>= threshold) and 1s (can't push past a complication)
-      if (v >= threshold || v === 1) return v;
-      return rollDie();
+      const kept = (v >= threshold || v === 1);
+      return { val: kept ? v : rollDie(), pushed: !kept };
     });
   }
 
-  const pushed = {
-    apt:  pushGroup(lastRollResults.apt  || []),
-    gear: pushGroup(lastRollResults.gear || [])
+  const pushedApt  = pushGroup(lastRollResults.apt  || []);
+  const pushedGear = pushGroup(lastRollResults.gear || []);
+
+  // Store flat values for future push checks (push is one-shot so this is informational)
+  lastRollResults = {
+    apt:  pushedApt.map(d => d.val),
+    gear: pushedGear.map(d => d.val)
   };
 
-  lastRollResults = pushed;
-  showDiceResult(pushed);
+  showDiceResultPushed({ apt: pushedApt, gear: pushedGear });
 
-  // Push is one-shot — disable after use
-  document.getElementById("dice-push-btn").disabled = true;
+  // One-shot
+  const pushBtn = document.getElementById("dice-push-btn");
+  pushBtn.disabled    = true;
+  pushBtn.textContent = "Pushed";
+}
+
+/* Show push results — same as showDiceResult but marks re-rolled dice */
+function showDiceResultPushed(groups) {
+  const el     = document.getElementById("dice-tray-result");
+  const banner = document.getElementById("dice-success-banner");
+  if (!el) return;
+
+  const threshold = getThreshold();
+  const allVals   = [...groups.apt, ...groups.gear].map(d => d.val);
+  const successes = countSuccesses(allVals, threshold);
+  const aptOnes   = groups.apt.filter(d => d.val === 1).length;
+  const gearOnes  = groups.gear.filter(d => d.val === 1).length;
+
+  // Banner
+  if (banner) {
+    banner.innerHTML = "";
+    banner.style.display = "flex";
+    const isZero = successes === 0;
+    banner.className = "dice-tray__success-banner" + (isZero ? " success-banner__zero" : "");
+
+    const headline = document.createElement("span");
+    headline.className   = "result-headline";
+    headline.textContent = (isZero
+      ? `✗  No Successes  (need ${threshold}+)`
+      : `✔  ${successes} Success${successes !== 1 ? "es" : ""}  on ${threshold}+`)
+      + "  — after Push";
+    banner.appendChild(headline);
+
+    const totalOnes = aptOnes + gearOnes;
+    if (totalOnes > 0) {
+      const onesLine = document.createElement("span");
+      onesLine.className = "result-ones-summary";
+      const parts = [];
+      if (aptOnes  > 0) parts.push(`${aptOnes} apt`);
+      if (gearOnes > 0) parts.push(`${gearOnes} gear`);
+      onesLine.textContent = `⚠ ${totalOnes} one${totalOnes !== 1 ? "s" : ""} (${parts.join(" + ")})`;
+      banner.appendChild(onesLine);
+    }
+  }
+
+  el.innerHTML     = "";
+  el.style.display = "flex";
+
+  function renderPushGroup(dice, groupLabel, pipClass) {
+    if (!dice || dice.length === 0) return;
+    const ones = dice.filter(d => d.val === 1).length;
+
+    const group = document.createElement("div");
+    group.className = "result-group";
+
+    const header = document.createElement("div");
+    header.className = "result-group-header";
+    const lbl = document.createElement("span");
+    lbl.className   = "result-group-label";
+    lbl.textContent = groupLabel;
+    header.appendChild(lbl);
+    if (ones > 0) {
+      const onesTag = document.createElement("span");
+      onesTag.className   = "result-group-ones";
+      onesTag.textContent = `${ones} × 1`;
+      header.appendChild(onesTag);
+    }
+    group.appendChild(header);
+
+    const pips = document.createElement("div");
+    pips.className = "result-group-pips";
+    dice.forEach(({ val, pushed }) => {
+      const pip       = document.createElement("span");
+      const isSuccess = val >= threshold;
+      const isOne     = val === 1;
+      pip.className   = [
+        "result-pip",
+        pipClass,
+        isOne     ? "result-pip--one"     : "",
+        isSuccess ? "result-pip--success" : "result-pip--fail",
+        pushed    ? "result-pip--pushed"  : "result-pip--kept"
+      ].filter(Boolean).join(" ");
+      pip.textContent = val;
+      if (pushed) pip.title = "re-rolled";
+      pips.appendChild(pip);
+    });
+    group.appendChild(pips);
+    el.appendChild(group);
+  }
+
+  renderPushGroup(groups.apt,  "Aptitude Dice", "result-pip--apt");
+  renderPushGroup(groups.gear, "Gear Dice",     "result-pip--gear");
 }
 
 /* -----------------------------------------------
