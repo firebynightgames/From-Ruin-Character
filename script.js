@@ -1131,7 +1131,9 @@ function clearDiceTray() {
 }
 
 /* -----------------------------------------------
-   Result display — individual die results
+   Result display — individual die results, split by type
+   showDiceResult({ apt: [...], gear: [...] })
+   or showDiceResult("error string")
    ----------------------------------------------- */
 function showDiceResult(results) {
   const el = document.getElementById("dice-tray-result");
@@ -1140,18 +1142,35 @@ function showDiceResult(results) {
   el.style.display = "flex";
 
   if (typeof results === "string") {
-    // Error string
     el.textContent = results;
     return;
   }
 
-  // results = array of numbers
-  results.forEach(val => {
-    const pip = document.createElement("span");
-    pip.className = `result-pip${val === 1 ? " result-pip--one" : ""}`;
-    pip.textContent = val;
-    el.appendChild(pip);
-  });
+  // results = { apt: number[], gear: number[] }
+  function renderGroup(values, label, pipClass) {
+    if (!values || values.length === 0) return;
+    const group = document.createElement("div");
+    group.className = "result-group";
+
+    const lbl = document.createElement("span");
+    lbl.className   = "result-group-label";
+    lbl.textContent = label;
+    group.appendChild(lbl);
+
+    const pips = document.createElement("div");
+    pips.className = "result-group-pips";
+    values.forEach(val => {
+      const pip = document.createElement("span");
+      pip.className = `result-pip ${pipClass}${val === 1 ? " result-pip--one" : ""}`;
+      pip.textContent = val;
+      pips.appendChild(pip);
+    });
+    group.appendChild(pips);
+    el.appendChild(group);
+  }
+
+  renderGroup(results.apt,  "Aptitude", "result-pip--apt");
+  renderGroup(results.gear, "Gear",     "result-pip--gear");
 }
 
 function hideDiceResult() {
@@ -1184,11 +1203,15 @@ async function checkDicePlusReady() {
    Local roll fallback — used when Dice+ is unavailable
    ----------------------------------------------- */
 function rollLocal() {
-  const { total } = adjustedPool();
-  if (total <= 0) return;
-  const results = Array.from({ length: total }, () => Math.ceil(Math.random() * 6));
-  lastRollResults = results;
-  showDiceResult(results);
+  const { aptDice, gearDice } = adjustedPool();
+  if (aptDice + gearDice <= 0) return;
+
+  const rollDie = () => Math.ceil(Math.random() * 6);
+  const aptResults  = Array.from({ length: aptDice  }, rollDie);
+  const gearResults = Array.from({ length: gearDice }, rollDie);
+
+  lastRollResults = { apt: aptResults, gear: gearResults };
+  showDiceResult(lastRollResults);
 
   const rollBtn = document.getElementById("dice-roll-btn");
   rollBtn.disabled    = false;
@@ -1219,6 +1242,9 @@ async function triggerRoll() {
   const rollId = `roll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   rollBtn.textContent = "Rolling…";
 
+  // Capture the split counts now before clearDiceTray wipes state
+  const { aptDice, gearDice } = adjustedPool();
+
   const resultUnsub = OBR.broadcast.onMessage(
     `${DICE_SOURCE_ID}/roll-result`,
     (event) => {
@@ -1227,14 +1253,18 @@ async function triggerRoll() {
       resultUnsub();
       errorUnsub();
 
-      lastRollResults = data.result;
-
-      const individualValues = data.result?.dice?.map(d => d.value)
+      const flatValues = data.result?.dice?.map(d => d.value)
         ?? data.result?.rolls
         ?? [];
 
-      if (individualValues.length > 0) {
-        showDiceResult(individualValues);
+      if (flatValues.length > 0) {
+        // Split flat array into apt slice + gear slice
+        const splitResults = {
+          apt:  flatValues.slice(0, aptDice),
+          gear: flatValues.slice(aptDice)
+        };
+        lastRollResults = splitResults;
+        showDiceResult(splitResults);
       } else if (data.result?.totalValue !== undefined) {
         showDiceResult(`Total: ${data.result.totalValue}`);
       }
@@ -1270,7 +1300,7 @@ async function triggerRoll() {
         playerName,
         rollTarget:   "everyone",
         diceNotation: notation,
-        showResults:  true,
+        showResults:  false,
         timestamp:    Date.now(),
         source:       DICE_SOURCE_ID
       },
@@ -1345,16 +1375,17 @@ document.getElementById("dice-tray-handle")
    Inject gear die icons into weapon/armor blocks
    ----------------------------------------------- */
 function injectGearDieIcons() {
-  // Weapons — die icon sits just left of the weapon-row, as a block sibling
+  // Weapons — die icon sits inside col-gear, left of the two gear inputs
   document.querySelectorAll(".weapon-block").forEach((block, i) => {
     const n         = i + 1;
     const slotKey   = `weapon-${n}`;
     const label     = `Weapon ${n}`;
     const gearInput = block.querySelector(`input[name="attr_weapon_gear_a_${n}"]`);
-    if (block.querySelector(".gear-die-icon")) return;
+    const gearCell  = block.querySelector(".col-gear");
+    if (!gearCell || block.querySelector(".gear-die-icon")) return;
 
     const btn = document.createElement("button");
-    btn.className       = "gear-die-icon gear-die-icon--weapon";
+    btn.className       = "gear-die-icon gear-die-icon--inline";
     btn.dataset.slotKey = slotKey;
     btn.title           = `Add ${label} gear dice`;
 
@@ -1370,9 +1401,9 @@ function injectGearDieIcons() {
       toggleGear(slotKey, label, count);
     });
 
-    // Insert before the weapon-row (above it, in the block)
-    const row = block.querySelector(".weapon-row");
-    if (row) block.insertBefore(btn, row);
+    // Insert before the gear-double-input wrapper inside col-gear
+    const doubleInput = gearCell.querySelector(".gear-double-input");
+    if (doubleInput) gearCell.insertBefore(btn, doubleInput);
   });
 
   // Armor — same pattern
@@ -1381,10 +1412,11 @@ function injectGearDieIcons() {
     const slotKey   = `armor-${n}`;
     const label     = `Armor ${n}`;
     const gearInput = block.querySelector(`input[name="attr_armor_gear_a_${n}"]`);
-    if (block.querySelector(".gear-die-icon")) return;
+    const gearCell  = block.querySelector(".col-armor-gear");
+    if (!gearCell || block.querySelector(".gear-die-icon")) return;
 
     const btn = document.createElement("button");
-    btn.className       = "gear-die-icon gear-die-icon--armor";
+    btn.className       = "gear-die-icon gear-die-icon--inline";
     btn.dataset.slotKey = slotKey;
     btn.title           = `Add ${label} gear dice`;
 
@@ -1400,11 +1432,11 @@ function injectGearDieIcons() {
       toggleGear(slotKey, label, count);
     });
 
-    const row = block.querySelector(".armor-row");
-    if (row) block.insertBefore(btn, row);
+    const doubleInput = gearCell.querySelector(".gear-double-input");
+    if (doubleInput) gearCell.insertBefore(btn, doubleInput);
   });
 
-  // General Gear rows — die icon sits upper-left of the gear-val cell
+  // General Gear rows — die icon sits left of the gear-val cell
   document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
     const n        = i + 1;
     const slotKey  = `gear-${n}`;
@@ -1430,7 +1462,6 @@ function injectGearDieIcons() {
       toggleGear(slotKey, label, count);
     });
 
-    // Position icon upper-left of the val cell
     valCell.style.position = "relative";
     valCell.insertBefore(btn, valCell.firstChild);
   });
