@@ -650,6 +650,9 @@ if (gearTable) {
         <div class="field-wrap col-gear-name">
           <input type="text" name="attr_gear_name_${idx}" placeholder="-">
         </div>
+        <div class="field-wrap col-gear-val">
+          <input type="number" name="attr_gear_val_${idx}" placeholder="-">
+        </div>
         <div class="field-wrap col-gear-bulk">
           <input type="number" name="attr_gear_bulk_${idx}" placeholder="-">
         </div>`;
@@ -1055,8 +1058,13 @@ function renderDiceTray() {
   // Handle badge — show breakdown
   handleCount.textContent = netTotal > 0 ? buildBreakdownLabel() : "";
 
-  // Auto expand/collapse
-  tray.classList.toggle("dice-tray--collapsed", rawTotal === 0);
+  // Fully hide tray when empty, show when pool has dice
+  if (rawTotal === 0) {
+    tray.style.display = "none";
+  } else {
+    tray.style.display = "";
+    tray.classList.remove("dice-tray--collapsed");
+  }
 
   rollBtn.disabled  = netTotal === 0;
   clearBtn.disabled = rawTotal === 0;
@@ -1306,11 +1314,19 @@ document.getElementById("dice-push-btn")
   .addEventListener("click", triggerPush);
 document.getElementById("dice-difficulty")
   .addEventListener("input", () => renderDiceTray());
+// Close button — always closes tray completely
+document.getElementById("dice-tray-close")
+  .addEventListener("click", (e) => {
+    e.stopPropagation();
+    clearDiceTray();
+  });
+
+// Handle click — reopen tray if pool has dice
 document.getElementById("dice-tray-handle")
   .addEventListener("click", () => {
+    const tray = document.getElementById("dice-tray");
     if (rawAptCount() + rawGearCount() > 0) {
-      document.getElementById("dice-tray")
-        .classList.toggle("dice-tray--collapsed");
+      tray.classList.remove("dice-tray--collapsed");
     }
   });
 
@@ -1318,22 +1334,22 @@ document.getElementById("dice-tray-handle")
    Inject gear die icons into weapon/armor blocks
    ----------------------------------------------- */
 function injectGearDieIcons() {
+  // Weapons — die icon sits just left of the weapon-row, as a block sibling
   document.querySelectorAll(".weapon-block").forEach((block, i) => {
-    const n        = i + 1;
-    const slotKey  = `weapon-${n}`;
-    const label    = `Weapon ${n}`;
+    const n         = i + 1;
+    const slotKey   = `weapon-${n}`;
+    const label     = `Weapon ${n}`;
     const gearInput = block.querySelector(`input[name="attr_weapon_gear_a_${n}"]`);
-    const nameCell  = block.querySelector(".col-name");
-    if (!nameCell || block.querySelector(".gear-die-icon")) return;
+    if (block.querySelector(".gear-die-icon")) return;
 
     const btn = document.createElement("button");
-    btn.className        = "gear-die-icon";
-    btn.dataset.slotKey  = slotKey;
-    btn.title            = `Add ${label} gear dice`;
+    btn.className       = "gear-die-icon gear-die-icon--weapon";
+    btn.dataset.slotKey = slotKey;
+    btn.title           = `Add ${label} gear dice`;
 
     const img = document.createElement("img");
-    img.src   = DIE_SVG_URL;
-    img.alt   = "d6";
+    img.src       = DIE_SVG_URL;
+    img.alt       = "d6";
     img.className = "die-icon-img";
     btn.appendChild(img);
 
@@ -1343,26 +1359,27 @@ function injectGearDieIcons() {
       toggleGear(slotKey, label, count);
     });
 
-    nameCell.style.position = "relative";
-    nameCell.appendChild(btn);
+    // Insert before the weapon-row (above it, in the block)
+    const row = block.querySelector(".weapon-row");
+    if (row) block.insertBefore(btn, row);
   });
 
+  // Armor — same pattern
   document.querySelectorAll(".armor-block").forEach((block, i) => {
-    const n        = i + 1;
-    const slotKey  = `armor-${n}`;
-    const label    = `Armor ${n}`;
+    const n         = i + 1;
+    const slotKey   = `armor-${n}`;
+    const label     = `Armor ${n}`;
     const gearInput = block.querySelector(`input[name="attr_armor_gear_a_${n}"]`);
-    const nameCell  = block.querySelector(".col-armor-name");
-    if (!nameCell || block.querySelector(".gear-die-icon")) return;
+    if (block.querySelector(".gear-die-icon")) return;
 
     const btn = document.createElement("button");
-    btn.className        = "gear-die-icon";
-    btn.dataset.slotKey  = slotKey;
-    btn.title            = `Add ${label} gear dice`;
+    btn.className       = "gear-die-icon gear-die-icon--armor";
+    btn.dataset.slotKey = slotKey;
+    btn.title           = `Add ${label} gear dice`;
 
     const img = document.createElement("img");
-    img.src   = DIE_SVG_URL;
-    img.alt   = "d6";
+    img.src       = DIE_SVG_URL;
+    img.alt       = "d6";
     img.className = "die-icon-img";
     btn.appendChild(img);
 
@@ -1372,8 +1389,37 @@ function injectGearDieIcons() {
       toggleGear(slotKey, label, count);
     });
 
-    nameCell.style.position = "relative";
-    nameCell.appendChild(btn);
+    const row = block.querySelector(".armor-row");
+    if (row) block.insertBefore(btn, row);
+  });
+
+  // General Gear rows — die icon sits left of name cell
+  document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
+    const n        = i + 1;
+    const slotKey  = `gear-${n}`;
+    const label    = `Gear ${n}`;
+    const valInput = row.querySelector(`input[name="attr_gear_val_${n}"]`);
+    if (row.querySelector(".gear-die-icon")) return;
+
+    const btn = document.createElement("button");
+    btn.className       = "gear-die-icon gear-die-icon--general";
+    btn.dataset.slotKey = slotKey;
+    btn.title           = `Add ${label} dice`;
+
+    const img = document.createElement("img");
+    img.src       = DIE_SVG_URL;
+    img.alt       = "d6";
+    img.className = "die-icon-img";
+    btn.appendChild(img);
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const count = parseInt(valInput?.value) || 0;
+      toggleGear(slotKey, label, count);
+    });
+
+    row.style.position = "relative";
+    row.insertBefore(btn, row.firstChild);
   });
 }
 
