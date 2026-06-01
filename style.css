@@ -678,11 +678,21 @@ input.single-digit {
 
 .weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;   width: 40%; }
 .weapons-headers .hdr-name                            { text-align: left !important; padding-left: 6px; }
-.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 43.75%;   width: 12%; }
+.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 43.75%; width: 14%; }
 .weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 58%;  width: 9%; }
 .weapon-row .col-size, .weapons-headers .hdr-size     { left: 69.2%;  width: 9%; }
 .weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%;  width: 9%; }
 .weapon-row .col-bulk, .weapons-headers .hdr-bulk     { left: 88.5%;  width: 8.5%; }
+
+/* col-gear holds die icon + gear-double-input side by side */
+.weapon-row .col-gear,
+.armor-row .col-armor-gear {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  overflow: visible;
+}
 
 /* ================================================
    WOUNDS ACCORDION
@@ -864,8 +874,8 @@ input.single-digit {
 }
 
 .col-armor-name, .hdr-armor-name         { left: 2%;    width: 48%; }
-.col-armor-gear, .hdr-armor-gear         { left: 43.75%;   width: 12%; }
-.col-armor-features, .hdr-armor-features { left: 57%;    width: 30%; }
+.col-armor-gear, .hdr-armor-gear         { left: 43.75%; width: 14%; }
+.col-armor-features, .hdr-armor-features { left: 59%;    width: 28%; }
 .col-armor-bulk, .hdr-armor-bulk         { left: 88%;    width: 10%; }
 
 .hdr-armor-name { text-align: left !important; padding-left: 6px; }
@@ -1556,15 +1566,17 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   flex-shrink: 0;
 }
 
-/* Weapon/armor — sits above the row, left-aligned */
-.gear-die-icon--weapon,
-.gear-die-icon--armor {
-  display: block;
-  width: 16px;
-  height: 16px;
-  margin-bottom: 2px;
-  margin-left: 4px;
+/* Weapon/armor — inline inside col-gear, sits left of the inputs */
+.gear-die-icon--inline {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-right: 3px;
+  vertical-align: middle;
 }
+
+.gear-die-icon--inline:hover { transform: scale(1.15); }
 
 /* General gear — absolutely positioned to the left of the gear-val cell */
 .gear-die-icon--general {
@@ -1577,8 +1589,6 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 }
 
 .gear-die-icon--general:hover { transform: translateY(-50%) scale(1.15); }
-.gear-die-icon--weapon:hover,
-.gear-die-icon--armor:hover   { transform: scale(1.15); }
 
 /* Unselected — black dim */
 .gear-die-icon:not(.gear-die-icon--selected) .die-icon-img {
@@ -1672,18 +1682,37 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 }
 
 /* ================================================
-   RESULT PIPS — individual die results
+   RESULT GROUPS — apt and gear dice shown separately
    ================================================ */
 .dice-tray__result {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 6px;
-  align-items: center;
   padding: 6px 8px;
   background: #0d0d0d;
   border: 1px solid #333;
   border-radius: 3px;
   min-height: 32px;
+}
+
+.result-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.result-group-label {
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #555;
+}
+
+.result-group-pips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 .result-pip {
@@ -1700,11 +1729,25 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   color: #eee;
 }
 
-/* 1s highlighted in red — significant for Push */
+/* Aptitude dice — red tint */
+.result-pip--apt {
+  border-color: rgba(192, 57, 43, 0.6);
+  background: rgba(192, 57, 43, 0.08);
+  color: #e8c0bc;
+}
+
+/* Gear dice — yellow tint */
+.result-pip--gear {
+  border-color: rgba(241, 196, 15, 0.5);
+  background: rgba(241, 196, 15, 0.08);
+  color: #f0d96a;
+}
+
+/* 1s highlighted brighter red — significant for Push */
 .result-pip--one {
-  background: rgba(231, 76, 60, 0.2);
-  border-color: #e74c3c;
-  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.25) !important;
+  border-color: #e74c3c !important;
+  color: #e74c3c !important;
 }
 
 /* ================================================
