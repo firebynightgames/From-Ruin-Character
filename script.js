@@ -1,6 +1,12 @@
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
 
 /* ================================================
+   CONSTANTS (hoisted — used by generators and dice tray)
+   ================================================ */
+const DICE_SOURCE_ID  = "com.firebynightgames.from-ruin";
+const DIE_SVG_URL     = "https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg";
+
+/* ================================================
    CHARACTER MODEL
    ================================================ */
 const character = {
@@ -109,16 +115,20 @@ async function saveSheet() {
 
   const data = { named, checks, desc, features, drives, flaws, relics, wounds, pairState };
 
+  // Always keep a localStorage backup so hard reloads survive
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
   try {
     const playerKey = await getPlayerKey();
-    // Read existing metadata first, then merge — matches OBR extension pattern
+    // Read existing metadata first, then merge per-player
     const existing = await OBR.room.getMetadata();
-    const existingBlock = (existing[STORAGE_KEY] ?? {});
+    const existingBlock = (existing[STORAGE_KEY] != null && typeof existing[STORAGE_KEY] === "object")
+      ? existing[STORAGE_KEY]
+      : {};
     const merged = { ...existingBlock, [playerKey]: data };
     await OBR.room.setMetadata({ [STORAGE_KEY]: merged });
-
   } catch (err) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // OBR unavailable — localStorage backup already written above
   }
 }
 
@@ -127,7 +137,7 @@ async function saveSheet() {
    ================================================ */
 async function getPlayerKey() {
   const id = await OBR.player.getId();
-  return `${STORAGE_KEY}.${id}`;
+  return id;   // just the player ID — used as sub-key inside STORAGE_KEY block
 }
 
 async function loadSheet() {
@@ -137,9 +147,9 @@ async function loadSheet() {
     const block = meta[STORAGE_KEY];
     if (block && block[playerKey]) {
       return block[playerKey];
-    } else {
     }
   } catch (err) {
+    // OBR unavailable — fall through to localStorage
   }
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
@@ -658,6 +668,7 @@ if (gearTable) {
           <input type="number" name="attr_gear_bulk_${idx}" placeholder="-">
         </div>`;
       container.appendChild(newRow);
+      injectGearDieIcons(); // add die icon to the new row
     }
   });
 }
@@ -846,13 +857,30 @@ Object.values(PAIR_MAP).forEach(({ key }) => {
     ?.addEventListener("change", updateAllPairs);
 });
 
-// Stress + trauma box listeners
+// Stress + trauma box listeners — also enforce sequential filling and cap
 document.addEventListener("change", (e) => {
-  if (e.target.classList.contains("stress-box") ||
-      e.target.classList.contains("trauma-box")) {
-    const prefix = [...e.target.classList].find(c => ["fd","ea","sr","dr"].includes(c));
-    if (prefix) updateStressTrauma(prefix);
+  const isStress = e.target.classList.contains("stress-box");
+  const isTrauma = e.target.classList.contains("trauma-box");
+  if (!isStress && !isTrauma) return;
+
+  const prefix = [...e.target.classList].find(c => ["fd","ea","sr","dr"].includes(c));
+  if (!prefix) return;
+
+  // Enforce sequential: when checking a box, all prior boxes must be checked;
+  // when unchecking, all subsequent boxes must be unchecked.
+  const boxClass  = isStress ? "stress-box" : "trauma-box";
+  const boxes     = [...document.querySelectorAll(`.${boxClass}.${prefix}`)];
+  const idx       = parseInt(e.target.dataset.index);
+
+  if (e.target.checked) {
+    // Check all boxes before this one too
+    boxes.forEach((b, i) => { if (i < idx && !b.disabled) b.checked = true; });
+  } else {
+    // Uncheck all boxes after this one too
+    boxes.forEach((b, i) => { if (i > idx) b.checked = false; });
   }
+
+  updateStressTrauma(prefix);
 });
 
 /* ================================================
@@ -900,9 +928,6 @@ OBR.onReady(async () => {
    - Individual results shown in tray, 1s highlighted
    - Pool breakdown: 2d6 (Finesse) + 3d6 (Exert) + 2d6 (Gear)
    ================================================ */
-
-const DICE_SOURCE_ID  = "com.firebynightgames.from-ruin";
-const DIE_SVG_URL     = "https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg";
 
 /* -----------------------------------------------
    State
@@ -1057,10 +1082,18 @@ function renderDiceTray() {
   // Handle badge
   handleCount.textContent = netTotal > 0 ? buildBreakdownLabel() : "";
 
-  // Show the tray always; show/hide the body based on whether there's a pool
+  // Show the tray always; open body when pool has dice, close when empty
   tray.style.display = "block";
   const body = tray.querySelector(".dice-tray__body");
-  if (body) body.style.display = rawTotal > 0 ? "flex" : "none";
+  if (body) {
+    // If new dice were just added (rawTotal > 0) always open the body,
+    // regardless of whether user had manually collapsed it.
+    if (rawTotal > 0) {
+      body.style.display = "flex";
+    } else {
+      body.style.display = "none";
+    }
+  }
 
   rollBtn.disabled  = netTotal === 0;
   clearBtn.disabled = rawTotal === 0;
@@ -1432,10 +1465,11 @@ document.querySelectorAll(".threshold-btn").forEach(btn => {
   });
 });
 
-// Close button — always closes tray completely
+// Close button — clears pool and hides tray body (separate from handle toggle)
 document.getElementById("dice-tray-close")
   .addEventListener("click", (e) => {
     e.stopPropagation();
+    e.preventDefault();
     clearDiceTray();
   });
 
@@ -1468,6 +1502,7 @@ function wireRowDieIcons() {
 
 /* -----------------------------------------------
    Inject gear die icons into general gear rows only
+   Icon sits at the right edge of the name column (after the name)
    ----------------------------------------------- */
 function injectGearDieIcons() {
   document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
@@ -1475,8 +1510,8 @@ function injectGearDieIcons() {
     const slotKey  = `gear-${n}`;
     const label    = `Gear ${n}`;
     const valInput = row.querySelector(`input[name="attr_gear_val_${n}"]`);
-    const valCell  = row.querySelector(".col-gear-val");
-    if (!valCell || row.querySelector(".gear-die-icon")) return;
+    const nameCell = row.querySelector(".col-gear-name");
+    if (!nameCell || row.querySelector(".gear-die-icon")) return;
 
     const btn = document.createElement("button");
     btn.className       = "gear-die-icon gear-die-icon--general";
@@ -1495,8 +1530,14 @@ function injectGearDieIcons() {
       toggleGear(slotKey, label, count);
     });
 
-    valCell.style.position = "relative";
-    valCell.insertBefore(btn, valCell.firstChild);
+    // Position at right edge of name cell
+    nameCell.style.position = "relative";
+    nameCell.style.overflow = "visible";
+    btn.style.position = "absolute";
+    btn.style.right    = "-18px";
+    btn.style.top      = "50%";
+    btn.style.transform = "translateY(-50%)";
+    nameCell.appendChild(btn);
   });
 }
 
