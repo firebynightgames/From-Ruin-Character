@@ -76,15 +76,15 @@
       <div class="acc-section">
         <button class="acc-header">Aptitudes <span class="acc-caret">▼</span></button>
        <div class="acc-body open sheet-panel">
-  <!-- Aptitude die icons — absolutely positioned over graphic -->
-  <button class="apt-die-icon left-apt  row-1" data-apt="finesse" title="Add Finesse dice">⬡</button>
-  <button class="apt-die-icon right-apt row-1" data-apt="devise"  title="Add Devise dice">⬡</button>
-  <button class="apt-die-icon left-apt  row-2" data-apt="exert"   title="Add Exert dice">⬡</button>
-  <button class="apt-die-icon right-apt row-2" data-apt="adapt"   title="Add Adapt dice">⬡</button>
-  <button class="apt-die-icon left-apt  row-3" data-apt="sense"   title="Add Sense dice">⬡</button>
-  <button class="apt-die-icon right-apt row-3" data-apt="resist"  title="Add Resist dice">⬡</button>
-  <button class="apt-die-icon left-apt  row-4" data-apt="deceive" title="Add Deceive dice">⬡</button>
-  <button class="apt-die-icon right-apt row-4" data-apt="relate"  title="Add Relate dice">⬡</button>
+  <!-- Aptitude die icons — absolutely positioned over graphic, SVG die face -->
+  <button class="apt-die-icon left-apt  row-1" data-apt="finesse" title="Add Finesse dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
+  <button class="apt-die-icon right-apt row-1" data-apt="devise"  title="Add Devise dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
+  <button class="apt-die-icon left-apt  row-2" data-apt="exert"   title="Add Exert dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
+  <button class="apt-die-icon right-apt row-2" data-apt="adapt"   title="Add Adapt dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
+  <button class="apt-die-icon left-apt  row-3" data-apt="sense"   title="Add Sense dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
+  <button class="apt-die-icon right-apt row-3" data-apt="resist"  title="Add Resist dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
+  <button class="apt-die-icon left-apt  row-4" data-apt="deceive" title="Add Deceive dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
+  <button class="apt-die-icon right-apt row-4" data-apt="relate"  title="Add Relate dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
 
   <input type="number" id="apt-finesse" class="aptitude-field left-apt  row-1" name="attr_finesse"  placeholder="#">
   <span class="apt-current left-apt  row-1" id="cur-finesse"></span>
@@ -367,10 +367,12 @@
     <!-- Expanded body -->
     <div class="dice-tray__body">
 
-      <!-- Pool display — red aptitude chips + yellow gear chips -->
+      <!-- Pool display — SVG die icons, red for aptitude, yellow for gear -->
       <div class="dice-tray__pool" id="dice-pool-display">
         <!-- Populated dynamically by JS -->
       </div>
+      <!-- Breakdown label: 2d6 (Finesse) + 3d6 (Exert) + 2d6 (Gear) -->
+      <div id="dice-pool-breakdown" class="dice-tray__breakdown"></div>
 
       <!-- Difficulty + modifiers row -->
       <div class="dice-tray__modifiers">
@@ -394,7 +396,7 @@
       <div class="dice-tray__actions">
         <button id="dice-clear-btn" class="dice-tray__btn dice-tray__btn--clear">Clear</button>
         <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled title="Available after rolling">Push</button>
-        <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">ROLL</button>
+        <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">ROLL ALL</button>
       </div>
 
     </div>
