@@ -107,22 +107,7 @@ html, body {
 }
 
 
-/* --- Dynamic Text Swap Fix --- */
-#character-sheet.gear-active .header-text-dynamic {
-  font-size: 0; 
-}
-#character-sheet.gear-active .header-text-dynamic::after {
-  content: "Bulk";
-  font-size: 11px; /* Restores size when text swaps */
-}
 
-#character-sheet:not(.gear-active) .header-text-dynamic {
-  font-size: 0;
-}
-#character-sheet:not(.gear-active) .header-text-dynamic::after {
-  content: "Experience";
-  font-size: 11px;
-}
 
 /* ================================================
    HEADER, TABS & ACCORDION FLUSH STACKING
@@ -140,34 +125,52 @@ html, body {
   margin-bottom: 0;
 }
 
+/* ================================================
+   TABS
+   ================================================ */
 .tab-menu {
   display: flex;
   background: #222;
   width: 100%;
   margin-top: 5px;
-  margin-bottom: 0 !important; /* Eliminates space under the tabs */
+  margin-bottom: 0 !important;
   box-sizing: border-box;
 }
 
-#accordion, 
-#accordion-gear, 
+#accordion,
+#accordion-gear,
 #accordion-spells {
   width: 100%;
-  margin-top: 0 !important;   /* Pulls the inner layout engines up */
+  margin-top: 0 !important;
   box-sizing: border-box;
 }
 
 .tab-content {
   display: none;
-  margin-top: 0 !important;   
-  padding-top: 0 !important;  /* Stops wrapper padding from forcing a gap */
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
-/* Forces the very first accordion header to sit directly under the tabs */
+/* First accordion header sits flush under the tabs */
 .tab-content.active-tab .acc-section:first-child .acc-header {
   margin-top: 0 !important;
-  border-top: none; /* Optional: cleans up the double-border look where they touch */
+  border-top: none;
 }
+
+.tab-btn {
+  flex: 1;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.tab-btn:hover       { background: #444; color: #fff; }
+.tab-btn.active      { background: #222; color: #fff; font-weight: bold; }
+.tab-content.active-tab { display: block; }
 
 /* ================================================
    EDGE TRACK
@@ -222,30 +225,6 @@ html, body {
   background-color: #27ae60 !important; 
   border-color: #1e8449 !important;
 }
-
-/* ================================================
-   TABS
-   ================================================ */
-.tab-menu {
-  display: flex;
-  background: #222;
-}
-
-.tab-btn {
-  flex: 1;
-  background: #fff;
-  color: #000;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
-}
-
-.tab-btn:hover       { background: #444; color: #fff; }
-.tab-btn.active      { background: #222; color: #fff; font-weight: bold; }
-.tab-content         { display: none; }
-.tab-content.active-tab { display: block; }
 
 /* ================================================
    ACCORDION
@@ -1258,34 +1237,6 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 }
 
 /* ================================================
-   UNIVERSAL TAB ROUTING ENGINE
-   ================================================ */
-/* If your JS targets the active class directly */
-#tab-1.active, #tab-2.active, #tab-3.active, #tab-4.active {
-  display: block !important;
-}
-
-/* If your JS targets the active-tab class */
-#character-sheet .tab-content.active-tab {
-  display: block !important;
-}
-
-/* ================================================
-   STICKY HEADER & TAB MENU
-   ================================================ */
-.sheet-combined-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: #ffffff;
-  box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  margin-bottom: 0;
-}
-/* ================================================
    APTITUDE DIE ICONS
    Absolutely positioned inside .sheet-panel,
    matching the same coordinate system as everything else.
@@ -1323,8 +1274,6 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 /* Selected — full red #C0392B glow */
 .apt-die-icon.apt-die-icon--selected .die-icon-img {
   opacity: 1;
-  filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
-          saturate(600%) hue-rotate(330deg) brightness(1.1);
   filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
           saturate(700%) hue-rotate(340deg) brightness(1.0)
           drop-shadow(0 0 3px rgba(192,57,43,0.9));
@@ -1621,11 +1570,15 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 .gear-die-icon--general {
   position: absolute;
   left: -1px;
-  top: 1px;
-  transform: none;
+  top: 50%;
+  transform: translateY(-50%);
   width: 16px;
   height: 16px;
 }
+
+.gear-die-icon--general:hover { transform: translateY(-50%) scale(1.15); }
+.gear-die-icon--weapon:hover,
+.gear-die-icon--armor:hover   { transform: scale(1.15); }
 
 /* Unselected — black dim */
 .gear-die-icon:not(.gear-die-icon--selected) .die-icon-img {
@@ -1639,9 +1592,6 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
           saturate(600%) hue-rotate(5deg) brightness(1.1);
 }
-.gear-die-icon--general:hover { transform: translateY(-50%) scale(1.15); }
-.gear-die-icon--weapon:hover,
-.gear-die-icon--armor:hover   { transform: scale(1.15); }
 
 /* Selected — full yellow #F1C40F glow */
 .gear-die-icon--selected .die-icon-img {
