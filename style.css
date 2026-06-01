@@ -1478,17 +1478,16 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 /* Success banner */
 .dice-tray__success-banner {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 5px 8px;
+  gap: 4px;
+  padding: 7px 10px;
   background: rgba(46, 204, 113, 0.08);
   border: 1px solid rgba(46, 204, 113, 0.3);
-  border-radius: 3px;
-  font-size: 13px;
-  font-weight: bold;
+  border-radius: 4px;
   color: #2ecc71;
   letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .success-banner__zero {
@@ -1714,18 +1713,39 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
 .dice-tray__result {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 8px;
+  padding: 8px 10px;
   background: #0d0d0d;
   border: 1px solid #333;
-  border-radius: 3px;
-  min-height: 32px;
+  border-radius: 4px;
+}
+
+/* Success / failure headline inside the banner */
+.result-headline {
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Ones warning line */
+.result-ones-summary {
+  font-size: 10px;
+  font-weight: bold;
+  color: #e74c3c;
+  letter-spacing: 0.3px;
 }
 
 .result-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+}
+
+/* Header row: label left, ones-count right */
+.result-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 }
 
 .result-group-label {
@@ -1736,59 +1756,92 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   color: #555;
 }
 
+/* Ones count badge in group header */
+.result-group-ones {
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: #e74c3c;
+  background: rgba(231,76,60,0.12);
+  border: 1px solid rgba(231,76,60,0.4);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
 .result-group-pips {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
 }
 
+/* Base pip */
 .result-pip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 4px;
   border: 1px solid #444;
-  background: #1e1e1e;
+  background: #1a1a1a;
   font-size: 15px;
   font-weight: bold;
-  color: #eee;
+  color: #555;
+  transition: opacity 0.15s;
 }
 
-/* Aptitude dice — red tint */
-.result-pip--apt {
-  border-color: rgba(192, 57, 43, 0.6);
-  background: rgba(192, 57, 43, 0.08);
-  color: #e8c0bc;
+/* Fail state — dim */
+.result-pip--fail {
+  opacity: 0.45;
 }
 
-/* Gear dice — yellow tint */
-.result-pip--gear {
-  border-color: rgba(241, 196, 15, 0.5);
-  background: rgba(241, 196, 15, 0.08);
-  color: #f0d96a;
-}
+/* Aptitude dice — red tint base */
+.result-pip--apt        { border-color: rgba(192,57,43,0.35); color: #a0706b; }
+.result-pip--apt.result-pip--fail { border-color: rgba(192,57,43,0.2); }
 
-/* 1s highlighted brighter red — significant for Push */
+/* Gear dice — yellow tint base */
+.result-pip--gear        { border-color: rgba(241,196,15,0.35); color: #a09030; }
+.result-pip--gear.result-pip--fail { border-color: rgba(241,196,15,0.2); }
+
+/* 1s — always bright red, never dimmed */
 .result-pip--one {
-  background: rgba(231, 76, 60, 0.25) !important;
+  background: rgba(231,76,60,0.2) !important;
   border-color: #e74c3c !important;
   color: #e74c3c !important;
+  opacity: 1 !important;
+  font-weight: 900;
 }
 
-/* Successes — bright green glow */
+/* Successes — bright green, never dimmed */
 .result-pip--success {
   border-color: #2ecc71 !important;
   color: #2ecc71 !important;
-  background: rgba(46, 204, 113, 0.12) !important;
+  background: rgba(46,204,113,0.12) !important;
+  opacity: 1 !important;
 }
 
-/* 1 always overrides success styling */
+/* 1 always overrides success */
 .result-pip--one.result-pip--success {
   border-color: #e74c3c !important;
   color: #e74c3c !important;
-  background: rgba(231, 76, 60, 0.25) !important;
+  background: rgba(231,76,60,0.2) !important;
+}
+
+/* Pushed dice — dashed border to show they were re-rolled */
+.result-pip--pushed {
+  border-style: dashed !important;
+  opacity: 1;
+}
+
+/* Kept dice (not re-rolled on push) — solid, slightly faded */
+.result-pip--kept {
+  opacity: 0.75;
+}
+
+/* Error string */
+.result-error {
+  color: #e74c3c;
+  font-size: 12px;
 }
 
 /* ================================================
