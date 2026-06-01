@@ -416,6 +416,9 @@ if (weaponContainer) {
           <div class="field-wrap col-name">
             <input type="text" name="attr_weapon_name_${i}" placeholder="-">
           </div>
+          <button class="gear-die-icon gear-die-icon--row col-die" data-slot-key="weapon-${i}" title="Add Weapon ${i} gear dice">
+            <img src="${DIE_SVG_URL}" alt="d6" class="die-icon-img">
+          </button>
           <div class="field-wrap col-gear">
             <div class="gear-double-input">
               <input type="number" class="single-digit" name="attr_weapon_gear_a_${i}" placeholder="-">
@@ -457,6 +460,9 @@ if (armorContainer) {
           <div class="field-wrap col-armor-name">
             <input type="text" name="attr_armor_name_${i}" placeholder="-">
           </div>
+          <button class="gear-die-icon gear-die-icon--row col-die" data-slot-key="armor-${i}" title="Add Armor ${i} gear dice">
+            <img src="${DIE_SVG_URL}" alt="d6" class="die-icon-img">
+          </button>
           <div class="field-wrap col-armor-gear">
             <div class="gear-double-input">
               <input type="number" class="single-digit" name="attr_armor_gear_a_${i}" placeholder="-">
@@ -1048,16 +1054,13 @@ function renderDiceTray() {
   const rawTotal         = rawAptCount() + rawGearCount();
   const { aptDice, gearDice, total: netTotal } = adjustedPool();
 
-  // Handle badge — show breakdown
+  // Handle badge
   handleCount.textContent = netTotal > 0 ? buildBreakdownLabel() : "";
 
-  // Fully hide tray when empty, show when pool has dice
-  if (rawTotal === 0) {
-    tray.style.display = "none";
-  } else {
-    tray.style.display = "block";
-    tray.classList.remove("dice-tray--collapsed");
-  }
+  // Show the tray always; show/hide the body based on whether there's a pool
+  tray.style.display = "block";
+  const body = tray.querySelector(".dice-tray__body");
+  if (body) body.style.display = rawTotal > 0 ? "flex" : "none";
 
   rollBtn.disabled  = netTotal === 0;
   clearBtn.disabled = rawTotal === 0;
@@ -1124,6 +1127,8 @@ function clearDiceTray() {
   const diffInput = document.getElementById("dice-difficulty");
   if (diffInput) diffInput.value = "";
   document.getElementById("dice-push-btn").disabled = true;
+  const banner = document.getElementById("dice-success-banner");
+  if (banner) { banner.style.display = "none"; banner.innerHTML = ""; }
   updateAptitudeIconStates();
   updateGearIconStates();
   renderDiceTray();
@@ -1131,37 +1136,72 @@ function clearDiceTray() {
 }
 
 /* -----------------------------------------------
-   Result display — individual die results, split by type
+   Get current success threshold from UI (4, 5, or 6)
+   ----------------------------------------------- */
+function getThreshold() {
+  const active = document.querySelector(".threshold-btn--active");
+  return active ? parseInt(active.dataset.threshold) : 5;
+}
+
+/* -----------------------------------------------
+   Count successes across a flat array of die values
+   ----------------------------------------------- */
+function countSuccesses(values, threshold) {
+  return values.filter(v => v >= threshold).length;
+}
+
+/* -----------------------------------------------
+   Result display — individual die results + success banner
    showDiceResult({ apt: [...], gear: [...] })
    or showDiceResult("error string")
    ----------------------------------------------- */
 function showDiceResult(results) {
-  const el = document.getElementById("dice-tray-result");
+  const el     = document.getElementById("dice-tray-result");
+  const banner = document.getElementById("dice-success-banner");
   if (!el) return;
   el.innerHTML = "";
   el.style.display = "flex";
 
   if (typeof results === "string") {
     el.textContent = results;
+    if (banner) banner.style.display = "none";
     return;
   }
 
-  // results = { apt: number[], gear: number[] }
-  function renderGroup(values, label, pipClass) {
+  const threshold = getThreshold();
+  const allValues = [...(results.apt || []), ...(results.gear || [])];
+  const successes = countSuccesses(allValues, threshold);
+
+  // Success banner
+  if (banner) {
+    banner.innerHTML = "";
+    banner.style.display = "flex";
+    banner.className = "dice-tray__success-banner" + (successes === 0 ? " success-banner__zero" : "");
+    const label = document.createElement("span");
+    label.textContent = successes === 0
+      ? `No successes (${threshold}+ to hit)`
+      : `${successes} Success${successes !== 1 ? "es" : ""} on ${threshold}+`;
+    banner.appendChild(label);
+  }
+
+  // Die pip groups
+  function renderGroup(values, groupLabel, pipClass) {
     if (!values || values.length === 0) return;
     const group = document.createElement("div");
     group.className = "result-group";
 
     const lbl = document.createElement("span");
     lbl.className   = "result-group-label";
-    lbl.textContent = label;
+    lbl.textContent = groupLabel;
     group.appendChild(lbl);
 
     const pips = document.createElement("div");
     pips.className = "result-group-pips";
     values.forEach(val => {
       const pip = document.createElement("span");
-      pip.className = `result-pip ${pipClass}${val === 1 ? " result-pip--one" : ""}`;
+      const isSuccess = val >= threshold;
+      const isOne     = val === 1;
+      pip.className = `result-pip ${pipClass}${isSuccess ? " result-pip--success" : ""}${isOne ? " result-pip--one" : ""}`;
       pip.textContent = val;
       pips.appendChild(pip);
     });
@@ -1213,10 +1253,11 @@ function rollLocal() {
   lastRollResults = { apt: aptResults, gear: gearResults };
   showDiceResult(lastRollResults);
 
-  const rollBtn = document.getElementById("dice-roll-btn");
+  const rollBtn  = document.getElementById("dice-roll-btn");
+  const pushBtn  = document.getElementById("dice-push-btn");
   rollBtn.disabled    = false;
   rollBtn.textContent = "ROLL ALL";
-  clearDiceTray();
+  pushBtn.disabled    = false;
 }
 
 /* -----------------------------------------------
@@ -1271,7 +1312,7 @@ async function triggerRoll() {
 
       rollBtn.disabled    = false;
       rollBtn.textContent = "ROLL ALL";
-      clearDiceTray();
+      document.getElementById("dice-push-btn").disabled = false;
     }
   );
 
@@ -1328,10 +1369,31 @@ async function triggerRoll() {
 }
 
 /* -----------------------------------------------
-   Push — placeholder
+   Push — reroll non-1 failures, keep 1s and successes
    ----------------------------------------------- */
 function triggerPush() {
-  showDiceResult("⚠ Push coming soon.");
+  if (!lastRollResults) return;
+  const threshold = getThreshold();
+  const rollDie   = () => Math.ceil(Math.random() * 6);
+
+  function pushGroup(values) {
+    return values.map(v => {
+      // Keep: successes (>= threshold) and 1s (can't push past a complication)
+      if (v >= threshold || v === 1) return v;
+      return rollDie();
+    });
+  }
+
+  const pushed = {
+    apt:  pushGroup(lastRollResults.apt  || []),
+    gear: pushGroup(lastRollResults.gear || [])
+  };
+
+  lastRollResults = pushed;
+  showDiceResult(pushed);
+
+  // Push is one-shot — disable after use
+  document.getElementById("dice-push-btn").disabled = true;
 }
 
 /* -----------------------------------------------
@@ -1354,7 +1416,22 @@ document.getElementById("dice-clear-btn")
 document.getElementById("dice-push-btn")
   .addEventListener("click", triggerPush);
 document.getElementById("dice-difficulty")
-  .addEventListener("input", () => renderDiceTray());
+  .addEventListener("input", () => {
+    renderDiceTray();
+    // Re-run showDiceResult to update success count with same dice
+    if (lastRollResults) showDiceResult(lastRollResults);
+  });
+
+// Threshold buttons
+document.querySelectorAll(".threshold-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".threshold-btn").forEach(b => b.classList.remove("threshold-btn--active"));
+    btn.classList.add("threshold-btn--active");
+    // Recount successes immediately if results are showing
+    if (lastRollResults) showDiceResult(lastRollResults);
+  });
+});
+
 // Close button — always closes tray completely
 document.getElementById("dice-tray-close")
   .addEventListener("click", (e) => {
@@ -1362,81 +1439,37 @@ document.getElementById("dice-tray-close")
     clearDiceTray();
   });
 
-// Handle click — reopen tray if pool has dice
+// Handle click — toggle body open/closed
 document.getElementById("dice-tray-handle")
   .addEventListener("click", () => {
-    const tray = document.getElementById("dice-tray");
-    if (rawAptCount() + rawGearCount() > 0) {
-      tray.classList.remove("dice-tray--collapsed");
-    }
+    const body = document.querySelector(".dice-tray__body");
+    if (body) body.style.display = body.style.display === "none" ? "flex" : "none";
   });
 
 /* -----------------------------------------------
-   Inject gear die icons into weapon/armor blocks
+   Wire up row die icons (weapon/armor — baked into HTML)
+   ----------------------------------------------- */
+function wireRowDieIcons() {
+  document.querySelectorAll(".gear-die-icon--row").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const slotKey = btn.dataset.slotKey;
+      const n       = slotKey.split("-")[1];
+      const label   = slotKey.startsWith("weapon") ? `Weapon ${n}` : `Armor ${n}`;
+      const inputName = slotKey.startsWith("weapon")
+        ? `attr_weapon_gear_a_${n}`
+        : `attr_armor_gear_a_${n}`;
+      const input = document.querySelector(`input[name="${inputName}"]`);
+      const count = parseInt(input?.value) || 0;
+      toggleGear(slotKey, label, count);
+    });
+  });
+}
+
+/* -----------------------------------------------
+   Inject gear die icons into general gear rows only
    ----------------------------------------------- */
 function injectGearDieIcons() {
-  // Weapons — die icon sits inside col-gear, left of the two gear inputs
-  document.querySelectorAll(".weapon-block").forEach((block, i) => {
-    const n         = i + 1;
-    const slotKey   = `weapon-${n}`;
-    const label     = `Weapon ${n}`;
-    const gearInput = block.querySelector(`input[name="attr_weapon_gear_a_${n}"]`);
-    const gearCell  = block.querySelector(".col-gear");
-    if (!gearCell || block.querySelector(".gear-die-icon")) return;
-
-    const btn = document.createElement("button");
-    btn.className       = "gear-die-icon gear-die-icon--inline";
-    btn.dataset.slotKey = slotKey;
-    btn.title           = `Add ${label} gear dice`;
-
-    const img = document.createElement("img");
-    img.src       = DIE_SVG_URL;
-    img.alt       = "d6";
-    img.className = "die-icon-img";
-    btn.appendChild(img);
-
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const count = parseInt(gearInput?.value) || 0;
-      toggleGear(slotKey, label, count);
-    });
-
-    // Insert before the gear-double-input wrapper inside col-gear
-    const doubleInput = gearCell.querySelector(".gear-double-input");
-    if (doubleInput) gearCell.insertBefore(btn, doubleInput);
-  });
-
-  // Armor — same pattern
-  document.querySelectorAll(".armor-block").forEach((block, i) => {
-    const n         = i + 1;
-    const slotKey   = `armor-${n}`;
-    const label     = `Armor ${n}`;
-    const gearInput = block.querySelector(`input[name="attr_armor_gear_a_${n}"]`);
-    const gearCell  = block.querySelector(".col-armor-gear");
-    if (!gearCell || block.querySelector(".gear-die-icon")) return;
-
-    const btn = document.createElement("button");
-    btn.className       = "gear-die-icon gear-die-icon--inline";
-    btn.dataset.slotKey = slotKey;
-    btn.title           = `Add ${label} gear dice`;
-
-    const img = document.createElement("img");
-    img.src       = DIE_SVG_URL;
-    img.alt       = "d6";
-    img.className = "die-icon-img";
-    btn.appendChild(img);
-
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const count = parseInt(gearInput?.value) || 0;
-      toggleGear(slotKey, label, count);
-    });
-
-    const doubleInput = gearCell.querySelector(".gear-double-input");
-    if (doubleInput) gearCell.insertBefore(btn, doubleInput);
-  });
-
-  // General Gear rows — die icon sits left of the gear-val cell
   document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
     const n        = i + 1;
     const slotKey  = `gear-${n}`;
@@ -1468,4 +1501,5 @@ function injectGearDieIcons() {
 }
 
 injectGearDieIcons();
+wireRowDieIcons();
 renderDiceTray();
