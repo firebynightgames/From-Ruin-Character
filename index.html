@@ -261,19 +261,23 @@
           <div class="sheet-gear-table">
             <div class="gear-headers">
               <span class="hdr-gear-name">Name</span>
+              <span class="hdr-gear-val">Gear</span>
               <span class="hdr-gear-bulk">Bulk</span>
             </div>
             <div class="sheet-gear-container">
               <div class="gear-row">
                 <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_1" placeholder="-"></div>
+                <div class="field-wrap col-gear-val"><input type="number" name="attr_gear_val_1" placeholder="-"></div>
                 <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_1" placeholder="-"></div>
               </div>
               <div class="gear-row">
                 <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_2" placeholder="-"></div>
+                <div class="field-wrap col-gear-val"><input type="number" name="attr_gear_val_2" placeholder="-"></div>
                 <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_2" placeholder="-"></div>
               </div>
               <div class="gear-row">
                 <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_3" placeholder="-"></div>
+                <div class="field-wrap col-gear-val"><input type="number" name="attr_gear_val_3" placeholder="-"></div>
                 <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_3" placeholder="-"></div>
               </div>
             </div>
@@ -361,7 +365,7 @@
     <div id="dice-tray-handle" class="dice-tray__handle">
       <span class="dice-tray__handle-label">DICE POOL</span>
       <span id="dice-tray-count" class="dice-tray__handle-count"></span>
-      <span class="dice-tray__handle-caret">▲</span>
+      <button id="dice-tray-close" class="dice-tray__close" title="Close">✕</button>
     </div>
 
     <!-- Expanded body -->
