@@ -1055,7 +1055,7 @@ function renderDiceTray() {
   if (rawTotal === 0) {
     tray.style.display = "none";
   } else {
-    tray.style.display = "";
+    tray.style.display = "block";
     tray.classList.remove("dice-tray--collapsed");
   }
 
