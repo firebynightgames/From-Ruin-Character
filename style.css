@@ -1,412 +1,1792 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>From Ruin Character Sheet</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="script.js"></script>
-</head>
-<body>
-<div id="character-sheet">
+/* ================================================
+   GLOBAL
+   ================================================ */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
 
-  <div class="sheet-combined-header">
-    <div class="sheet-header-area">
-      <div class="header-logo-container">
-        <img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_header.jpg" class="sheet-logo-img" alt="From Ruin Header">
-      </div>
-      <div class="header-counter-box">
-        <div id="xp-header" class="counter-header-title">Experience</div>
-        <div id="xp-body" class="counter-body">
-          <input type="number" name="attr_advances_left" placeholder="-">
-          <span class="box-slash">/</span>
-          <input type="number" name="attr_advances_right" placeholder="-">
-        </div>
-        <div id="bulk-header" class="counter-header-title" style="display:none;">Bulk</div>
-        <div id="bulk-body" class="counter-body" style="display:none;">
-          <span id="bulk-total" style="font-weight:bold;font-size:16px;">0</span>
-          <span class="box-slash">/</span>
-          <span id="bulk-threshold" style="font-weight:bold;font-size:16px;">20</span>
-        </div>
-        <div id="bulk-penalty" style="display:none;font-size:10px;font-weight:bold;text-align:center;color:red;line-height:1;padding-bottom:3px;"></div>
-      </div>
-    </div>
+#character-sheet {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-bottom: 80px;
+  box-sizing: border-box;
+}
 
-    <div class="edge-track">
-      <span class="edge-label">Edge</span>
-      <input type="checkbox" name="attr_edge_1"  class="edge-box">
-      <input type="checkbox" name="attr_edge_2"  class="edge-box">
-      <input type="checkbox" name="attr_edge_3"  class="edge-box">
-      <input type="checkbox" name="attr_edge_4"  class="edge-box">
-      <input type="checkbox" name="attr_edge_5"  class="edge-box">
-      <input type="checkbox" name="attr_edge_6"  class="edge-box">
-      <input type="checkbox" name="attr_edge_7"  class="edge-box">
-      <input type="checkbox" name="attr_edge_8"  class="edge-box">
-      <input type="checkbox" name="attr_edge_9"  class="edge-box">
-      <input type="checkbox" name="attr_edge_10" class="edge-box">
-    </div>
+#character-sheet,
+#character-sheet * {
+  font-family: "Century Gothic", sans-serif;
+}
 
-    <div class="tab-menu">
-      <button class="tab-btn active" data-tab="tab-1">MAIN</button>
-      <button class="tab-btn"        data-tab="tab-2">GEAR</button>
-      <button class="tab-btn"        data-tab="tab-3">SPELLS</button>
-      <button class="tab-btn"        data-tab="tab-4">STORY</button>
-    </div>
-  </div>
-  
-  <div id="tab-1" class="tab-content active-tab">
-    <div id="accordion">
-      <div class="acc-section">
-        <button class="acc-header">Details <span class="acc-caret">▼</span></button>
-        <div class="acc-body open desc-panel">
-          <p class="desc-text">
-            I am <span class="desc-field" contenteditable="true" data-placeholder="NAME"></span>,
-            a(n) <span class="desc-field" contenteditable="true" data-placeholder="AGE"></span>
-            <span class="desc-field" contenteditable="true" data-placeholder="FLAW"></span>
-            <span class="desc-field" contenteditable="true" data-placeholder="PEOPLE"></span> that
-            <span class="desc-field" contenteditable="true" data-placeholder="ORIGIN"></span> the life of a
-            <span class="desc-field" contenteditable="true" data-placeholder="BACKGROUND"></span>.
-            I carry a <span class="desc-field" contenteditable="true" data-placeholder="MOMENTO"></span>
-            to remind me how the Deep changed me.
-            <span class="desc-field" contenteditable="true" data-placeholder="EVENT"></span> shaped me, but I survived.
-          </p>
-        </div>
-      </div>
+/* ================================================
+   HEADER AREA & PERFECT LOGO CROP
+   ================================================ */
+.sheet-header-area {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important; 
+  width: 420px !important;
+  height: 65px !important; /* Set back to 65px to perfectly match the tracker box height */
+  position: relative !important;
+  background: transparent !important;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+  overflow: visible !important;
+}
 
-      <div class="acc-section">
-        <button class="acc-header">Aptitudes <span class="acc-caret">▼</span></button>
-       <div class="acc-body open sheet-panel">
-  <!-- Aptitude die icons — absolutely positioned over graphic, SVG die face -->
-  <button class="apt-die-icon left-apt  row-1" data-apt="finesse" title="Add Finesse dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
-  <button class="apt-die-icon right-apt row-1" data-apt="devise"  title="Add Devise dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
-  <button class="apt-die-icon left-apt  row-2" data-apt="exert"   title="Add Exert dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
-  <button class="apt-die-icon right-apt row-2" data-apt="adapt"   title="Add Adapt dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
-  <button class="apt-die-icon left-apt  row-3" data-apt="sense"   title="Add Sense dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
-  <button class="apt-die-icon right-apt row-3" data-apt="resist"  title="Add Resist dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
-  <button class="apt-die-icon left-apt  row-4" data-apt="deceive" title="Add Deceive dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
-  <button class="apt-die-icon right-apt row-4" data-apt="relate"  title="Add Relate dice"><img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="d6" class="die-icon-img"></button>
+/* Left Side: Container acting as the exact window for your logo */
+.header-logo-container {
+  width: 225px; 
+  height: 85px; /* Slices the window vertically to hide the rest of the file */
+  overflow: hidden;
+}
 
-  <input type="number" id="apt-finesse" class="aptitude-field left-apt  row-1" name="attr_finesse"  placeholder="#">
-  <span class="apt-current left-apt  row-1" id="cur-finesse"></span>
-  <input type="number" id="apt-devise"  class="aptitude-field right-apt row-1" name="attr_devise"   placeholder="#">
-  <span class="apt-current right-apt row-1" id="cur-devise"></span>
+.header-logo-container .sheet-logo-img {
+  width: 420px; /* Scales the original image back to its native sheet width */
+  height: auto;
+  object-fit: fill; 
+  object-position: left top; /* Locks the alignment to the far top left corner */
+}
 
-  <input type="number" id="apt-exert"   class="aptitude-field left-apt  row-2" name="attr_exert"    placeholder="#">
-  <span class="apt-current left-apt  row-2" id="cur-exert"></span>
-  <input type="number" id="apt-adapt"   class="aptitude-field right-apt row-2" name="attr_adapt"    placeholder="#">
-  <span class="apt-current right-apt row-2" id="cur-adapt"></span>
+/* Right Side: Tracker Box matching the height beautifully */
+.header-counter-box {
+  display: flex;
+  flex-direction: column;
+  width: 140px; 
+  height: 65px; 
+  border: 2px solid #000;
+  background: #fff;
+  box-sizing: border-box;
+}
 
-  <input type="number" id="apt-sense"   class="aptitude-field left-apt  row-3" name="attr_sense"    placeholder="#">
-  <span class="apt-current left-apt  row-3" id="cur-sense"></span>
-  <input type="number" id="apt-resist"  class="aptitude-field right-apt row-3" name="attr_resist"   placeholder="#">
-  <span class="apt-current right-apt row-3" id="cur-resist"></span>
+/* Black Box Header (Accordion Style) */
+.counter-header-title {
+  background-color: #000;
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 4px 0;
+  line-height: 1;
+}
 
-  <input type="number" id="apt-deceive" class="aptitude-field left-apt  row-4" name="attr_deceive"  placeholder="#">
-  <span class="apt-current left-apt  row-4" id="cur-deceive"></span>
-  <input type="number" id="apt-relate"  class="aptitude-field right-apt row-4" name="attr_relate"   placeholder="#">
-  <span class="apt-current right-apt row-4" id="cur-relate"></span>
-          <input type="checkbox" id="cond-hungry"  class="condition-checkbox cond-row-1">
-          <input type="checkbox" id="cond-thirsty" class="condition-checkbox cond-row-2">
-          <input type="checkbox" id="cond-exposed" class="condition-checkbox cond-row-3">
-          <input type="checkbox" id="cond-tired"   class="condition-checkbox cond-row-4">
+/* Content Area inside the border */
+.counter-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
 
-          <!-- Pair conditions — use condition-checkbox for left position, track for size/colour -->
-          <input type="checkbox" id="cond-finesse-devise" class="track condition-checkbox cond-row-1">
-          <input type="checkbox" id="cond-exert-adapt"    class="track condition-checkbox cond-row-2">
-          <input type="checkbox" id="cond-sense-resist"   class="track condition-checkbox cond-row-3">
-          <input type="checkbox" id="cond-deceive-relate" class="track condition-checkbox cond-row-4">
+.counter-body input[type="number"] {
+  width: 35px;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 16px;
+  font-family: "Century Gothic", sans-serif;
+  font-weight: bold;
+}
 
-          <!-- Stress row 1 (Finesse+Devise) -->
-          <input type="checkbox" class="track stress-box fd col-1 stress row-1" data-index="0">
-          <input type="checkbox" class="track stress-box fd col-2 stress row-1" data-index="1">
-          <input type="checkbox" class="track stress-box fd col-3 stress row-1" data-index="2">
-          <input type="checkbox" class="track stress-box fd col-4 stress row-1" data-index="3">
-          <input type="checkbox" class="track stress-box fd col-5 stress row-1" data-index="4">
-          <input type="checkbox" class="track stress-box fd col-6 stress row-1" data-index="5">
+.counter-body input[type="number"]:focus {
+  outline: none;
+}
 
-          <!-- Trauma row 1 (Finesse+Devise) -->
-          <input type="checkbox" class="track trauma-box fd col-1 trauma row-1" data-index="0">
-          <input type="checkbox" class="track trauma-box fd col-2 trauma row-1" data-index="1">
-          <input type="checkbox" class="track trauma-box fd col-3 trauma row-1" data-index="2">
-          <input type="checkbox" class="track trauma-box fd col-4 trauma row-1" data-index="3">
-          <input type="checkbox" class="track trauma-box fd col-5 trauma row-1" data-index="4">
-          <input type="checkbox" class="track trauma-box fd col-6 trauma row-1" data-index="5">
-
-          <!-- Stress row 2 (Exert+Adapt) -->
-          <input type="checkbox" class="track stress-box ea col-1 stress row-2" data-index="0">
-          <input type="checkbox" class="track stress-box ea col-2 stress row-2" data-index="1">
-          <input type="checkbox" class="track stress-box ea col-3 stress row-2" data-index="2">
-          <input type="checkbox" class="track stress-box ea col-4 stress row-2" data-index="3">
-          <input type="checkbox" class="track stress-box ea col-5 stress row-2" data-index="4">
-          <input type="checkbox" class="track stress-box ea col-6 stress row-2" data-index="5">
-
-          <!-- Trauma row 2 (Exert+Adapt) -->
-          <input type="checkbox" class="track trauma-box ea col-1 trauma row-2" data-index="0">
-          <input type="checkbox" class="track trauma-box ea col-2 trauma row-2" data-index="1">
-          <input type="checkbox" class="track trauma-box ea col-3 trauma row-2" data-index="2">
-          <input type="checkbox" class="track trauma-box ea col-4 trauma row-2" data-index="3">
-          <input type="checkbox" class="track trauma-box ea col-5 trauma row-2" data-index="4">
-          <input type="checkbox" class="track trauma-box ea col-6 trauma row-2" data-index="5">
-
-          <!-- Stress row 3 (Sense+Resist) -->
-          <input type="checkbox" class="track stress-box sr col-1 stress row-3" data-index="0">
-          <input type="checkbox" class="track stress-box sr col-2 stress row-3" data-index="1">
-          <input type="checkbox" class="track stress-box sr col-3 stress row-3" data-index="2">
-          <input type="checkbox" class="track stress-box sr col-4 stress row-3" data-index="3">
-          <input type="checkbox" class="track stress-box sr col-5 stress row-3" data-index="4">
-          <input type="checkbox" class="track stress-box sr col-6 stress row-3" data-index="5">
-
-          <!-- Trauma row 3 (Sense+Resist) -->
-          <input type="checkbox" class="track trauma-box sr col-1 trauma row-3" data-index="0">
-          <input type="checkbox" class="track trauma-box sr col-2 trauma row-3" data-index="1">
-          <input type="checkbox" class="track trauma-box sr col-3 trauma row-3" data-index="2">
-          <input type="checkbox" class="track trauma-box sr col-4 trauma row-3" data-index="3">
-          <input type="checkbox" class="track trauma-box sr col-5 trauma row-3" data-index="4">
-          <input type="checkbox" class="track trauma-box sr col-6 trauma row-3" data-index="5">
-
-          <!-- Stress row 4 (Deceive+Relate) -->
-          <input type="checkbox" class="track stress-box dr col-1 stress row-4" data-index="0">
-          <input type="checkbox" class="track stress-box dr col-2 stress row-4" data-index="1">
-          <input type="checkbox" class="track stress-box dr col-3 stress row-4" data-index="2">
-          <input type="checkbox" class="track stress-box dr col-4 stress row-4" data-index="3">
-          <input type="checkbox" class="track stress-box dr col-5 stress row-4" data-index="4">
-          <input type="checkbox" class="track stress-box dr col-6 stress row-4" data-index="5">
-
-          <!-- Trauma row 4 (Deceive+Relate) -->
-          <input type="checkbox" class="track trauma-box dr col-1 trauma row-4" data-index="0">
-          <input type="checkbox" class="track trauma-box dr col-2 trauma row-4" data-index="1">
-          <input type="checkbox" class="track trauma-box dr col-3 trauma row-4" data-index="2">
-          <input type="checkbox" class="track trauma-box dr col-4 trauma row-4" data-index="3">
-          <input type="checkbox" class="track trauma-box dr col-5 trauma row-4" data-index="4">
-          <input type="checkbox" class="track trauma-box dr col-6 trauma row-4" data-index="5">
-        </div>
-      </div>
-
-      <div class="acc-section">
-        <button class="acc-header">Features <span class="acc-caret">▼</span></button>
-        <div class="acc-body open">
-          <ol class="features-list">
-            <li><textarea placeholder="Add a feature..." rows="1"></textarea></li>
-          </ol>
-        </div>
-      </div>
-
-      <div class="acc-section">
-        <button class="acc-header">Drives <span class="acc-caret">▼</span></button>
-        <div class="acc-body open">
-          <ol class="drives-list">
-            <li>
-              <div class="drive-item">
-                <textarea placeholder="Add a drive..." rows="1" name="attr_drive_1"></textarea>
-                <div class="drive-tracker">
-                  <input type="checkbox" name="attr_drive_1_cb_1" class="diamond-box db-1">
-                  <input type="checkbox" name="attr_drive_1_cb_2" class="diamond-box db-2">
-                  <input type="checkbox" name="attr_drive_1_cb_3" class="diamond-box db-3">
-                </div>
-              </div>
-            </li>
-          </ol>
-        </div>
-      </div>
-            <div class="acc-section">
-              <button class="acc-header">Flaws <span class="acc-caret">▼</span></button>
-              <div class="acc-body open">
-                <ol class="flaws-list">
-                  <li><textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_1"></textarea></li>
-                </ol>
-              </div>
-            </div>
-            <div class="acc-section">
-        <button class="acc-header">Wounds <span class="acc-caret">▼</span></button>
-        <div class="acc-body open wounds-body">
-          <div class="wounds-container" id="wounds-container"></div>
-        </div>
-      </div>
-    </div>   
-  </div>
-
-  <div id="tab-2" class="tab-content">
-    <div id="accordion-gear">
-      <div class="acc-section">
-        <button class="acc-header">Weapons <span class="acc-caret">▼</span></button>
-        <div class="acc-body open weapons-body">
-          <div class="weapons-headers">
-            <span class="hdr-name">Name</span>
-            <span class="hdr-gear">Gear</span>
-            <span class="hdr-hand">Hand</span>
-            <span class="hdr-size">Size</span>
-            <span class="hdr-dmg">Dmg</span>
-            <span class="hdr-bulk">Bulk</span>
-          </div>
-          <div class="weapons-container" id="weapons-container"></div>
-        </div>
-      </div>
-
-      <div class="acc-section">
-        <button class="acc-header">Armor <span class="acc-caret">▼</span></button>
-        <div class="acc-body open armor-body">
-          <div class="armor-headers">
-            <span class="hdr-armor-name">Name</span>
-            <span class="hdr-armor-gear">Gear</span>
-            <span class="hdr-armor-features">Features</span>
-            <span class="hdr-armor-bulk">Bulk</span>
-          </div>
-          <div class="armor-container" id="armor-container"></div>
-        </div>
-      </div>
-
-      <div class="acc-section">
-        <button class="acc-header">Gear <span class="acc-caret">▼</span></button>
-        <div class="acc-body open gear-body">
-          <div class="sheet-gear-table">
-            <div class="gear-headers">
-              <span class="hdr-gear-name">Name</span>
-              <span class="hdr-gear-val">Gear</span>
-              <span class="hdr-gear-bulk">Bulk</span>
-            </div>
-            <div class="sheet-gear-container">
-              <div class="gear-row">
-                <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_1" placeholder="-"></div>
-                <div class="field-wrap col-gear-val"><input type="number" name="attr_gear_val_1" placeholder="-"></div>
-                <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_1" placeholder="-"></div>
-              </div>
-              <div class="gear-row">
-                <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_2" placeholder="-"></div>
-                <div class="field-wrap col-gear-val"><input type="number" name="attr_gear_val_2" placeholder="-"></div>
-                <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_2" placeholder="-"></div>
-              </div>
-              <div class="gear-row">
-                <div class="field-wrap col-gear-name"><input type="text" name="attr_gear_name_3" placeholder="-"></div>
-                <div class="field-wrap col-gear-val"><input type="number" name="attr_gear_val_3" placeholder="-"></div>
-                <div class="field-wrap col-gear-bulk"><input type="number" name="attr_gear_bulk_3" placeholder="-"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="acc-section">
-        <button class="acc-header">Relics <span class="acc-caret">▼</span></button>
-        <div class="acc-body open relics-body">
-          <div class="relics-headers">
-            <span class="hdr-rel-name">Name</span>
-            <span class="hdr-rel-type">Type</span>
-            <span class="hdr-rel-effect">Effect</span>
-          </div>
-          <div class="relics-container" id="relics-container"></div>
-        </div>
-      </div>
-    </div>
-  </div> 
-
-<div id="tab-3" class="tab-content">
-    <div id="accordion-spells">
-      <div class="acc-section">
-        <button class="acc-header">Spells <span class="acc-caret">▼</span></button>
-        <div class="acc-body open">
-          <div class="spells-table-header">
-            <span class="hdr-desc">Spell Description</span>
-            <span class="hdr-diff">Difficulty</span>
-          </div>
-          <ol class="spells-list" id="spells-container"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
-
- <div id="tab-4" class="tab-content">
-  <div id="accordion-story">
-    <div class="acc-section">
-      <button class="acc-header">Portrait & Summary <span class="acc-caret">▼</span></button>
-      <div class="acc-body open">
-        <div class="portrait-summary-row">
-          <div class="portrait-side">
-            <label class="portrait-upload-label" for="portrait-upload">
-              Click to upload portrait
-            </label>
-            <input type="file" id="portrait-upload" accept="image/*" style="display:none;">
-            <img id="portrait-img" alt="" style="display:none;">
-          </div>
-          <div class="summary-side" id="summary-panel">
-            <p class="summary-line"><span class="summary-label">Name</span><span class="summary-value" id="sum-name"></span></p>
-            <p class="summary-line"><span class="summary-label">Age</span><span class="summary-value" id="sum-age"></span></p>
-            <p class="summary-line"><span class="summary-label">People</span><span class="summary-value" id="sum-people"></span></p>
-            <p class="summary-line"><span class="summary-label">Origin</span><span class="summary-value" id="sum-origin"></span></p>
-            <p class="summary-line"><span class="summary-label">Background</span><span class="summary-value" id="sum-background"></span></p>
-            <p class="summary-line"><span class="summary-label">Flaw</span><span class="summary-value" id="sum-flaw"></span></p>
-            <p class="summary-line"><span class="summary-label">Memento</span><span class="summary-value" id="sum-momento"></span></p>
-            <p class="summary-line"><span class="summary-label">Event</span><span class="summary-value" id="sum-event"></span></p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="acc-section">
-      <button class="acc-header">History <span class="acc-caret">▼</span></button>
-      <div class="acc-body open">
-        <textarea class="story-field" name="attr_history" placeholder="Write your character's history..."></textarea>
-      </div>
-    </div>
-    <div class="acc-section">
-      <button class="acc-header">Notes <span class="acc-caret">▼</span></button>
-      <div class="acc-body open">
-        <textarea class="story-field" name="attr_notes" placeholder="Write your notes..."></textarea>
-      </div>
-    </div>
-  </div>
-</div>
-
-  <!-- ================================================
-       DICE TRAY — Sticky pool builder at bottom
-       ================================================ -->
-  <div id="dice-tray" class="dice-tray dice-tray--collapsed" aria-label="Dice Pool Tray">
-
-    <!-- Collapsed handle — click to expand when pool has dice -->
-    <div id="dice-tray-handle" class="dice-tray__handle">
-      <span class="dice-tray__handle-label">DICE POOL</span>
-      <span id="dice-tray-count" class="dice-tray__handle-count"></span>
-      <button id="dice-tray-close" class="dice-tray__close" title="Close">✕</button>
-    </div>
-
-    <!-- Expanded body -->
-    <div class="dice-tray__body">
-
-      <!-- Pool display — SVG die icons, red for aptitude, yellow for gear -->
-      <div class="dice-tray__pool" id="dice-pool-display">
-        <!-- Populated dynamically by JS -->
-      </div>
-      <!-- Breakdown label: 2d6 (Finesse) + 3d6 (Exert) + 2d6 (Gear) -->
-      <div id="dice-pool-breakdown" class="dice-tray__breakdown"></div>
-
-      <!-- Difficulty + modifiers row -->
-      <div class="dice-tray__modifiers">
-        <div class="dice-tray__difficulty">
-          <label class="dice-tray__mod-label" for="dice-difficulty">Difficulty</label>
-          <input type="number" id="dice-difficulty" class="dice-tray__mod-input"
-                 min="0" max="20" placeholder="0">
-        </div>
-        <div class="dice-tray__mod-spacer"></div>
-        <div class="dice-tray__pool-counts">
-          <span id="pool-apt-count"  class="pool-count pool-count--apt"></span>
-          <span id="pool-gear-count" class="pool-count pool-count--gear"></span>
-          <span id="pool-net-count"  class="pool-count pool-count--net"></span>
-        </div>
-      </div>
-
-      <!-- Roll result display -->
-      <div id="dice-tray-result" class="dice-tray__result" style="display:none;"></div>
-
-      <!-- Action buttons -->
-      <div class="dice-tray__actions">
-        <button id="dice-clear-btn" class="dice-tray__btn dice-tray__btn--clear">Clear</button>
-        <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled title="Available after rolling">Push</button>
-        <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">ROLL ALL</button>
-      </div>
-
-    </div>
-  </div>
+.box-slash {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 4px;
+  color: #000;
+}
 
 
-</div>
-</body>
-</html>
+/* --- Dynamic Text Swap Fix --- */
+#character-sheet.gear-active .header-text-dynamic {
+  font-size: 0; 
+}
+#character-sheet.gear-active .header-text-dynamic::after {
+  content: "Bulk";
+  font-size: 11px; /* Restores size when text swaps */
+}
+
+#character-sheet:not(.gear-active) .header-text-dynamic {
+  font-size: 0;
+}
+#character-sheet:not(.gear-active) .header-text-dynamic::after {
+  content: "Experience";
+  font-size: 11px;
+}
+
+/* ================================================
+   HEADER, TABS & ACCORDION FLUSH STACKING
+   ================================================ */
+.sheet-combined-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #ffffff;
+  box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin-bottom: 0;
+}
+
+.tab-menu {
+  display: flex;
+  background: #222;
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 0 !important; /* Eliminates space under the tabs */
+  box-sizing: border-box;
+}
+
+#accordion, 
+#accordion-gear, 
+#accordion-spells {
+  width: 100%;
+  margin-top: 0 !important;   /* Pulls the inner layout engines up */
+  box-sizing: border-box;
+}
+
+.tab-content {
+  display: none;
+  margin-top: 0 !important;   
+  padding-top: 0 !important;  /* Stops wrapper padding from forcing a gap */
+}
+
+/* Forces the very first accordion header to sit directly under the tabs */
+.tab-content.active-tab .acc-section:first-child .acc-header {
+  margin-top: 0 !important;
+  border-top: none; /* Optional: cleans up the double-border look where they touch */
+}
+
+/* ================================================
+   EDGE TRACK
+   ================================================ */
+.edge-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;                  
+  padding: 6px 8px;          
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.edge-label {
+  color: #000;
+  font-size: 18px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-right: 6px;         
+  white-space: nowrap;
+}
+
+.edge-box {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 22px !important;     
+  height: 22px !important;    
+  display: inline-block;
+  position: relative !important; 
+  background-color: transparent !important;
+  border: 1px solid #333333 !important; 
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border-radius: 2px;         
+}
+
+.edge-box:not(:checked):hover {
+  border-color: #27ae60 !important;
+  background-color: #1e8449 !important;
+}
+
+.edge-box:checked {
+  background-color: #2ecc71 !important; 
+  border-color: #6cc6a0 !important;
+}
+
+.edge-box:checked:hover {
+  background-color: #27ae60 !important; 
+  border-color: #1e8449 !important;
+}
+
+/* ================================================
+   TABS
+   ================================================ */
+.tab-menu {
+  display: flex;
+  background: #222;
+}
+
+.tab-btn {
+  flex: 1;
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.tab-btn:hover       { background: #444; color: #fff; }
+.tab-btn.active      { background: #222; color: #fff; font-weight: bold; }
+.tab-content         { display: none; }
+.tab-content.active-tab { display: block; }
+
+/* ================================================
+   ACCORDION
+   ================================================ */
+#accordion, #accordion-gear {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.acc-header {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  width: 100%;
+  padding: 6px 10px;
+  background: #222;
+  color: #fff;
+  border: 1px solid #444;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+.acc-header:hover { background: #444; }
+
+.acc-caret {
+  font-size: 9px;
+  transition: transform 0.2s ease-in-out;
+  display: inline-block;
+}
+
+.acc-header:has(+ .acc-body.open) .acc-caret {
+  transform: rotate(180deg);
+}
+
+.acc-body {
+  display: none;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ccc;
+  border-top: none;
+  font-size: 11px;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.acc-body.open { display: block; }
+
+.acc-body.weapons-body,
+.acc-body.armor-body {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ================================================
+   APTITUDES PANEL (RESERVED GRAPHIC & POSITIONING)
+   ================================================ */
+.sheet-panel {
+  position: relative !important;
+  width: 420px !important;
+  height: 524px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_aptitudes.jpg") no-repeat center / 100% 100% !important;
+  box-sizing: border-box;
+}
+
+.aptitude-field {
+  position: absolute;
+  height: 11%;
+  font-size: 24px;
+  border: none !important;
+  background: transparent !important;
+  text-align: center;
+  outline: none;
+}
+
+.aptitude-field {
+  -moz-appearance: textfield;
+}
+
+.left-apt  { left: 9.6%;   width: 12.6%; }
+.right-apt { left: 76.5%;  width: 12.6%; }
+
+.row-1 { top: 11%; }
+.row-2 { top: 33.175%; }
+.row-3 { top: 55.75%; }
+.row-4 { top: 78%; }
+
+.apt-current {
+  position: absolute;
+  font-size: 16px;
+  font-weight: bold;
+  color: #C0392B;
+  text-align: center;
+  pointer-events: none;
+  width: 12.6%;
+}
+
+.apt-current.left-apt  { left: 15%; }
+.apt-current.right-apt { left: 82%; }
+
+.apt-current.row-1 { top: 11.5%; }
+.apt-current.row-2 { top: 34%; }
+.apt-current.row-3 { top: 56.5%; }
+.apt-current.row-4 { top: 79%; }
+
+/* ================================================
+   CHECKBOXES — CONDITIONS, STRESS, TRAUMA
+   ================================================ */
+.condition-checkbox,
+.track {
+  position: absolute;
+  width: 4.5%;
+  height: 3.6%;
+  border: none !important;
+  cursor: pointer;
+  appearance: none;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.condition-checkbox:hover,
+.track:hover                  { background: rgba(244, 162, 89, 0.5); }
+.condition-checkbox:checked,
+.track:checked                { background: #f4a259 !important; }
+.condition-checkbox:checked:hover,
+.track:checked:hover          { background: #d9823f !important; }
+
+.condition-checkbox { left: 37.75%; }
+.cond-row-1 { top: 5.95%; }
+.cond-row-2 { top: 28.35%; }
+.cond-row-3 { top: 50.65%; }
+.cond-row-4 { top: 73.15%; }
+
+.col-1 { left: 42.8%; }
+.col-2 { left: 47.7%; }
+.col-3 { left: 52.675%; }
+.col-4 { left: 57.5%; }
+.col-5 { left: 62.5%; }
+.col-6 { left: 67.5%; }
+
+.stress.row-1 { top: 12.25%; }
+.stress.row-2 { top: 34.75%; }
+.stress.row-3 { top: 56.9%; }
+.stress.row-4 { top: 79.4%; }
+
+.trauma.row-1 { top: 17%; }
+.trauma.row-2 { top: 39.25%; }
+.trauma.row-3 { top: 61.5%; }
+.trauma.row-4 { top: 83.95%; }
+
+/* ================================================
+   DESCRIPTION PANEL
+   ================================================ */
+.desc-text {
+  white-space: normal;
+  line-height: 1.6;
+  font-size: 20px;
+  color: #222;
+}
+
+.desc-field {
+  display: inline-block;
+  min-width: 40px;
+  max-width: 100%;
+  padding: 2px 4px;
+  border-bottom: 2px dashed #222;
+  font-size: 20px;
+  line-height: 1.2;
+  outline: none;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.desc-field:empty::before {
+  content: attr(data-placeholder);
+  color: #999;
+  font-weight: bold;
+}
+
+/* ================================================
+   FEATURES LIST
+   ================================================ */
+.features-list {
+  padding-left: 24px;
+  margin: 0;
+  list-style: disc;
+}
+
+.features-list li {
+  margin-bottom: 12px;
+  vertical-align: top;
+}
+
+.features-list textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: 24px;
+  background-size: 100% 24px;
+}
+
+/* ================================================
+   DRIVES LIST & DIAMOND TRACKER ENGINE
+   ================================================ */
+.drives-list {
+  padding-left: 24px;
+  margin: 0;
+  margin-bottom: 10px !important;
+  padding-right: 15px;
+  list-style: disc;
+}
+
+.drives-list li {
+  margin-bottom: 8px;
+}
+
+/* Flexbox to keep the text line and the image sitting side-by-side */
+.drive-item {
+  display: flex;
+  align-items: flex-end; 
+  gap: 15px;
+  width: 100%;
+}
+
+.drive-item textarea {
+  flex: 1;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font-family: "Century Gothic", AppleGothic, sans-serif !important;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  line-height: 24px;
+}
+
+/* The Graphic Container */
+.drive-tracker {
+  position: relative;
+  width: 80px;  /* Scaled down proportion of 133 */
+  height: 58px; /* Scaled down proportion of 97 */
+  background: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_drive.jpg') no-repeat center center / contain;
+  flex-shrink: 0;
+}
+
+/* Turns standard checkboxes into diamonds */
+.diamond-box {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #333;
+  background-color: transparent;
+  cursor: pointer;
+  transform: rotate(45deg); /* The magic diamond rotation */
+  transition: all 0.15s ease;
+  margin: 0;
+}
+
+.diamond-box:checked {background-color: #6cc6a0; border-color: #27ae60;
+}
+
+.diamond-box:hover {border-color: #27ae60; background-color: #1e8449;
+}
+
+.diamond-box:checked:hover {background-color: #1e8449; border-color: #27ae60;
+}
+
+/* --- Diamond Positions (Adjust these % values to fit your graphic perfectly!) --- */
+.db-1 { left: 6%; top: 45%; }
+.db-2 { left: 35%; top: 45%; }
+.db-3 { left: 64.25%; top: 45%; }
+
+/* ================================================
+   FLAWS LIST STYLES (CAPPED AT 3)
+   ================================================ */
+.flaws-list {
+  padding-left: 24px;
+  margin: 0;
+  margin-bottom: 10px !important;
+  padding-right: 15px;
+  list-style: disc;
+}
+
+.flaws-list li {
+  margin-bottom: 12px;
+  vertical-align: top;
+}
+
+.flaws-list textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font-family: "Century Gothic", AppleGothic, sans-serif !important;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  vertical-align: top;
+  line-height: 24px;
+}
+
+/* ================================================
+   WEAPONS ACCORDION CONTENT & DYNAMIC ENGINE
+   ================================================ */
+.weapons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;                 
+  padding: 4px 0;           
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.weapon-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;                                           
+  width: 100%;
+  transition: all 0.25s ease-in-out; 
+  border-bottom: 1px solid #e0e0e0;  
+  padding-bottom: 4px;      
+}
+
+.weapons-headers {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 18px;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+.weapons-headers span {
+  position: absolute;
+  bottom: 2px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111111;              
+  text-align: center;
+  white-space: nowrap;        
+}
+
+.weapon-row {
+  position: relative;
+  width: 100%;
+  height: 49px;            
+  background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_weapon.jpg');
+  background-size: 100% 100%; 
+  background-repeat: no-repeat;
+}
+
+.weapon-features-row {
+  display: flex;
+  align-items: center;
+  width: 98%;                
+  padding-left: 28px;        
+  box-sizing: border-box;
+}
+
+.weapon-features-row label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #555;
+  text-transform: uppercase;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.weapon-features-row input {
+  flex: 1;
+  border: none !important;
+  border-bottom: 1px dashed #999 !important; 
+  background: transparent !important;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: normal;
+  color: #111;
+  padding: 1px 4px;
+  outline: none;
+}
+
+.weapon-features-row input:focus {
+  border-bottom-color: #222 !important;
+}
+
+.field-wrap {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  bottom: 16px;              
+  height: 18px;            
+}
+
+.field-wrap label {
+  display: none !important;
+}
+
+.field-wrap input {
+  width: 100%;
+  height: 100%;
+  border: none !important;
+  background: transparent !important;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: bold;
+  color: #111;
+  padding: 0 2px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.weapon-row .col-name input {
+  text-align: left;
+  padding-left: 6px;
+}
+
+.gear-double-input {
+  display: flex;
+  gap: 6px; 
+  width: 100%;
+  height: 100%;
+}
+
+input.single-digit {
+  text-align: center;
+  padding: 0;
+  width: 100%;
+}
+
+.weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;   width: 40%; }
+.weapons-headers .hdr-name                            { text-align: left !important; padding-left: 6px; }
+.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 43.75%;   width: 12%; }
+.weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 58%;  width: 9%; }
+.weapon-row .col-size, .weapons-headers .hdr-size     { left: 69.2%;  width: 9%; }
+.weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%;  width: 9%; }
+.weapon-row .col-bulk, .weapons-headers .hdr-bulk     { left: 88.5%;  width: 8.5%; }
+
+/* ================================================
+   WOUNDS ACCORDION
+   ================================================ */
+.wounds-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wounds-column-headers,
+.wound-row {
+  display: grid;
+  grid-template-columns: 18% 15% 1fr 40px;
+  align-items: center;
+  gap: 6px;
+}
+
+.wounds-column-headers {
+  margin-bottom: 4px;
+}
+
+.wounds-column-headers span {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111;
+  text-align: left;
+}
+
+.wounds-column-headers span:last-child {
+  text-align: right;
+}
+
+.wound-row {
+  padding: 4px 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+.wounds-container .wound-row:last-child { border-bottom: none; }
+
+.wound-row select,
+.wound-row input[type="text"] {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  font-family: "Century Gothic", sans-serif;
+  font-size: 13px;
+  color: #111;
+  padding: 2px 4px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.wound-row select {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  cursor: pointer;
+}
+
+.wound-patch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #333;
+  background: transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  justify-self: end;
+  transition: background 0.15s ease;
+}
+
+.wound-patch:checked {background-color: #6cc6a0; border-color: #27ae60;
+}
+
+.wound-patch:hover {border-color: #27ae60; background-color: #1e8449;
+}
+
+.wound-patch:checked:hover  {border-color: #27ae60; background-color: #1e8449;
+}
+
+/* ================================================
+   ARMOR ACCORDION CONTENT
+   ================================================ */
+.armor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;                 
+  padding: 4px 0;           
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.armor-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  border-bottom: 1px solid #e0e0e0;  
+  padding-bottom: 4px;      
+}
+
+.armor-features-row {
+  display: flex;
+  align-items: center;
+  width: 98%;                
+  padding-left: 28px;        
+  box-sizing: border-box;
+}
+
+.armor-features-row label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #555;
+  text-transform: uppercase;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.armor-features-row input {
+  flex: 1;
+  border: none !important;
+  border-bottom: 1px dotted #999 !important; 
+  background: transparent !important;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111;
+  padding: 1px 4px;
+  outline: none;
+}
+
+.armor-features-row input:focus {
+  border-bottom-color: #222 !important;
+}
+
+/* Visibility engines */
+.slot-2, .slot-3, .slot-4, .slot-5 { display: none; opacity: 0; }
+.slot-1:not(:has(input[name="attr_weapon_name_1"]:placeholder-shown)) ~ .slot-2 { display: flex; opacity: 1; }
+.slot-2:not(:has(input[name="attr_weapon_name_2"]:placeholder-shown)) ~ .slot-3 { display: flex; opacity: 1; }
+.slot-3:not(:has(input[name="attr_weapon_name_3"]:placeholder-shown)) ~ .slot-4 { display: flex; opacity: 1; }
+.slot-4:not(:has(input[name="attr_weapon_name_4"]:placeholder-shown)) ~ .slot-5 { display: flex; opacity: 1; }
+
+.armor-slot-2, .armor-slot-3, .armor-slot-4, .armor-slot-5 { display: none; opacity: 0; }
+.armor-slot-1:not(:has(input[name="attr_armor_name_1"]:placeholder-shown)) ~ .armor-slot-2 { display: flex; opacity: 1; }
+.armor-slot-2:not(:has(input[name="attr_armor_name_2"]:placeholder-shown)) ~ .armor-slot-3 { display: flex; opacity: 1; }
+.armor-slot-3:not(:has(input[name="attr_armor_name_3"]:placeholder-shown)) ~ .armor-slot-4 { display: flex; opacity: 1; }
+.armor-slot-4:not(:has(input[name="attr_armor_name_4"]:placeholder-shown)) ~ .armor-slot-5 { display: flex; opacity: 1; }
+
+.armor-row {
+  position: relative;
+  width: 100%;
+  height: 49px;
+  background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_armor.jpg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.armor-headers {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 18px;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+.armor-headers span {
+  position: absolute;
+  bottom: 2px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111;
+  text-align: center;
+  white-space: nowrap;        
+}
+
+.col-armor-name, .hdr-armor-name         { left: 2%;    width: 48%; }
+.col-armor-gear, .hdr-armor-gear         { left: 43.75%;   width: 12%; }
+.col-armor-features, .hdr-armor-features { left: 57%;    width: 30%; }
+.col-armor-bulk, .hdr-armor-bulk         { left: 88%;    width: 10%; }
+
+.hdr-armor-name { text-align: left !important; padding-left: 6px; }
+.col-armor-name input { text-align: left !important; padding-left: 6px; }
+
+.armor-row .col-armor-bulk input {
+  -moz-appearance: textfield;
+}
+
+/* ================================================ 
+   GEAR ACCORDION TABLE & DIMENSIONS
+   ================================================ */
+.sheet-gear-container {
+  background-color: #ffffff;
+  position: relative;
+  width: 100%;
+  min-height: 74px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+
+.gear-headers, .gear-row {
+  position: relative;
+  width: 100%;
+  height: 24px;
+}
+
+.gear-headers span, .gear-row .field-wrap {
+  position: absolute;
+  height: 20px;
+  top: 2px;
+}
+
+.gear-headers span {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: bold;
+  color: #111;
+  text-align: center;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.sheet-gear-container .gear-row {
+  border-bottom: 1px dashed #cccccc;
+  height: 24px; 
+}
+
+.col-gear-name, .hdr-gear-name { 
+  left: 2%; 
+  width: 75%; 
+}
+.col-gear-bulk, .hdr-gear-bulk { 
+  left: 88%; 
+  width: 10%; 
+}
+
+.hdr-gear-name { text-align: left !important; padding-left: 6px; }
+.col-gear-name input { text-align: left !important; padding-left: 6px; }
+
+.sheet-gear-container .gear-row input {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.sheet-gear-container .gear-row input[type="number"] {
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+/* Relics - Grid Headers */
+.relics-headers { 
+  display: flex; 
+  width: 100%; 
+  margin-bottom: 5px; 
+}
+.relics-headers span { 
+  font-size: 11px; 
+  font-weight: bold; 
+  text-transform: uppercase; 
+}
+.hdr-rel-name { width: 30%; }
+.hdr-rel-type { width: 20%; }
+.hdr-rel-effect { width: 50%; }
+
+/* ================================================
+   RELICS-Auto Expand
+   ================================================ */
+.relic-row {
+  width: 100%;
+  margin-bottom: 5px;
+  overflow: visible;
+}
+
+.relic-row textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 5px 0;
+  font-family: inherit;
+  font-size: 13px;
+  resize: none;
+  overflow: hidden;
+  display: block;
+  box-sizing: border-box;
+  min-height: 30px;
+}
+
+
+/* ================================================
+   SPELLS & RITUALS LIST (FEATURES STYLE)
+   ================================================ */
+#accordion-spells {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.spells-table-header {
+  display: grid;
+  grid-template-columns: 83% 17%;
+  padding: 4px 12px 4px 28px; 
+  box-sizing: border-box;
+}
+
+.spells-table-header span {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.spells-table-header .hdr-diff {
+  text-align: center;
+}
+
+.spells-list {
+  padding-left: 24px;
+  margin: 0;
+  list-style: decimal;
+}
+
+.spells-list li {
+  margin-bottom: 12px;
+  display: list-item;
+}
+
+.spell-item-grid {
+  display: grid;
+  grid-template-columns: 83% 17%;
+  align-items: end;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 4px;
+}
+
+.spell-item-grid textarea {
+  width: 100%;
+  border: none;
+  border-bottom: 1px dashed #666;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font-size: 16px;
+  font-weight: bold;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  vertical-align: bottom;
+  line-height: 24px;
+}
+
+.spell-item-grid input[type="number"] {
+  width: 85%;
+  margin-left: auto;
+  height: 22px;
+  border: 1px solid #333;
+  background: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  outline: none;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+
+/* ================================================
+   STORY TAB
+   ================================================ */
+#accordion-story {
+  width: 100%;
+  margin-top: 0 !important;
+  box-sizing: border-box;
+}
+/* ================================================
+   PORTRAIT & SUMMARY
+   ================================================ */
+.portrait-summary-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.portrait-side {
+  flex: 0 0 45%;
+}
+
+.portrait-upload-label {
+  display: flex;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: 2px dashed #666;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  color: #999;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+#portrait-img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.summary-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.summary-line {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px dashed #ccc;
+  padding-bottom: 4px;
+}
+
+.summary-label {
+  font-size: 9px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #999;
+  line-height: 1;
+}
+
+.summary-value {
+  font-size: 13px;
+  font-weight: bold;
+  color: #222;
+  line-height: 1.3;
+  min-height: 16px;
+}
+
+.story-field {
+  width: 100% !important;
+  min-height: 120px;
+  border: none !important;
+  border-bottom: 1px dashed #666 !important;
+  background: transparent !important;
+  font-family: "Century Gothic", sans-serif !important;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #222;
+  resize: none !important;
+  overflow: hidden;
+  outline: none;
+  box-sizing: border-box;
+  padding: 4px 0;
+  display: block;
+}
+
+/* ================================================
+   ACCORDION COHESION FIXES
+   ================================================ */
+/* Adds a matching border and background structure to the Aptitudes panel */
+.acc-body.sheet-panel {
+  border: 1px solid #ccc !important;
+  border-top: none !important; /* Matches the seamless header connection */
+  background-color: #ffffff !important; /* Fills behind the graphic if it scales */
+  box-sizing: border-box;
+}
+
+/* Prevents specialized padding overrides from breaking the uniform edge alignment */
+.acc-body.weapons-body,
+.acc-body.armor-body {
+  padding: 10px !important;
+}
+
+/* ================================================
+   GLOBAL SPINNER REMOVAL (ALL FIELDS)
+   ================================================ */
+/* Removes up/down spin arrows for Chrome, Safari, Edge, and Opera */
+#character-sheet input[type="number"]::-webkit-outer-spin-button,
+#character-sheet input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+/* Removes up/down spin arrows for Firefox */
+#character-sheet input[type="number"] {
+  -moz-appearance: textfield !important;
+}
+
+/* ================================================
+   FEATURES BOTTOM PADDING FIX
+   ================================================ */
+/* Adds safety padding to the bottom of all accordion bodies */
+.acc-body {
+  padding-bottom: 1px !important;
+}
+
+/* Fixes the features list spacing so it doesn't clip the bottom edge */
+.features-list {
+  margin-bottom: 10px !important;
+  padding-right: 15px; /* Gives a right-side safety buffer for typing */
+}
+
+.features-list li textarea {
+  margin-bottom: 4px;
+}
+
+/* ================================================
+   RESPONSIVE SCALING ENGINE
+   ================================================ */
+@media (max-width: 470px) {
+  #character-sheet { 
+    transform: scale(0.92); 
+    left: 15px;
+    top: 15px;
+  }
+}
+
+@media (max-width: 410px) {
+  #character-sheet { 
+    transform: scale(0.82); 
+    left: 10px;
+    top: 10px;
+  }
+}
+
+@media (max-width: 350px) {
+  #character-sheet { 
+    transform: scale(0.70); 
+    left: 5px;
+  }
+}
+
+/* ================================================
+   FORCE PARAGRAPH & EDITABLE FIELD TYPOGRAPHY
+   ================================================ */
+.desc-text,
+.desc-field,
+.desc-field::before {
+font-family: "Century Gothic", AppleGothic, sans-serif !important;
+}
+
+/* ================================================
+   UNIVERSAL TAB ROUTING ENGINE
+   ================================================ */
+/* If your JS targets the active class directly */
+#tab-1.active, #tab-2.active, #tab-3.active, #tab-4.active {
+  display: block !important;
+}
+
+/* If your JS targets the active-tab class */
+#character-sheet .tab-content.active-tab {
+  display: block !important;
+}
+
+/* ================================================
+   STICKY HEADER & TAB MENU
+   ================================================ */
+.sheet-combined-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #ffffff;
+  box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin-bottom: 0;
+}
+/* ================================================
+   APTITUDE DIE ICONS
+   Absolutely positioned inside .sheet-panel,
+   matching the same coordinate system as everything else.
+   ================================================ */
+.apt-die-icon {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: transform 0.1s;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Unselected — black, dim */
+.apt-die-icon:not(.apt-die-icon--selected) .die-icon-img {
+  opacity: 0.4;
+  filter: brightness(0);        /* forces to pure black */
+}
+
+/* Hover — red */
+.apt-die-icon:hover .die-icon-img {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
+          saturate(600%) hue-rotate(330deg) brightness(1.1);
+  transform: scale(1.15);
+}
+
+/* Selected — full red #C0392B glow */
+.apt-die-icon.apt-die-icon--selected .die-icon-img {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
+          saturate(600%) hue-rotate(330deg) brightness(1.1);
+  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
+          saturate(700%) hue-rotate(340deg) brightness(1.0)
+          drop-shadow(0 0 3px rgba(192,57,43,0.9));
+}
+
+/* Position die icons in upper-left of each aptitude field */
+/* Left aptitudes sit at left: 9.6%, icon offset slightly left+up */
+.apt-die-icon.left-apt  { left: 8%;   }
+.apt-die-icon.right-apt { left: 74.5%; }
+
+.apt-die-icon.row-1 { top: 9%;    }
+.apt-die-icon.row-2 { top: 31.5%; }
+.apt-die-icon.row-3 { top: 54%;   }
+.apt-die-icon.row-4 { top: 76.5%; }
+
+/* ================================================
+   DICE TRAY
+   ================================================ */
+
+.dice-tray {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 200;
+  box-sizing: border-box;
+  font-family: "Century Gothic", sans-serif;
+  background: #111;
+  border-top: 2px solid #333;
+  overflow: hidden;
+}
+
+.dice-tray--collapsed .dice-tray__body {
+  display: none;
+}
+
+.dice-tray--collapsed .dice-tray__handle-caret {
+  transform: rotate(180deg);
+}
+
+/* Handle */
+.dice-tray__handle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: #1a1a1a;
+}
+
+.dice-tray__handle:hover { background: #222; }
+
+.dice-tray__handle-label {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  color: #888;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.dice-tray__handle-count {
+  font-size: 11px;
+  font-weight: bold;
+  color: #e74c3c;
+  min-width: 20px;
+}
+
+.dice-tray__handle-caret {
+  font-size: 9px;
+  color: #555;
+  transition: transform 0.2s ease;
+}
+
+/* Body */
+.dice-tray__body {
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Pool display */
+.dice-tray__pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 28px;
+  align-items: center;
+}
+
+.dice-tray__pool:empty::before {
+  content: "Click aptitude or gear icons to build a pool";
+  font-size: 10px;
+  color: #444;
+  font-style: italic;
+}
+
+/* Pool chip — base */
+.pool-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* Red = aptitude dice */
+.pool-chip--apt {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid #e74c3c;
+  color: #e74c3c;
+}
+
+/* Yellow = gear dice */
+.pool-chip--gear {
+  background: rgba(241, 196, 15, 0.12);
+  border: 1px solid #f1c40f;
+  color: #f1c40f;
+}
+
+/* Greyed out = removed by difficulty */
+.pool-chip--removed {
+  opacity: 0.3;
+  text-decoration: line-through;
+}
+
+/* Modifiers row */
+.dice-tray__modifiers {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dice-tray__difficulty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dice-tray__mod-label {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.dice-tray__mod-input {
+  width: 40px;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: "Century Gothic", sans-serif;
+  text-align: center;
+  padding: 3px 4px;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.dice-tray__mod-input::-webkit-outer-spin-button,
+.dice-tray__mod-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.dice-tray__mod-input:focus { border-color: #666; }
+
+.dice-tray__mod-spacer { flex: 1; }
+
+/* Pool count badges */
+.dice-tray__pool-counts {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pool-count {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: none;
+}
+
+.pool-count--apt  { color: #e74c3c; border: 1px solid #e74c3c; background: rgba(231,76,60,0.1); }
+.pool-count--gear { color: #f1c40f; border: 1px solid #f1c40f; background: rgba(241,196,15,0.1); }
+.pool-count--net  { color: #eee;    border: 1px solid #555;    background: #1a1a1a; }
+
+.pool-count.visible { display: inline-block; }
+
+/* Result */
+.dice-tray__result {
+  padding: 5px 10px;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #2ecc71;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Actions */
+.dice-tray__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.dice-tray__btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: "Century Gothic", sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.dice-tray__btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.dice-tray__btn--clear {
+  background: #1e1e1e;
+  color: #777;
+  border: 1px solid #333;
+  flex: 0 0 auto;
+}
+
+.dice-tray__btn--clear:hover:not(:disabled) {
+  background: #2a2a2a;
+  color: #aaa;
+}
+
+.dice-tray__btn--push {
+  background: #1e1e1e;
+  color: #e67e22;
+  border: 1px solid #e67e22;
+  flex: 0 0 auto;
+}
+
+.dice-tray__btn--push:hover:not(:disabled) {
+  background: rgba(230,126,34,0.15);
+}
+
+.dice-tray__btn--roll {
+  background: #e74c3c;
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.dice-tray__btn--roll:hover:not(:disabled) { background: #c0392b; }
+.dice-tray__btn--roll:active:not(:disabled) { background: #a93226; }
+
+/* Gear die icon — sits above weapon/armor row or left of general gear row */
+/* ================================================
+   GEAR DIE ICONS — shared base
+   ================================================ */
+.gear-die-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  z-index: 5;
+  transition: transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Weapon/armor — sits above the row, left-aligned */
+.gear-die-icon--weapon,
+.gear-die-icon--armor {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+}
+
+/* General gear — absolutely positioned to the left of the gear-val cell */
+.gear-die-icon--general {
+  position: absolute;
+  left: -1px;
+  top: 1px;
+  transform: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* Unselected — black dim */
+.gear-die-icon:not(.gear-die-icon--selected) .die-icon-img {
+  opacity: 0.4;
+  filter: brightness(0);
+}
+
+/* Hover — yellow */
+.gear-die-icon:hover .die-icon-img {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
+          saturate(600%) hue-rotate(5deg) brightness(1.1);
+}
+.gear-die-icon--general:hover { transform: translateY(-50%) scale(1.15); }
+.gear-die-icon--weapon:hover,
+.gear-die-icon--armor:hover   { transform: scale(1.15); }
+
+/* Selected — full yellow #F1C40F glow */
+.gear-die-icon--selected .die-icon-img {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
+          saturate(600%) hue-rotate(5deg) brightness(1.1)
+          drop-shadow(0 0 3px rgba(241,196,15,0.9));
+}
+
+/* ================================================
+   POOL DIE ICONS (visual pool in tray)
+   ================================================ */
+.dice-tray__pool {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pool-die {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: opacity 0.2s;
+}
+
+.pool-die__img {
+  width: 20px;
+  height: 20px;
+}
+
+/* Red — aptitude pool dice */
+.pool-die--apt .pool-die__img {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
+          saturate(700%) hue-rotate(340deg) brightness(1.0);
+}
+
+/* Yellow — gear pool dice */
+.pool-die--gear .pool-die__img {
+  filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
+          saturate(600%) hue-rotate(5deg) brightness(1.1);
+}
+
+/* Removed by difficulty — crossed out */
+.pool-die--removed {
+  opacity: 0.2;
+  position: relative;
+}
+
+.pool-die--removed::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #e74c3c;
+  transform: rotate(-45deg);
+  border-radius: 1px;
+}
+
+/* Shared die icon img sizing */
+.die-icon-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ================================================
+   BREAKDOWN LABEL
+   ================================================ */
+.dice-tray__breakdown {
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 0.5px;
+  min-height: 14px;
+}
+
+/* ================================================
+   RESULT PIPS — individual die results
+   ================================================ */
+.dice-tray__result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 8px;
+  background: #0d0d0d;
+  border: 1px solid #333;
+  border-radius: 3px;
+  min-height: 32px;
+}
+
+.result-pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #1e1e1e;
+  font-size: 15px;
+  font-weight: bold;
+  color: #eee;
+}
+
+/* 1s highlighted in red — significant for Push */
+.result-pip--one {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+/* ================================================
+   GEAR VALUE COLUMN (general gear table)
+   ================================================ */
+.col-gear-name, .hdr-gear-name { left: 2%;  width: 60%; }
+.col-gear-val,  .hdr-gear-val  { left: 74%; width: 12%; text-align: center; }
+.col-gear-bulk, .hdr-gear-bulk { left: 88%; width: 10%; }
+
+.hdr-gear-val  { text-align: center !important; }
+.hdr-gear-bulk { text-align: center !important; }
+
+/* ================================================
+   DICE TRAY — CLOSE BUTTON & INIT HIDDEN
+   ================================================ */
+#dice-tray { display: none; }
+
+.dice-tray__close {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+
+.dice-tray__close:hover { color: #e74c3c; }
+
+/* Remove the old caret styles since handle no longer has one */
+.dice-tray--collapsed .dice-tray__handle-caret { display: none; }
