@@ -61,13 +61,13 @@ async function saveSheet() {
   const desc   = [];
 
   // Named inputs & textareas — skip wound and relic fields (handled separately)
-  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
-    if (isPairEngineCheckbox(el)) return;
-    if (el.name.startsWith("attr_wound_")) return;
-    if (el.name.startsWith("attr_relic_")) return;
-    if (el.type === "checkbox") named[el.name] = el.checked;
-    else named[el.name] = el.value;
-  });
+root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+  if (isPairEngineCheckbox(el)) return;
+  if (el.name.startsWith("attr_wound_")) return;
+  if (el.name.startsWith("attr_relic_")) return;
+  if (el.type === "checkbox") named[el.name] = el.checked;
+  else named[el.name] = el.value;
+});
 
   // Id-only checkboxes (global conditions)
   root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
@@ -93,14 +93,15 @@ async function saveSheet() {
   root.querySelectorAll(".flaws-list textarea").forEach(el => flaws.push(el.value));
 
   // Wounds — structured array, skip fully-empty rows
-  const wounds = [];
-  root.querySelectorAll(".wound-row").forEach(row => {
-    const apt     = row.querySelector("select")?.value                  ?? "";
-    const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
-    const dsc     = row.querySelector("input[name*='desc']")?.value     ?? "";
-    const patched = row.querySelector("input.wound-patch")?.checked      ?? false;
-    if (apt || sev || dsc || patched) wounds.push({ apt, sev, dsc, patched });
-  });
+root.querySelectorAll(".wound-row").forEach(row => {
+  const apt     = row.querySelector("select")?.value ?? "";
+  const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
+  const dsc     = row.querySelector("input[name*='desc']")?.value ?? "";
+  const patched = row.querySelector(".wound-patch")?.checked ?? false;
+  if (apt || sev || dsc || patched) {
+    wounds.push({ apt, sev, dsc, patched });
+  }
+});
 
   // Relics — saved by position, name is unstable (index-based)
   const relics = [];
@@ -1700,7 +1701,46 @@ document.querySelector(".pregen-modal__backdrop")
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closePregenModal();
 });
-
+function newCharacter() {
+  const root = document.getElementById("character-sheet");
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (el.type === "checkbox") el.checked = false;
+    else el.value = "";
+  });
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    el.checked = false;
+  });
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    el.innerHTML = "";
+  });
+  ["features-list", "drives-list", "flaws-list"].forEach(cls => {
+    const list = root.querySelector(`.${cls}`);
+    if (!list) return;
+    list.querySelectorAll("li").forEach((li, i) => { if (i > 0) li.remove(); });
+    const ta = list.querySelector("textarea");
+    if (ta) { ta.value = ""; ta.style.height = ""; }
+  });
+  const wc = root.querySelector("#wounds-container");
+  if (wc) {
+    wc.querySelectorAll(".wound-row").forEach(r => r.remove());
+    wc.appendChild(createWoundRow(1));
+  }
+  if (relicContainer) {
+    relicContainer.innerHTML = "";
+    relicCount = 0;
+    for (let i = 0; i < 3; i++) addRelicRow();
+  }
+  Object.keys(character.stress).forEach(k => character.stress[k].fill(false));
+  Object.keys(character.trauma).forEach(k => character.trauma[k].fill(false));
+  Object.keys(character.pairConditions).forEach(k => character.pairConditions[k] = false);
+  updateAllPairs();
+  clearDiceTray();
+  localStorage.removeItem(STORAGE_KEY);
+  saveSheet();
+  root.scrollTop = 0;
+  syncSummary();
+  calculateTotalBulk();
+}
 /* CHARACTER MENU */
 const charMenuBtn   = document.getElementById("char-menu-btn");
 const charMenuPanel = document.getElementById("char-menu-panel");
