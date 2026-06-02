@@ -1701,19 +1701,8 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closePregenModal();
 });
 
-/* ================================================
-   CHARACTER MENU — New / Export / Import / Pregens
-   ================================================ */
-
-document.getElementById("char-pregen-btn").addEventListener("click", () => {
-  charMenuPanel.classList.remove("open");
-  openPregenModal();
-});
-
-/* -----------------------------------------------
-   Hamburger toggle
-   ----------------------------------------------- */
-const charMenuBtn   = document.getElementById("char-menu-btn");
+/* CHARACTER MENU */
+const charMenuBtn   = document.getElementById("char-menu-btn");   // declare first
 const charMenuPanel = document.getElementById("char-menu-panel");
 
 charMenuBtn.addEventListener("click", (e) => {
@@ -1721,9 +1710,14 @@ charMenuBtn.addEventListener("click", (e) => {
   charMenuPanel.classList.toggle("open");
 });
 
-// Close panel when clicking anywhere outside
 document.addEventListener("click", () => charMenuPanel.classList.remove("open"));
 
+document.getElementById("char-new-btn").addEventListener("click", () => { ... });
+
+document.getElementById("char-pregen-btn").addEventListener("click", () => {  // only once, after declarations
+  charMenuPanel.classList.remove("open");
+  openPregenModal();
+});
 
 /* -----------------------------------------------
    New Character — wipes sheet after confirmation
