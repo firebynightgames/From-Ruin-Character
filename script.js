@@ -60,6 +60,7 @@ async function saveSheet() {
   const checks = {};
   const desc   = [];
 
+   
   // Named inputs & textareas — skip wound and relic fields (handled separately)
 root.querySelectorAll("input[name], textarea[name]").forEach(el => {
   if (isPairEngineCheckbox(el)) return;
@@ -93,15 +94,14 @@ root.querySelectorAll("input[name], textarea[name]").forEach(el => {
   root.querySelectorAll(".flaws-list textarea").forEach(el => flaws.push(el.value));
 
   // Wounds — structured array, skip fully-empty rows
-root.querySelectorAll(".wound-row").forEach(row => {
-  const apt     = row.querySelector("select")?.value ?? "";
-  const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
-  const dsc     = row.querySelector("input[name*='desc']")?.value ?? "";
-  const patched = row.querySelector(".wound-patch")?.checked ?? false;
-  if (apt || sev || dsc || patched) {
-    wounds.push({ apt, sev, dsc, patched });
-  }
-});
+  const wounds = [];
+  root.querySelectorAll(".wound-row").forEach(row => {
+    const apt     = row.querySelector("select")?.value ?? "";
+    const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
+    const dsc     = row.querySelector("input[name*='desc']")?.value ?? "";
+    const patched = row.querySelector("input.wound-patch")?.checked ?? false;
+    if (apt || sev || dsc || patched) wounds.push({ apt, sev, dsc, patched });
+  });
 
   // Relics — saved by position, name is unstable (index-based)
   const relics = [];
