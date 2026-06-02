@@ -1,12 +1,6 @@
 import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
 
 /* ================================================
-   CONSTANTS (hoisted — used by generators and dice tray)
-   ================================================ */
-const DICE_SOURCE_ID  = "com.firebynightgames.from-ruin";
-const DIE_SVG_URL     = "https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg";
-
-/* ================================================
    CHARACTER MODEL
    ================================================ */
 const character = {
@@ -33,7 +27,13 @@ const character = {
 /* ================================================
    STORAGE KEY
    ================================================ */
-const STORAGE_KEY = "com.firebynightgames.from-ruin/character";
+const STORAGE_KEY    = "com.firebynightgames.from-ruin/character";
+
+/* ================================================
+   DICE CONSTANTS — declared early so generators can use them
+   ================================================ */
+const DICE_SOURCE_ID = "com.firebynightgames.from-ruin";
+const DIE_SVG_URL    = "https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
@@ -115,20 +115,16 @@ async function saveSheet() {
 
   const data = { named, checks, desc, features, drives, flaws, relics, wounds, pairState };
 
-  // Always keep a localStorage backup so hard reloads survive
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
   try {
     const playerKey = await getPlayerKey();
-    // Read existing metadata first, then merge per-player
+    // Read existing metadata first, then merge — matches OBR extension pattern
     const existing = await OBR.room.getMetadata();
-    const existingBlock = (existing[STORAGE_KEY] != null && typeof existing[STORAGE_KEY] === "object")
-      ? existing[STORAGE_KEY]
-      : {};
+    const existingBlock = (existing[STORAGE_KEY] ?? {});
     const merged = { ...existingBlock, [playerKey]: data };
     await OBR.room.setMetadata({ [STORAGE_KEY]: merged });
+
   } catch (err) {
-    // OBR unavailable — localStorage backup already written above
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 }
 
@@ -137,24 +133,21 @@ async function saveSheet() {
    ================================================ */
 async function getPlayerKey() {
   const id = await OBR.player.getId();
-  return id;   // just the player ID — used as sub-key inside STORAGE_KEY block
+  return `${STORAGE_KEY}.${id}`;
 }
 
 async function loadSheet() {
-  // Try OBR cloud storage first
   try {
     const playerKey = await getPlayerKey();
     const meta = await OBR.room.getMetadata();
     const block = meta[STORAGE_KEY];
-    if (block && typeof block === "object" && block[playerKey]) {
-      // Found cloud data — also refresh localStorage backup
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(block[playerKey]));
+    if (block && block[playerKey]) {
       return block[playerKey];
     }
+    // Cloud had nothing — try localStorage fallback
   } catch (err) {
-    // OBR unavailable — fall through to localStorage
+    console.warn("[FromRuin] Cloud load failed, trying localStorage:", err);
   }
-  // Fallback: localStorage (survives hard reloads when OBR context is briefly lost)
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
@@ -672,7 +665,6 @@ if (gearTable) {
           <input type="number" name="attr_gear_bulk_${idx}" placeholder="-">
         </div>`;
       container.appendChild(newRow);
-      injectGearDieIcons(); // add die icon to the new row
     }
   });
 }
@@ -775,11 +767,9 @@ function updateCurrentAptitudes() {
       const current = Math.max(0, base - traumaCount);
       const el      = document.getElementById(`cur-${apt}`);
       if (el) {
-        if (base > 0) {
+        if (traumaCount > 0 && base > 0) {
           el.textContent = current;
-          el.style.color = traumaCount > 0
-            ? (current === 0 ? "red" : "rgba(255,0,0,0.7)")
-            : "#555";
+          el.style.color = current === 0 ? "red" : "rgba(255,0,0,0.7)";
         } else {
           el.textContent = "";
         }
@@ -863,41 +853,17 @@ Object.values(PAIR_MAP).forEach(({ key }) => {
     ?.addEventListener("change", updateAllPairs);
 });
 
-// Stress + trauma box listeners — also enforce sequential filling and cap
+// Stress + trauma box listeners
 document.addEventListener("change", (e) => {
-  const isStress = e.target.classList.contains("stress-box");
-  const isTrauma = e.target.classList.contains("trauma-box");
-  if (!isStress && !isTrauma) return;
-
-  const prefix = [...e.target.classList].find(c => ["fd","ea","sr","dr"].includes(c));
-  if (!prefix) return;
-
-  // Enforce sequential: when checking a box, all prior boxes must be checked;
-  // when unchecking, all subsequent boxes must be unchecked.
-  const boxClass  = isStress ? "stress-box" : "trauma-box";
-  const boxes     = [...document.querySelectorAll(`.${boxClass}.${prefix}`)];
-  const idx       = parseInt(e.target.dataset.index);
-
-  if (e.target.checked) {
-    // Check all boxes before this one too
-    boxes.forEach((b, i) => { if (i < idx && !b.disabled) b.checked = true; });
-  } else {
-    // If this is a stress box and condition is active, prevent unchecking (locked)
-    if (isStress) {
-      const condKey  = PAIR_MAP[prefix].key;
-      const condId   = `cond-${condKey.replace("_", "-")}`;
-      const condBox  = document.getElementById(condId);
-      if (condBox?.checked) {
-        e.target.checked = true; // revert — stress is locked by condition
-        return;
-      }
-    }
-    // Uncheck all boxes after this one too
-    boxes.forEach((b, i) => { if (i > idx) b.checked = false; });
+  if (e.target.classList.contains("stress-box") ||
+      e.target.classList.contains("trauma-box")) {
+    const prefix = [...e.target.classList].find(c => ["fd","ea","sr","dr"].includes(c));
+    if (prefix) updateStressTrauma(prefix);
   }
-
-  updateStressTrauma(prefix);
 });
+
+// Apply caps immediately so boxes are disabled before OBR loads
+updateAllPairs();
 
 /* ================================================
    INIT
@@ -932,6 +898,16 @@ OBR.onReady(async () => {
     el.addEventListener("input", saveSheet);
     el.addEventListener("blur",  saveSheet);
   });
+
+  // Re-save if room metadata is reset externally (e.g. hard reset wipes cloud)
+  OBR.room.onMetadataChange(async (meta) => {
+    const playerKey = await getPlayerKey();
+    const block = meta[STORAGE_KEY];
+    if (!block || !block[playerKey]) {
+      // Our data was lost — write it back immediately
+      saveSheet();
+    }
+  });
 });
 
 /* ================================================
@@ -956,23 +932,8 @@ const aptitudeQueue = [];
 // { slotKey: "weapon-1", label: "Weapon 1", count: 2 }
 let activeGear = null;
 
-// Last roll results for Push
+// Last roll results for Push (future)
 let lastRollResults = null;
-
-/* -----------------------------------------------
-   Push button state helper
-   ----------------------------------------------- */
-function updatePushState() {
-  const pushBtn = document.getElementById("dice-push-btn");
-  if (!pushBtn) return;
-
-  const hasResults =
-    lastRollResults &&
-    (Array.isArray(lastRollResults.apt) || Array.isArray(lastRollResults.gear));
-
-  pushBtn.disabled    = !hasResults;
-  pushBtn.textContent = hasResults ? "Push" : "Push";
-}
 
 /* -----------------------------------------------
    Get aptitude value (trauma-adjusted if shown)
@@ -1001,7 +962,7 @@ function toggleAptitude(apt) {
   }
   updateAptitudeIconStates();
   renderDiceTray();
-  // Results intentionally NOT cleared here — dice persist until explicit Clear
+  hideDiceResult();
 }
 
 /* -----------------------------------------------
@@ -1009,13 +970,15 @@ function toggleAptitude(apt) {
    ----------------------------------------------- */
 function toggleGear(slotKey, label, count) {
   if (activeGear?.slotKey === slotKey) {
+    // Deselect
     activeGear = null;
   } else {
+    // Replace previous (or set first)
     if (count > 0) activeGear = { slotKey, label, count };
   }
   updateGearIconStates();
   renderDiceTray();
-  // Results intentionally NOT cleared here — dice persist until explicit Clear
+  hideDiceResult();
 }
 
 /* -----------------------------------------------
@@ -1106,21 +1069,21 @@ function renderDiceTray() {
   const clearBtn    = document.getElementById("dice-clear-btn");
 
   const rawTotal         = rawAptCount() + rawGearCount();
-  const selectionCount   = aptitudeQueue.length + (activeGear ? 1 : 0); // selections, not dice
   const { aptDice, gearDice, total: netTotal } = adjustedPool();
 
   // Handle badge
-  handleCount.textContent = selectionCount > 0 ? (buildBreakdownLabel() || "0d6") : "";
+  handleCount.textContent = netTotal > 0 ? buildBreakdownLabel() : "";
 
-  // Show tray always; open body whenever something is selected (even 0 dice)
+  // Show tray always; show/hide body based on pool and collapsed state
   tray.style.display = "block";
   const body = tray.querySelector(".dice-tray__body");
   if (body) {
-    body.style.display = selectionCount > 0 ? "flex" : "none";
+    const isCollapsed = body.dataset.collapsed === "true";
+    body.style.display = (rawTotal > 0 && !isCollapsed) ? "flex" : "none";
   }
 
   rollBtn.disabled  = netTotal === 0;
-  clearBtn.disabled = selectionCount === 0;
+  clearBtn.disabled = rawTotal === 0;
 
   // Pool display — individual SVG die icons
   display.innerHTML = "";
@@ -1183,13 +1146,13 @@ function clearDiceTray() {
   lastRollResults      = null;
   const diffInput = document.getElementById("dice-difficulty");
   if (diffInput) diffInput.value = "";
+  document.getElementById("dice-push-btn").disabled = true;
   const banner = document.getElementById("dice-success-banner");
   if (banner) { banner.style.display = "none"; banner.innerHTML = ""; }
   updateAptitudeIconStates();
   updateGearIconStates();
   renderDiceTray();
   hideDiceResult();
-  updatePushState();
 }
 
 /* -----------------------------------------------
@@ -1208,105 +1171,57 @@ function countSuccesses(values, threshold) {
 }
 
 /* -----------------------------------------------
-   Result display
+   Result display — individual die results + success banner
    showDiceResult({ apt: [...], gear: [...] })
-   Dice persist until Clear is pressed.
-   Layout:
-     ┌─ SUCCESS HEADLINE ──────────────────────────┐
-     │  X Successes (threshold+)   [push available] │
-     └──────────────────────────────────────────────┘
-     APTITUDE DICE  [pip] [pip] [pip] …   Ones: N
-     GEAR DICE      [pip] [pip] …         Ones: N
+   or showDiceResult("error string")
    ----------------------------------------------- */
 function showDiceResult(results) {
   const el     = document.getElementById("dice-tray-result");
   const banner = document.getElementById("dice-success-banner");
   if (!el) return;
+  el.innerHTML = "";
+  el.style.display = "flex";
 
-  // --- string fallback (error) ---
   if (typeof results === "string") {
-    el.innerHTML     = `<span class="result-error">${results}</span>`;
-    el.style.display = "flex";
+    el.textContent = results;
     if (banner) banner.style.display = "none";
     return;
   }
 
-  const threshold  = getThreshold();
-  const aptVals    = results.apt  || [];
-  const gearVals   = results.gear || [];
-  const allValues  = [...aptVals, ...gearVals];
-  const successes  = countSuccesses(allValues, threshold);
-  const aptOnes    = aptVals.filter(v => v === 1).length;
-  const gearOnes   = gearVals.filter(v => v === 1).length;
+  const threshold = getThreshold();
+  const allValues = [...(results.apt || []), ...(results.gear || [])];
+  const successes = countSuccesses(allValues, threshold);
 
-  // --- Success headline banner ---
+  // Success banner
   if (banner) {
     banner.innerHTML = "";
     banner.style.display = "flex";
-    const isZero = successes === 0;
-    banner.className = "dice-tray__success-banner" + (isZero ? " success-banner__zero" : "");
-
-    const headline = document.createElement("span");
-    headline.className   = "result-headline";
-    headline.textContent = isZero
-      ? `✗  No Successes  (need ${threshold}+)`
-      : `✔  ${successes} Success${successes !== 1 ? "es" : ""}  on ${threshold}+`;
-    banner.appendChild(headline);
-
-    // Ones summary line — only if any 1s rolled
-    const totalOnes = aptOnes + gearOnes;
-    if (totalOnes > 0) {
-      const onesLine = document.createElement("span");
-      onesLine.className = "result-ones-summary";
-      const parts = [];
-      if (aptOnes  > 0) parts.push(`${aptOnes} apt`);
-      if (gearOnes > 0) parts.push(`${gearOnes} gear`);
-      onesLine.textContent = `⚠ ${totalOnes} one${totalOnes !== 1 ? "s" : ""} (${parts.join(" + ")})`;
-      banner.appendChild(onesLine);
-    }
+    banner.className = "dice-tray__success-banner" + (successes === 0 ? " success-banner__zero" : "");
+    const label = document.createElement("span");
+    label.textContent = successes === 0
+      ? `No successes (${threshold}+ to hit)`
+      : `${successes} Success${successes !== 1 ? "es" : ""} on ${threshold}+`;
+    banner.appendChild(label);
   }
 
-  // --- Die pip groups ---
-  el.innerHTML     = "";
-  el.style.display = "flex";
-
+  // Die pip groups
   function renderGroup(values, groupLabel, pipClass) {
     if (!values || values.length === 0) return;
-    const ones = values.filter(v => v === 1).length;
-
     const group = document.createElement("div");
     group.className = "result-group";
-
-    // Header row: label + ones count
-    const header = document.createElement("div");
-    header.className = "result-group-header";
 
     const lbl = document.createElement("span");
     lbl.className   = "result-group-label";
     lbl.textContent = groupLabel;
-    header.appendChild(lbl);
+    group.appendChild(lbl);
 
-    if (ones > 0) {
-      const onesTag = document.createElement("span");
-      onesTag.className   = "result-group-ones";
-      onesTag.textContent = `${ones} × 1`;
-      header.appendChild(onesTag);
-    }
-    group.appendChild(header);
-
-    // Pip row
     const pips = document.createElement("div");
     pips.className = "result-group-pips";
     values.forEach(val => {
-      const pip       = document.createElement("span");
+      const pip = document.createElement("span");
       const isSuccess = val >= threshold;
       const isOne     = val === 1;
-      pip.className   = [
-        "result-pip",
-        pipClass,
-        isOne     ? "result-pip--one"     : "",
-        isSuccess ? "result-pip--success" : "result-pip--fail"
-      ].filter(Boolean).join(" ");
+      pip.className = `result-pip ${pipClass}${isSuccess ? " result-pip--success" : ""}${isOne ? " result-pip--one" : ""}`;
       pip.textContent = val;
       pips.appendChild(pip);
     });
@@ -1314,16 +1229,13 @@ function showDiceResult(results) {
     el.appendChild(group);
   }
 
-  renderGroup(aptVals,  "Aptitude Dice", "result-pip--apt");
-  renderGroup(gearVals, "Gear Dice",     "result-pip--gear");
+  renderGroup(results.apt,  "Aptitude", "result-pip--apt");
+  renderGroup(results.gear, "Gear",     "result-pip--gear");
 }
 
 function hideDiceResult() {
-  // Only called on explicit Clear — don't call on toggle or re-roll
   const el = document.getElementById("dice-tray-result");
   if (el) { el.innerHTML = ""; el.style.display = "none"; }
-  const banner = document.getElementById("dice-success-banner");
-  if (banner) { banner.innerHTML = ""; banner.style.display = "none"; }
 }
 
 /* -----------------------------------------------
@@ -1352,11 +1264,7 @@ async function checkDicePlusReady() {
    ----------------------------------------------- */
 function rollLocal() {
   const { aptDice, gearDice } = adjustedPool();
-  if (aptDice + gearDice <= 0) {
-    lastRollResults = null;
-    updatePushState();
-    return;
-  }
+  if (aptDice + gearDice <= 0) return;
 
   const rollDie = () => Math.ceil(Math.random() * 6);
   const aptResults  = Array.from({ length: aptDice  }, rollDie);
@@ -1365,11 +1273,11 @@ function rollLocal() {
   lastRollResults = { apt: aptResults, gear: gearResults };
   showDiceResult(lastRollResults);
 
-  const rollBtn = document.getElementById("dice-roll-btn");
+  const rollBtn  = document.getElementById("dice-roll-btn");
+  const pushBtn  = document.getElementById("dice-push-btn");
   rollBtn.disabled    = false;
   rollBtn.textContent = "ROLL ALL";
-
-  updatePushState();
+  pushBtn.disabled    = false;
 }
 
 /* -----------------------------------------------
@@ -1418,16 +1326,13 @@ async function triggerRoll() {
         };
         lastRollResults = splitResults;
         showDiceResult(splitResults);
-        updatePushState();
       } else if (data.result?.totalValue !== undefined) {
-        // Ignore totalValue — we want individual die results only
-        // Fall back to local roll to get proper per-die display
-        rollLocal();
-        return;
+        showDiceResult(`Total: ${data.result.totalValue}`);
       }
 
       rollBtn.disabled    = false;
       rollBtn.textContent = "ROLL ALL";
+      document.getElementById("dice-push-btn").disabled = false;
     }
   );
 
@@ -1484,140 +1389,31 @@ async function triggerRoll() {
 }
 
 /* -----------------------------------------------
-   Push — reroll non-1 failures; keep successes and 1s.
-   One-shot per roll. Re-rolled dice shown with dashed border.
+   Push — reroll non-1 failures, keep 1s and successes
    ----------------------------------------------- */
 function triggerPush() {
-  const pushBtn = document.getElementById("dice-push-btn");
-
-  const hasResults =
-    lastRollResults &&
-    (Array.isArray(lastRollResults.apt) || Array.isArray(lastRollResults.gear));
-
-  // Guard: need results to push
-  if (!hasResults) {
-    pushBtn.disabled = true;
-    return;
-  }
-
+  if (!lastRollResults) return;
   const threshold = getThreshold();
   const rollDie   = () => Math.ceil(Math.random() * 6);
 
-  // Map each value: keep if success or 1, else reroll
   function pushGroup(values) {
-    if (!Array.isArray(values)) return [];
     return values.map(v => {
-      const kept = (v >= threshold || v === 1);
-      return { val: kept ? v : rollDie(), pushed: !kept };
+      // Keep: successes (>= threshold) and 1s (can't push past a complication)
+      if (v >= threshold || v === 1) return v;
+      return rollDie();
     });
   }
 
-  const aptVals  = Array.isArray(lastRollResults.apt)  ? lastRollResults.apt  : [];
-  const gearVals = Array.isArray(lastRollResults.gear) ? lastRollResults.gear : [];
-
-  const pushedApt  = pushGroup(aptVals);
-  const pushedGear = pushGroup(gearVals);
-
-  // Update lastRollResults to the new flat values
-  lastRollResults = {
-    apt:  pushedApt.map(d => d.val),
-    gear: pushedGear.map(d => d.val)
+  const pushed = {
+    apt:  pushGroup(lastRollResults.apt  || []),
+    gear: pushGroup(lastRollResults.gear || [])
   };
 
-  // Render
-  showDiceResultPushed({ apt: pushedApt, gear: pushedGear });
+  lastRollResults = pushed;
+  showDiceResult(pushed);
 
-  // One-shot disable
-  pushBtn.disabled    = true;
-  pushBtn.textContent = "Pushed";
-}
-
-/* Show push results — same as showDiceResult but marks re-rolled dice */
-function showDiceResultPushed(groups) {
-  const el     = document.getElementById("dice-tray-result");
-  const banner = document.getElementById("dice-success-banner");
-  if (!el) return;
-
-  const threshold = getThreshold();
-  const allVals   = [...groups.apt, ...groups.gear].map(d => d.val);
-  const successes = countSuccesses(allVals, threshold);
-  const aptOnes   = groups.apt.filter(d => d.val === 1).length;
-  const gearOnes  = groups.gear.filter(d => d.val === 1).length;
-
-  // Banner
-  if (banner) {
-    banner.innerHTML = "";
-    banner.style.display = "flex";
-    const isZero = successes === 0;
-    banner.className = "dice-tray__success-banner" + (isZero ? " success-banner__zero" : "");
-
-    const headline = document.createElement("span");
-    headline.className   = "result-headline";
-    headline.textContent = (isZero
-      ? `✗  No Successes  (need ${threshold}+)`
-      : `✔  ${successes} Success${successes !== 1 ? "es" : ""}  on ${threshold}+`)
-      + "  — after Push";
-    banner.appendChild(headline);
-
-    const totalOnes = aptOnes + gearOnes;
-    if (totalOnes > 0) {
-      const onesLine = document.createElement("span");
-      onesLine.className = "result-ones-summary";
-      const parts = [];
-      if (aptOnes  > 0) parts.push(`${aptOnes} apt`);
-      if (gearOnes > 0) parts.push(`${gearOnes} gear`);
-      onesLine.textContent = `⚠ ${totalOnes} one${totalOnes !== 1 ? "s" : ""} (${parts.join(" + ")})`;
-      banner.appendChild(onesLine);
-    }
-  }
-
-  el.innerHTML     = "";
-  el.style.display = "flex";
-
-  function renderPushGroup(dice, groupLabel, pipClass) {
-    if (!dice || dice.length === 0) return;
-    const ones = dice.filter(d => d.val === 1).length;
-
-    const group = document.createElement("div");
-    group.className = "result-group";
-
-    const header = document.createElement("div");
-    header.className = "result-group-header";
-    const lbl = document.createElement("span");
-    lbl.className   = "result-group-label";
-    lbl.textContent = groupLabel;
-    header.appendChild(lbl);
-    if (ones > 0) {
-      const onesTag = document.createElement("span");
-      onesTag.className   = "result-group-ones";
-      onesTag.textContent = `${ones} × 1`;
-      header.appendChild(onesTag);
-    }
-    group.appendChild(header);
-
-    const pips = document.createElement("div");
-    pips.className = "result-group-pips";
-    dice.forEach(({ val, pushed }) => {
-      const pip       = document.createElement("span");
-      const isSuccess = val >= threshold;
-      const isOne     = val === 1;
-      pip.className   = [
-        "result-pip",
-        pipClass,
-        isOne     ? "result-pip--one"     : "",
-        isSuccess ? "result-pip--success" : "result-pip--fail",
-        pushed    ? "result-pip--pushed"  : "result-pip--kept"
-      ].filter(Boolean).join(" ");
-      pip.textContent = val;
-      if (pushed) pip.title = "re-rolled";
-      pips.appendChild(pip);
-    });
-    group.appendChild(pips);
-    el.appendChild(group);
-  }
-
-  renderPushGroup(groups.apt,  "Aptitude Dice", "result-pip--apt");
-  renderPushGroup(groups.gear, "Gear Dice",     "result-pip--gear");
+  // Push is one-shot — disable after use
+  document.getElementById("dice-push-btn").disabled = true;
 }
 
 /* -----------------------------------------------
@@ -1656,20 +1452,23 @@ document.querySelectorAll(".threshold-btn").forEach(btn => {
   });
 });
 
-// Close button — clears pool and hides tray body (separate from handle toggle)
+// Close button — always closes tray completely
 document.getElementById("dice-tray-close")
   .addEventListener("click", (e) => {
     e.stopPropagation();
-    e.preventDefault();
     clearDiceTray();
   });
 
-// Handle click — collapse/expand body, but NOT when close button was clicked
+// Handle click — toggle body open/closed
 document.getElementById("dice-tray-handle")
   .addEventListener("click", (e) => {
-    if (e.target.closest("#dice-tray-close")) return; // close btn handled separately
+    // Don't toggle if the close button was clicked
+    if (e.target.closest("#dice-tray-close")) return;
     const body = document.querySelector(".dice-tray__body");
-    if (body) body.style.display = body.style.display === "none" ? "flex" : "none";
+    if (!body) return;
+    const isHidden = body.dataset.collapsed === "true";
+    body.dataset.collapsed = isHidden ? "false" : "true";
+    body.style.display = isHidden ? "flex" : "none";
   });
 
 /* -----------------------------------------------
@@ -1679,17 +1478,14 @@ function wireRowDieIcons() {
   document.querySelectorAll(".gear-die-icon--row").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const slotKey    = btn.dataset.slotKey;
-      const n          = slotKey.split("-")[1];
-      const isWeapon   = slotKey.startsWith("weapon");
-      const nameName   = isWeapon ? `attr_weapon_name_${n}` : `attr_armor_name_${n}`;
-      const gearName   = isWeapon ? `attr_weapon_gear_a_${n}` : `attr_armor_gear_a_${n}`;
-      const nameInput  = document.querySelector(`input[name="${nameName}"]`);
-      const gearInput  = document.querySelector(`input[name="${gearName}"]`);
-      const rawLabel   = nameInput?.value?.trim();
-      const fallback   = isWeapon ? `Weapon ${n}` : `Armor ${n}`;
-      const label      = rawLabel || fallback;
-      const count      = parseInt(gearInput?.value) || 0;
+      const slotKey = btn.dataset.slotKey;
+      const n       = slotKey.split("-")[1];
+      const label   = slotKey.startsWith("weapon") ? `Weapon ${n}` : `Armor ${n}`;
+      const inputName = slotKey.startsWith("weapon")
+        ? `attr_weapon_gear_a_${n}`
+        : `attr_armor_gear_a_${n}`;
+      const input = document.querySelector(`input[name="${inputName}"]`);
+      const count = parseInt(input?.value) || 0;
       toggleGear(slotKey, label, count);
     });
   });
@@ -1697,7 +1493,6 @@ function wireRowDieIcons() {
 
 /* -----------------------------------------------
    Inject gear die icons into general gear rows only
-   Icon sits at the right edge of the name column (after the name)
    ----------------------------------------------- */
 function injectGearDieIcons() {
   document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
@@ -1705,8 +1500,8 @@ function injectGearDieIcons() {
     const slotKey  = `gear-${n}`;
     const label    = `Gear ${n}`;
     const valInput = row.querySelector(`input[name="attr_gear_val_${n}"]`);
-    const nameCell = row.querySelector(".col-gear-name");
-    if (!nameCell || row.querySelector(".gear-die-icon")) return;
+    const valCell  = row.querySelector(".col-gear-val");
+    if (!valCell || row.querySelector(".gear-die-icon")) return;
 
     const btn = document.createElement("button");
     btn.className       = "gear-die-icon gear-die-icon--general";
@@ -1721,25 +1516,384 @@ function injectGearDieIcons() {
 
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const nameInput = row.querySelector(`input[name="attr_gear_name_${n}"]`);
-      const rawLabel  = nameInput?.value?.trim();
-      const liveLabel = rawLabel || label;     // fallback to "Gear N"
-      const count     = parseInt(valInput?.value) || 0;
-      toggleGear(slotKey, liveLabel, count);
+      const count = parseInt(valInput?.value) || 0;
+      toggleGear(slotKey, label, count);
     });
 
-    // Position at right edge of name cell
-    nameCell.style.position = "relative";
-    nameCell.style.overflow = "visible";
-    btn.style.position = "absolute";
-    btn.style.right    = "-18px";
-    btn.style.top      = "50%";
-    btn.style.transform = "translateY(-50%)";
-    nameCell.appendChild(btn);
+    valCell.style.position = "relative";
+    valCell.insertBefore(btn, valCell.firstChild);
   });
 }
+
+/* ================================================
+   PREGEN CHARACTERS
+   Edit the objects below to set your pregens.
+   Each pregen's `data` field is a full restoreSheet-
+   compatible save object — use Export to generate
+   real data, then paste it in here.
+   ================================================ */
+const PREGENS = [
+  {
+    name:    "Mira Ashveil",
+    background: "Smuggler",
+    tagline: "She always has a way out — usually through someone else's wall.",
+    aptitudeTags: ["Finesse 4", "Deceive 3", "Adapt 3"],
+    data: {
+      named: {
+        attr_finesse: "4", attr_devise: "1", attr_exert: "2",
+        attr_adapt: "3",   attr_sense: "2",  attr_resist: "1",
+        attr_deceive: "3", attr_relate: "2",
+        attr_advances_left: "3", attr_advances_right: "10"
+      },
+      checks: {},
+      desc: [
+        "Mira Ashveil", "32-year-old", "impulsive",
+        "Vashari", "narrowly escaped", "smuggler",
+        "a cracked compass", "a debt that never got repaid"
+      ],
+      features: [
+        "Always has a hidden exit route planned before entering any building.",
+        "Can forge travel documents given an hour and the right supplies."
+      ],
+      drives:   ["Get the cargo through, no matter the cost."],
+      flaws:    ["Trusts no one completely — not even her closest allies."],
+      relics:   ["", "", ""],
+      wounds:   [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  },
+  {
+    name:    "Corryn Dusk",
+    background: "Soldier",
+    tagline: "The war ended. He didn't get the message.",
+    aptitudeTags: ["Exert 4", "Resist 3", "Sense 3"],
+    data: {
+      named: {
+        attr_finesse: "2", attr_devise: "1", attr_exert: "4",
+        attr_adapt: "2",   attr_sense: "3",  attr_resist: "3",
+        attr_deceive: "1", attr_relate: "2",
+        attr_advances_left: "3", attr_advances_right: "10"
+      },
+      checks: {},
+      desc: [
+        "Corryn Dusk", "40-year-old", "stubborn",
+        "Halteri", "survived", "soldier",
+        "a rusted medal", "the siege of Vael Hold"
+      ],
+      features: [
+        "Trained to keep moving under fire — ignores the first Condition each encounter.",
+        "Can read a battlefield at a glance; always acts first in structured chaos."
+      ],
+      drives:   ["Protect whoever's left standing beside me."],
+      flaws:    ["Solves problems with force long after subtlety would've worked better."],
+      relics:   ["", "", ""],
+      wounds:   [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  },
+  {
+    name:    "Sable",
+    background: "Arcanist",
+    tagline: "She collects secrets the way other people collect scars.",
+    aptitudeTags: ["Devise 4", "Sense 3", "Relate 3"],
+    data: {
+      named: {
+        attr_finesse: "2", attr_devise: "4", attr_exert: "1",
+        attr_adapt: "2",   attr_sense: "3",  attr_resist: "1",
+        attr_deceive: "2", attr_relate: "3",
+        attr_advances_left: "3", attr_advances_right: "10"
+      },
+      checks: {},
+      desc: [
+        "Sable", "27-year-old", "obsessive",
+        "Orvyn", "sought out", "arcanist",
+        "a sealed letter she's never opened", "a ritual gone wrong in the Deep"
+      ],
+      features: [
+        "Can read residual arcane traces left by rituals up to a week old.",
+        "Knows three languages no living person officially teaches."
+      ],
+      drives:   ["Understand what the Deep actually is before it claims me."],
+      flaws:    ["Will delay action indefinitely if she thinks there's more to learn first."],
+      relics:   ["", "", ""],
+      wounds:   [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  }
+];
+
+/* ================================================
+   PREGEN MODAL ENGINE
+   ================================================ */
+function openPregenModal() {
+  const modal = document.getElementById("pregen-modal");
+  const grid  = document.getElementById("pregen-card-grid");
+
+  // Build cards
+  grid.innerHTML = "";
+  PREGENS.forEach((pregen, idx) => {
+    // Pull display info from desc array (positional: 0=name, 1=age, 3=people, 5=background)
+    const desc       = pregen.data?.desc || [];
+    const cardName   = desc[0] || pregen.name;
+    const cardAge    = desc[1] || "";
+    const cardPeople = desc[3] || "";
+    const cardBg     = desc[5] || "";
+    const preview    = [cardAge, cardPeople, cardBg].filter(Boolean).join(" · ");
+
+    const card = document.createElement("div");
+    card.className = "pregen-card";
+    card.innerHTML = `
+      <div class="pregen-card__name">${cardName}</div>
+      <div class="pregen-card__tagline">${pregen.tagline}</div>
+      <div class="pregen-card__meta">
+        <span class="pregen-card__tag">${preview}</span>
+        ${pregen.aptitudeTags.map(t => `<span class="pregen-card__tag pregen-card__tag--apt">${t}</span>`).join("")}
+      </div>
+      <button class="pregen-card__select-btn">Select</button>
+    `;
+    card.addEventListener("click", () => loadPregen(idx));
+    grid.appendChild(card);
+  });
+
+  modal.style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+function closePregenModal() {
+  const modal = document.getElementById("pregen-modal");
+  modal.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+function loadPregen(idx) {
+  const pregen = PREGENS[idx];
+  if (!confirm(`Load "${pregen.name}"? Your current sheet will be replaced.`)) return;
+  closePregenModal();
+  newCharacter();
+  setTimeout(() => {
+    restoreSheet(pregen.data);
+    saveSheet();
+  }, 50);
+}
+
+// Close button
+document.getElementById("pregen-close-btn")
+  .addEventListener("click", closePregenModal);
+
+// Backdrop click closes modal
+document.querySelector(".pregen-modal__backdrop")
+  .addEventListener("click", closePregenModal);
+
+// Escape key closes modal
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closePregenModal();
+});
+
+/* ================================================
+   CHARACTER MENU — New / Export / Import / Pregens
+   ================================================ */
+
+/* -----------------------------------------------
+   Hamburger toggle
+   ----------------------------------------------- */
+const charMenuBtn   = document.getElementById("char-menu-btn");
+const charMenuPanel = document.getElementById("char-menu-panel");
+
+charMenuBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  charMenuPanel.classList.toggle("open");
+});
+
+// Close panel when clicking anywhere outside
+document.addEventListener("click", () => charMenuPanel.classList.remove("open"));
+
+/* -----------------------------------------------
+   New Character — wipes sheet after confirmation
+   ----------------------------------------------- */
+document.getElementById("char-new-btn").addEventListener("click", () => {
+  charMenuPanel.classList.remove("open");
+  if (!confirm("Start a new character? All current data will be cleared.")) return;
+  newCharacter();
+});
+
+document.getElementById("char-pregen-btn").addEventListener("click", () => {
+  charMenuPanel.classList.remove("open");
+  openPregenModal();
+});
+
+function newCharacter() {
+  const root = document.getElementById("character-sheet");
+
+  // Clear all named inputs and textareas
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (el.type === "checkbox") el.checked = false;
+    else el.value = "";
+  });
+
+  // Clear id-only checkboxes
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    el.checked = false;
+  });
+
+  // Clear desc-fields
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    el.innerHTML = "";
+  });
+
+  // Reset features/drives/flaws to single blank row
+  ["features-list", "drives-list", "flaws-list"].forEach(cls => {
+    const list = root.querySelector(`.${cls}`);
+    if (!list) return;
+    const items = list.querySelectorAll("li");
+    items.forEach((li, i) => { if (i > 0) li.remove(); });
+    const ta = list.querySelector("textarea");
+    if (ta) { ta.value = ""; ta.style.height = ""; }
+  });
+
+  // Reset wounds to single blank row
+  const woundsContainer = root.querySelector("#wounds-container");
+  if (woundsContainer) {
+    woundsContainer.querySelectorAll(".wound-row").forEach(r => r.remove());
+    woundsContainer.appendChild(createWoundRow(1));
+  }
+
+  // Reset relics to 3 blank rows
+  if (relicContainer) {
+    relicContainer.innerHTML = "";
+    relicCount = 0;
+    for (let i = 0; i < 3; i++) addRelicRow();
+  }
+
+  // Reset pair engine model
+  Object.keys(character.stress).forEach(k => character.stress[k].fill(false));
+  Object.keys(character.trauma).forEach(k => character.trauma[k].fill(false));
+  Object.keys(character.pairConditions).forEach(k => character.pairConditions[k] = false);
+  updateAllPairs();
+
+  // Clear dice tray
+  clearDiceTray();
+
+  // Clear saves
+  localStorage.removeItem(STORAGE_KEY);
+  saveSheet();
+
+  // Scroll back to top
+  root.scrollTop = 0;
+
+  syncSummary();
+  calculateTotalBulk();
+}
+
+/* -----------------------------------------------
+   Export — serialise current sheet to a .json file
+   ----------------------------------------------- */
+document.getElementById("char-export-btn").addEventListener("click", async () => {
+  charMenuPanel.classList.remove("open");
+
+  // Reuse saveSheet's serialisation logic — read from DOM directly
+  const root   = document.getElementById("character-sheet");
+  const named  = {};
+  const checks = {};
+  const desc   = [];
+
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    if (el.name.startsWith("attr_wound_")) return;
+    if (el.name.startsWith("attr_relic_")) return;
+    if (el.type === "checkbox") named[el.name] = el.checked;
+    else named[el.name] = el.value;
+  });
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    checks[el.id] = el.checked;
+  });
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => desc.push(el.innerHTML));
+
+  const features = [], drives = [], flaws = [], relics = [], wounds = [];
+  root.querySelectorAll(".features-list textarea").forEach(el => features.push(el.value));
+  root.querySelectorAll(".drives-list  textarea").forEach(el => drives.push(el.value));
+  root.querySelectorAll(".flaws-list   textarea").forEach(el => flaws.push(el.value));
+  root.querySelectorAll(".relic-row    textarea").forEach(el => relics.push(el.value));
+  root.querySelectorAll(".wound-row").forEach(row => {
+    const apt     = row.querySelector("select")?.value ?? "";
+    const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
+    const dsc     = row.querySelector("input[name*='desc']")?.value ?? "";
+    const patched = row.querySelector("input.wound-patch")?.checked ?? false;
+    if (apt || sev || dsc || patched) wounds.push({ apt, sev, dsc, patched });
+  });
+
+  const pairState = {
+    stress:         character.stress,
+    trauma:         character.trauma,
+    pairConditions: character.pairConditions
+  };
+
+  const data = { named, checks, desc, features, drives, flaws, relics, wounds, pairState };
+
+  // Build a filename from the character name if available
+  const charName = (named["attr_character_name"] || "").trim()
+    || Object.values(named).find(v => typeof v === "string" && v.trim())?.trim()
+    || "character";
+  const slug = charName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const filename = `from-ruin-${slug}.json`;
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+/* -----------------------------------------------
+   Import — load a .json file and restore the sheet
+   ----------------------------------------------- */
+document.getElementById("char-import-input").addEventListener("change", (e) => {
+  charMenuPanel.classList.remove("open");
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Reset the input so the same file can be re-imported later
+  e.target.value = "";
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    let data;
+    try {
+      data = JSON.parse(ev.target.result);
+    } catch {
+      alert("Could not read that file — make sure it's a valid From Ruin export.");
+      return;
+    }
+
+    if (!confirm("Import this character? Your current sheet will be replaced.")) return;
+
+    // Wipe first, then restore
+    newCharacter();
+    // Small delay so the DOM settles after newCharacter's resets
+    setTimeout(() => {
+      restoreSheet(data);
+      saveSheet();
+    }, 50);
+  };
+  reader.readAsText(file);
+});
 
 injectGearDieIcons();
 wireRowDieIcons();
 renderDiceTray();
-updatePushState();
