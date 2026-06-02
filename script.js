@@ -1621,73 +1621,6 @@ const PREGENS = [
 ];
 
 /* ================================================
-   PREGEN MODAL ENGINE
-   ================================================ */
-function openPregenModal() {
-  const modal = document.getElementById("pregen-modal");
-  const grid  = document.getElementById("pregen-card-grid");
-
-  // Build cards
-  grid.innerHTML = "";
-  PREGENS.forEach((pregen, idx) => {
-    // Pull display info from desc array (positional: 0=name, 1=age, 3=people, 5=background)
-    const desc       = pregen.data?.desc || [];
-    const cardName   = desc[0] || pregen.name;
-    const cardAge    = desc[1] || "";
-    const cardPeople = desc[3] || "";
-    const cardBg     = desc[5] || "";
-    const preview    = [cardAge, cardPeople, cardBg].filter(Boolean).join(" · ");
-
-    const card = document.createElement("div");
-    card.className = "pregen-card";
-    card.innerHTML = `
-      <div class="pregen-card__name">${cardName}</div>
-      <div class="pregen-card__tagline">${pregen.tagline}</div>
-      <div class="pregen-card__meta">
-        <span class="pregen-card__tag">${preview}</span>
-        ${pregen.aptitudeTags.map(t => `<span class="pregen-card__tag pregen-card__tag--apt">${t}</span>`).join("")}
-      </div>
-      <button class="pregen-card__select-btn">Select</button>
-    `;
-    card.addEventListener("click", () => loadPregen(idx));
-    grid.appendChild(card);
-  });
-
-  modal.style.display = "flex";
-  document.body.style.overflow = "hidden";
-}
-
-function closePregenModal() {
-  const modal = document.getElementById("pregen-modal");
-  modal.style.display = "none";
-  document.body.style.overflow = "";
-}
-
-function loadPregen(idx) {
-  const pregen = PREGENS[idx];
-  if (!confirm(`Load "${pregen.name}"? Your current sheet will be replaced.`)) return;
-  closePregenModal();
-  newCharacter();
-  setTimeout(() => {
-    restoreSheet(pregen.data);
-    saveSheet();
-  }, 50);
-}
-
-// Close button
-document.getElementById("pregen-close-btn")
-  .addEventListener("click", closePregenModal);
-
-// Backdrop click closes modal
-document.querySelector(".pregen-modal__backdrop")
-  .addEventListener("click", closePregenModal);
-
-// Escape key closes modal
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closePregenModal();
-});
-
-/* ================================================
    CHARACTER MENU
    ================================================ */
 const charMenuBtn   = document.getElementById("char-menu-btn");
@@ -1782,6 +1715,72 @@ document.getElementById("char-import-input")?.addEventListener("change", (e) => 
     setTimeout(() => { restoreSheet(data); saveSheet(); }, 50);
   };
   reader.readAsText(file);
+});
+/* ================================================
+   PREGEN MODAL ENGINE
+   ================================================ */
+function openPregenModal() {
+  const modal = document.getElementById("pregen-modal");
+  const grid  = document.getElementById("pregen-card-grid");
+
+  // Build cards
+  grid.innerHTML = "";
+  PREGENS.forEach((pregen, idx) => {
+    // Pull display info from desc array (positional: 0=name, 1=age, 3=people, 5=background)
+    const desc       = pregen.data?.desc || [];
+    const cardName   = desc[0] || pregen.name;
+    const cardAge    = desc[1] || "";
+    const cardPeople = desc[3] || "";
+    const cardBg     = desc[5] || "";
+    const preview    = [cardAge, cardPeople, cardBg].filter(Boolean).join(" · ");
+
+    const card = document.createElement("div");
+    card.className = "pregen-card";
+    card.innerHTML = `
+      <div class="pregen-card__name">${cardName}</div>
+      <div class="pregen-card__tagline">${pregen.tagline}</div>
+      <div class="pregen-card__meta">
+        <span class="pregen-card__tag">${preview}</span>
+        ${pregen.aptitudeTags.map(t => `<span class="pregen-card__tag pregen-card__tag--apt">${t}</span>`).join("")}
+      </div>
+      <button class="pregen-card__select-btn">Select</button>
+    `;
+    card.addEventListener("click", () => loadPregen(idx));
+    grid.appendChild(card);
+  });
+
+  modal.style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+function closePregenModal() {
+  const modal = document.getElementById("pregen-modal");
+  modal.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+function loadPregen(idx) {
+  const pregen = PREGENS[idx];
+  if (!confirm(`Load "${pregen.name}"? Your current sheet will be replaced.`)) return;
+  closePregenModal();
+  newCharacter();
+  setTimeout(() => {
+    restoreSheet(pregen.data);
+    saveSheet();
+  }, 50);
+}
+
+// Close button
+document.getElementById("pregen-close-btn")
+  .addEventListener("click", closePregenModal);
+
+// Backdrop click closes modal
+document.querySelector(".pregen-modal__backdrop")
+  .addEventListener("click", closePregenModal);
+
+// Escape key closes modal
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closePregenModal();
 });
 
 /* ================================================
