@@ -1897,3 +1897,112 @@ document.getElementById("char-import-input").addEventListener("change", (e) => {
 injectGearDieIcons();
 wireRowDieIcons();
 renderDiceTray();
+
+/* ================================================
+   HAMBURGER MENU
+   ================================================ */
+const hamburgerBtn      = document.getElementById("hamburger-btn");
+const hamburgerDropdown = document.getElementById("hamburger-dropdown");
+
+function toggleHamburger(forceClose = false) {
+  const isOpen = !hamburgerDropdown.classList.contains("hamburger-dropdown--closed");
+  if (forceClose || isOpen) {
+    hamburgerDropdown.classList.add("hamburger-dropdown--closed");
+    hamburgerBtn.classList.remove("hbg-open");
+  } else {
+    hamburgerDropdown.classList.remove("hamburger-dropdown--closed");
+    hamburgerBtn.classList.add("hbg-open");
+  }
+}
+
+hamburgerBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  toggleHamburger();
+});
+
+document.addEventListener("click", () => toggleHamburger(true));
+
+/* --- New Character --- */
+document.getElementById("hbg-new-char").addEventListener("click", () => {
+  if (!confirm("Start a new character? Unsaved data will be lost.")) return;
+  toggleHamburger(true);
+  // Clear all inputs, textareas, checkboxes, contenteditable fields
+  document.querySelectorAll("#character-sheet input[type='text'], #character-sheet input[type='number']")
+    .forEach(el => el.value = "");
+  document.querySelectorAll("#character-sheet textarea")
+    .forEach(el => el.value = "");
+  document.querySelectorAll("#character-sheet input[type='checkbox']")
+    .forEach(el => el.checked = false);
+  document.querySelectorAll("#character-sheet [contenteditable]")
+    .forEach(el => el.textContent = "");
+  clearDiceTray();
+});
+
+/* --- Iconic (Pregen) — placeholder, wire up your own logic --- */
+document.getElementById("hbg-iconic").addEventListener("click", () => {
+  toggleHamburger(true);
+  // TODO: Open your pregen character selector here
+  alert("Iconic Character selector coming soon!");
+});
+
+/* --- Export File --- */
+document.getElementById("hbg-export").addEventListener("click", () => {
+  toggleHamburger(true);
+  const data = {};
+  document.querySelectorAll("#character-sheet input[name], #character-sheet textarea[name]")
+    .forEach(el => {
+      if (el.type === "checkbox") {
+        data[el.name] = el.checked;
+      } else {
+        data[el.name] = el.value;
+      }
+    });
+  document.querySelectorAll("#character-sheet input[type='checkbox'][name]")
+    .forEach(el => { data[el.name] = el.checked; });
+  document.querySelectorAll("#character-sheet [contenteditable][data-placeholder]")
+    .forEach(el => { data["desc_" + el.dataset.placeholder] = el.textContent; });
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = (data["desc_NAME"] || "character") + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* --- Import File --- */
+document.getElementById("hbg-import").addEventListener("click", () => {
+  toggleHamburger(true);
+  document.getElementById("hbg-import-input").click();
+});
+
+document.getElementById("hbg-import-input").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      Object.entries(data).forEach(([key, val]) => {
+        // Named inputs / textareas
+        const el = document.querySelector(`#character-sheet [name="${key}"]`);
+        if (el) {
+          if (el.type === "checkbox") el.checked = !!val;
+          else el.value = val;
+          return;
+        }
+        // Contenteditable desc fields
+        if (key.startsWith("desc_")) {
+          const placeholder = key.slice(5);
+          const field = document.querySelector(`#character-sheet [data-placeholder="${placeholder}"]`);
+          if (field) field.textContent = val;
+        }
+      });
+    } catch {
+      alert("Could not read file — make sure it's a valid character JSON.");
+    }
+    e.target.value = "";
+  };
+  reader.readAsText(file);
+});
