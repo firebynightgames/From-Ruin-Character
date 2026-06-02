@@ -384,54 +384,52 @@
 </div><!-- end #character-sheet -->
 
 <!-- ================================================
-     DICE TRAY — Fixed at bottom of viewport
+     DICE TRAY — Fixed panel, right side
      ================================================ -->
 <div id="dice-tray" class="dice-tray" aria-label="Dice Pool Tray">
 
-  <!-- Handle bar — always visible when tray is open -->
-  <div id="dice-tray-handle" class="dice-tray__handle">
-    <span class="dice-tray__handle-label">DICE POOL</span>
-    <span id="dice-tray-count" class="dice-tray__handle-count"></span>
+  <!-- Tab trigger on the right edge -->
+  <button id="dice-tray-tab" class="dice-tray__tab" title="Dice Pool">
+    <img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="dice" class="dice-tray__tab-icon">
+  </button>
+
+  <!-- Panel body -->
+  <div class="dice-tray__panel" id="dice-tray-panel">
+
+    <!-- Close button -->
     <button id="dice-tray-close" class="dice-tray__close" title="Close">✕</button>
-  </div>
 
-  <!-- Expanded body -->
-  <div class="dice-tray__body">
-
-    <!-- Pool display — SVG die icons -->
-    <div class="dice-tray__pool" id="dice-pool-display"></div>
-    <div id="dice-pool-breakdown" class="dice-tray__breakdown"></div>
-
-    <!-- Difficulty + threshold row -->
-    <div class="dice-tray__modifiers">
-      <div class="dice-tray__difficulty">
-        <label class="dice-tray__mod-label" for="dice-difficulty">Difficulty</label>
-        <input type="number" id="dice-difficulty" class="dice-tray__mod-input"
-               min="0" max="20" placeholder="0">
-      </div>
-      <div class="dice-tray__mod-spacer"></div>
-      <div class="dice-tray__threshold">
-        <span class="dice-tray__mod-label">Success</span>
-        <div class="threshold-btns">
-          <button class="threshold-btn" data-threshold="4">4+</button>
-          <button class="threshold-btn threshold-btn--active" data-threshold="5">5+</button>
-          <button class="threshold-btn" data-threshold="6">6+</button>
-        </div>
+    <!-- Success threshold -->
+    <div class="dice-tray__section">
+      <span class="dice-tray__section-label">Success</span>
+      <div class="threshold-btns">
+        <button class="threshold-btn" data-threshold="4">4+</button>
+        <button class="threshold-btn threshold-btn--active" data-threshold="5">5+</button>
+        <button class="threshold-btn" data-threshold="6">6+</button>
       </div>
     </div>
 
-    <!-- Success count banner — shown after a roll -->
-    <div id="dice-success-banner" class="dice-tray__success-banner" style="display:none;"></div>
+    <!-- Difficulty -->
+    <div class="dice-tray__section">
+      <span class="dice-tray__section-label">Difficulty</span>
+      <input type="number" id="dice-difficulty" class="dice-tray__mod-input"
+             min="0" max="20" placeholder="0">
+    </div>
 
-    <!-- Roll result display -->
-    <div id="dice-tray-result" class="dice-tray__result" style="display:none;"></div>
+    <!-- Dice columns -->
+    <div class="dice-tray__columns" id="dice-pool-display">
+      <!-- Injected by JS -->
+    </div>
 
     <!-- Action buttons -->
     <div class="dice-tray__actions">
+      <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">Roll</button>
+      <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled>Push</button>
       <button id="dice-clear-btn" class="dice-tray__btn dice-tray__btn--clear">Clear</button>
-      <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled title="Reroll non-1 failures">Push</button>
-      <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">ROLL ALL</button>
     </div>
+
+    <!-- Success banner -->
+    <div id="dice-success-banner" class="dice-tray__success-banner" style="display:none;"></div>
 
   </div>
 </div>
