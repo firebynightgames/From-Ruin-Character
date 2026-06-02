@@ -1912,7 +1912,7 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.char-menu-panel[aria-hidden="false"] {
+.char-menu-panel.open {
   transform: scale(1);
   opacity: 1;
   pointer-events: auto;
