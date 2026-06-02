@@ -1756,102 +1756,151 @@ document.addEventListener("click", () => {
 charMenuPanel?.classList.remove("open");
 });
 
-// New Character
+/* ================================================
+   NEW CHARACTER
+   ================================================ */
+function newCharacter() {
+  const root = document.getElementById("character-sheet");
+
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (el.type === "checkbox") el.checked = false;
+    else el.value = "";
+  });
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    el.checked = false;
+  });
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    el.innerHTML = "";
+  });
+  ["features-list", "drives-list", "flaws-list"].forEach(cls => {
+    const list = root.querySelector(`.${cls}`);
+    if (!list) return;
+    list.querySelectorAll("li").forEach((li, i) => { if (i > 0) li.remove(); });
+    const ta = list.querySelector("textarea");
+    if (ta) { ta.value = ""; ta.style.height = ""; }
+  });
+  const wc = root.querySelector("#wounds-container");
+  if (wc) {
+    wc.querySelectorAll(".wound-row").forEach(r => r.remove());
+    wc.appendChild(createWoundRow(1));
+  }
+  if (relicContainer) {
+    relicContainer.innerHTML = "";
+    relicCount = 0;
+    for (let i = 0; i < 3; i++) addRelicRow();
+  }
+  Object.keys(character.stress).forEach(k => character.stress[k].fill(false));
+  Object.keys(character.trauma).forEach(k => character.trauma[k].fill(false));
+  Object.keys(character.pairConditions).forEach(k => character.pairConditions[k] = false);
+  updateAllPairs();
+  clearDiceTray();
+  localStorage.removeItem(STORAGE_KEY);
+  saveSheet();
+  root.scrollTop = 0;
+  syncSummary();
+  calculateTotalBulk();
+}
+
+/* ================================================
+   CHARACTER MENU
+   ================================================ */
+const charMenuBtn   = document.getElementById("char-menu-btn");
+const charMenuPanel = document.getElementById("char-menu-panel");
+
+charMenuBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  charMenuPanel?.classList.toggle("open");
+});
+
+document.addEventListener("click", () => {
+  charMenuPanel?.classList.remove("open");
+});
+
 document.getElementById("char-new-btn")?.addEventListener("click", () => {
-charMenuPanel?.classList.remove("open");
-if (!confirm("Start a new character? All current data will be cleared.")) return;
-newCharacter();
+  charMenuPanel?.classList.remove("open");
+  if (!confirm("Start a new character? All current data will be cleared.")) return;
+  newCharacter();
 });
 
-// Pregens
 document.getElementById("char-pregen-btn")?.addEventListener("click", () => {
-charMenuPanel?.classList.remove("open");
-openPregenModal();
+  charMenuPanel?.classList.remove("open");
+  openPregenModal();
 });
 
-// Export
 document.getElementById("char-export-btn")?.addEventListener("click", async () => {
-charMenuPanel?.classList.remove("open");
+  charMenuPanel?.classList.remove("open");
+  const root   = document.getElementById("character-sheet");
+  const named  = {};
+  const checks = {};
+  const desc   = [];
 
-const root   = document.getElementById("character-sheet");
-const named  = {};
-const checks = {};
-const desc   = [];
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    if (el.name.startsWith("attr_wound_")) return;
+    if (el.name.startsWith("attr_relic_")) return;
+    if (el.type === "checkbox") named[el.name] = el.checked;
+    else named[el.name] = el.value;
+  });
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    checks[el.id] = el.checked;
+  });
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => desc.push(el.innerHTML));
 
-root.querySelectorAll("input[name], textarea[name]").forEach(el => {
-if (isPairEngineCheckbox(el)) return;
-if (el.name.startsWith("attr_wound_")) return;
-if (el.name.startsWith("attr_relic_")) return;
+  const features = [], drives = [], flaws = [], relics = [], wounds = [];
+  root.querySelectorAll(".features-list textarea").forEach(el => features.push(el.value));
+  root.querySelectorAll(".drives-list textarea").forEach(el => drives.push(el.value));
+  root.querySelectorAll(".flaws-list textarea").forEach(el => flaws.push(el.value));
+  root.querySelectorAll(".relic-row textarea").forEach(el => relics.push(el.value));
+  root.querySelectorAll(".wound-row").forEach(row => {
+    const apt     = row.querySelector("select")?.value ?? "";
+    const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
+    const dsc     = row.querySelector("input[name*='desc']")?.value ?? "";
+    const patched = row.querySelector("input.wound-patch")?.checked ?? false;
+    if (apt || sev || dsc || patched) wounds.push({ apt, sev, dsc, patched });
+  });
 
-```
-if (el.type === "checkbox") named[el.name] = el.checked;
-else named[el.name] = el.value;
-```
+  const data = {
+    named, checks, desc, features, drives, flaws, relics, wounds,
+    pairState: {
+      stress:         character.stress,
+      trauma:         character.trauma,
+      pairConditions: character.pairConditions
+    }
+  };
 
+  const charName = data.desc[0]?.trim() || "character";
+  const slug     = charName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const blob     = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a        = document.createElement("a");
+  a.href         = URL.createObjectURL(blob);
+  a.download     = `from-ruin-${slug}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
 });
 
-root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
-if (isPairEngineCheckbox(el)) return;
-checks[el.id] = el.checked;
+document.getElementById("char-import-input")?.addEventListener("change", (e) => {
+  charMenuPanel?.classList.remove("open");
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = "";
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    let data;
+    try { data = JSON.parse(ev.target.result); }
+    catch { alert("Could not read that file — make sure it's a valid From Ruin export."); return; }
+    if (!confirm("Import this character? Your current sheet will be replaced.")) return;
+    newCharacter();
+    setTimeout(() => { restoreSheet(data); saveSheet(); }, 50);
+  };
+  reader.readAsText(file);
 });
 
-root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
-desc.push(el.innerHTML);
-});
-
-const features = [];
-const drives   = [];
-const flaws    = [];
-const relics   = [];
-const wounds   = [];
-
-root.querySelectorAll(".features-list textarea").forEach(el => features.push(el.value));
-root.querySelectorAll(".drives-list textarea").forEach(el => drives.push(el.value));
-root.querySelectorAll(".flaws-list textarea").forEach(el => flaws.push(el.value));
-root.querySelectorAll(".relic-row textarea").forEach(el => relics.push(el.value));
-
-root.querySelectorAll(".wound-row").forEach(row => {
-const apt     = row.querySelector("select")?.value ?? "";
-const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
-const dsc     = row.querySelector("input[name*='desc']")?.value ?? "";
-const patched = row.querySelector(".wound-patch")?.checked ?? false;
-
-```
-if (apt || sev || dsc || patched) {
-  wounds.push({ apt, sev, dsc, patched });
-}
-```
-
-});
-
-const data = {
-named,
-checks,
-desc,
-features,
-drives,
-flaws,
-relics,
-wounds,
-pairState: {
-stress: character.stress,
-trauma: character.trauma,
-pairConditions: character.pairConditions
-}
-};
-
-const blob = new Blob(
-[JSON.stringify(data, null, 2)],
-{ type: "application/json" }
-);
-
-const a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = "from-ruin-character.json";
-a.click();
-URL.revokeObjectURL(a.href);
-});
-
+/* ================================================
+   INIT CALLS
+   ================================================ */
 injectGearDieIcons();
 wireRowDieIcons();
 renderDiceTray();
