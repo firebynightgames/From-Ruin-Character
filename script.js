@@ -1621,6 +1621,53 @@ const PREGENS = [
 ];
 
 /* ================================================
+   NEW CHARACTER
+   ================================================ */
+function newCharacter() {
+  const root = document.getElementById("character-sheet");
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (el.type === "checkbox") el.checked = false;
+    else el.value = "";
+  });
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    el.checked = false;
+  });
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    el.innerHTML = "";
+  });
+  ["features-list", "drives-list", "flaws-list"].forEach(cls => {
+    const list = root.querySelector(`.${cls}`);
+    if (!list) return;
+    list.querySelectorAll("li").forEach((li, i) => { if (i > 0) li.remove(); });
+    const ta = list.querySelector("textarea");
+    if (ta) { ta.value = ""; ta.style.height = ""; }
+  });
+  const wc = root.querySelector("#wounds-container");
+  if (wc) {
+    wc.querySelectorAll(".wound-row").forEach(r => r.remove());
+    wc.appendChild(createWoundRow(1));
+  }
+  if (relicContainer) {
+    relicContainer.innerHTML = "";
+    relicCount = 0;
+    for (let i = 0; i < 3; i++) addRelicRow();
+  }
+  Object.keys(character.stress).forEach(k => character.stress[k].fill(false));
+  Object.keys(character.trauma).forEach(k => character.trauma[k].fill(false));
+  Object.keys(character.pairConditions).forEach(k => character.pairConditions[k] = false);
+  updateAllPairs();
+  clearDiceTray();
+  localStorage.removeItem(STORAGE_KEY);
+  saveSheet();
+  root.scrollTop = 0;
+  syncSummary();
+  calculateTotalBulk();
+}
+
+/* ================================================
+   CHARACTER MENU
+   ================================================ */
+/* ================================================
    CHARACTER MENU
    ================================================ */
 const charMenuBtn   = document.getElementById("char-menu-btn");
