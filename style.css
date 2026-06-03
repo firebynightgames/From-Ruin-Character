@@ -14,7 +14,7 @@ html, body {
   height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
-  padding-bottom: 220px;
+  padding-bottom: 20px;
   box-sizing: border-box;
 }
 
@@ -1326,15 +1326,13 @@ input.single-digit {
 /* ================================================
    DICE TRAY — Right-panel pop-out
    ================================================ */
-
-/* The tab button fixed to the right edge */
 #dice-tray {
   position: fixed;
   top: 0;
   right: 0;
   height: 100%;
   z-index: 200;
-  pointer-events: none; /* children re-enable */
+  pointer-events: none;
 }
 
 .dice-tray__tab {
@@ -1356,8 +1354,8 @@ input.single-digit {
   z-index: 201;
 }
 
-.dice-tray__tab:hover { background: #444; }
-.dice-tray__tab.is-open { right: 120px; background: #333; }
+.dice-tray__tab:hover    { background: #444; }
+.dice-tray__tab.is-open  { right: 120px; background: #333; }
 
 .dice-tray__tab-icon {
   width: 18px;
@@ -1366,11 +1364,10 @@ input.single-digit {
   opacity: 0.8;
 }
 
-/* The sliding panel */
 .dice-tray__panel {
   position: absolute;
   top: 0;
-  right: -120px; /* hidden off-screen */
+  right: -120px;
   width: 120px;
   height: 100%;
   background: #1a1a1a;
@@ -1385,11 +1382,8 @@ input.single-digit {
   overflow-x: hidden;
 }
 
-.dice-tray__panel.is-open {
-  right: 0;
-}
+.dice-tray__panel.is-open { right: 0; }
 
-/* Close button — top right of panel */
 .dice-tray__close {
   position: absolute;
   top: 6px;
@@ -1407,7 +1401,6 @@ input.single-digit {
 
 .dice-tray__close:hover { color: #e74c3c; }
 
-/* Section label */
 .dice-tray__section {
   margin-bottom: 8px;
 }
@@ -1422,7 +1415,6 @@ input.single-digit {
   margin-bottom: 4px;
 }
 
-/* Threshold buttons */
 .threshold-btns {
   display: flex;
   gap: 3px;
@@ -1442,10 +1434,9 @@ input.single-digit {
   transition: background 0.12s, color 0.12s;
 }
 
-.threshold-btn:hover            { background: #333; color: #ccc; }
-.threshold-btn--active          { background: #c0392b !important; border-color: #c0392b !important; color: #fff !important; }
+.threshold-btn:hover   { background: #333; color: #ccc; }
+.threshold-btn--active { background: #c0392b !important; border-color: #c0392b !important; color: #fff !important; }
 
-/* Difficulty input */
 .dice-tray__mod-input {
   width: 100%;
   box-sizing: border-box;
@@ -1464,17 +1455,8 @@ input.single-digit {
 
 .dice-tray__mod-input::-webkit-outer-spin-button,
 .dice-tray__mod-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
 .dice-tray__mod-input:focus { border-color: #555; }
 
-/* Divider */
-.dice-tray__divider {
-  border: none;
-  border-top: 1px solid #2a2a2a;
-  margin: 6px 0;
-}
-
-/* Dice columns wrapper — side by side */
 .dice-tray__columns {
   display: flex;
   gap: 4px;
@@ -1484,7 +1466,6 @@ input.single-digit {
   margin-bottom: 6px;
 }
 
-/* Individual column */
 .dice-col {
   flex: 1;
   display: flex;
@@ -1494,7 +1475,6 @@ input.single-digit {
   min-width: 0;
 }
 
-/* Column header (aptitude name or gear name) */
 .dice-col__header {
   font-size: 8px;
   font-weight: bold;
@@ -1513,7 +1493,6 @@ input.single-digit {
 .dice-col__header--apt  { color: #c0392b; }
 .dice-col__header--gear { color: #888; }
 
-/* Sub-header for second aptitude in same column */
 .dice-col__subheader {
   font-size: 8px;
   font-weight: bold;
@@ -1530,7 +1509,6 @@ input.single-digit {
   text-overflow: ellipsis;
 }
 
-/* Each die slot */
 .die-slot {
   width: 100%;
   display: flex;
@@ -1540,15 +1518,9 @@ input.single-digit {
   flex-shrink: 0;
 }
 
-.die-slot--removed {
-  opacity: 0.2;
-}
+.die-slot--removed { opacity: 0.2; }
 
-/* Die icon (before rolling) */
-.die-slot__icon {
-  width: 20px;
-  height: 20px;
-}
+.die-slot__icon { width: 20px; height: 20px; }
 
 .die-slot__icon--apt {
   filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
@@ -1561,7 +1533,6 @@ input.single-digit {
   opacity: 0.4;
 }
 
-/* Result pip (after rolling) */
 .die-slot__pip {
   display: inline-flex;
   align-items: center;
@@ -1575,16 +1546,14 @@ input.single-digit {
   line-height: 1;
 }
 
-.die-slot__pip--apt  { border: 1px solid #3a2a2a; }
-.die-slot__pip--gear { border: 1px solid #2a2a3a; }
-
+.die-slot__pip--apt     { border: 1px solid #3a2a2a; }
+.die-slot__pip--gear    { border: 1px solid #2a2a3a; }
 .die-slot__pip--success { background: #1a3a2a; color: #6cc6a0; border-color: #27ae60; }
 .die-slot__pip--fail    { background: #2a2a2a; color: #666;    border-color: #3a3a3a; }
 .die-slot__pip--one     { background: #3a1a1a; color: #c0392b; border-color: #c0392b; }
 .die-slot__pip--pushed  { opacity: 0.7; }
 .die-slot__pip--kept    { box-shadow: 0 0 0 1px rgba(255,255,255,0.15); }
 
-/* Action buttons */
 .dice-tray__actions {
   display: flex;
   flex-direction: column;
@@ -1618,7 +1587,6 @@ input.single-digit {
 .dice-tray__btn--clear { background: transparent; color: #555; border: 1px solid #2a2a2a; }
 .dice-tray__btn--clear:not(:disabled):hover { color: #e74c3c; border-color: #e74c3c; }
 
-/* Success banner — pinned to bottom of panel */
 .dice-tray__success-banner {
   display: flex;
   flex-direction: column;
@@ -1635,63 +1603,12 @@ input.single-digit {
   text-align: center;
 }
 
-.success-banner__zero span:first-child {
-  color: #c0392b;
-}
+.success-banner__zero span:first-child { color: #c0392b; }
 
 .result-ones-summary {
   font-size: 9px;
   color: #c0392b;
   text-align: center;
-}
-
-/* Gear die icon styles (shared) */
-.gear-die-icon {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.1s;
-}
-
-.gear-die-icon .die-icon-img {
-  width: 14px;
-  height: 14px;
-  opacity: 0.35;
-  filter: brightness(0);
-}
-
-.gear-die-icon:hover .die-icon-img {
-  opacity: 1;
-  filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
-          saturate(600%) hue-rotate(330deg) brightness(1.1);
-  transform: scale(1.15);
-}
-
-.gear-die-icon--selected .die-icon-img {
-  opacity: 1;
-  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
-          saturate(700%) hue-rotate(340deg) brightness(1.0)
-          drop-shadow(0 0 3px rgba(192,57,43,0.9));
-}
-
-.gear-die-icon--row {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  bottom: 18px;
-}
-
-.gear-die-icon--general {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
 }
 
 /* ================================================
