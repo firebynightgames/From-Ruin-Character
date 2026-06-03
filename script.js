@@ -897,33 +897,16 @@ OBR.onReady(async () => {
 });
 
 /* ================================================
-   DICE TRAY ENGINE v2
-   - SVG die icons for aptitude (red) and gear (yellow)
-   - Max 2 aptitudes, max 1 gear slot (bumps on new selection)
-   - Visual die-icon pool display
-   - Difficulty removes dice one by one
-   - Rolls via Dice+ — 3D dice appear on OBR main screen
-   - Individual results shown in tray, 1s highlighted
-   - Pool breakdown: 2d6 (Finesse) + 3d6 (Exert) + 2d6 (Gear)
+   DICE TRAY ENGINE v3 — Right panel
    ================================================ */
 
-/* -----------------------------------------------
-   State
-   ----------------------------------------------- */
-// Ordered queue of selected aptitudes, max 2
-// Each: { apt: "finesse", count: 3 }
 const aptitudeQueue = [];
-
-// Single active gear slot or null
-// { slotKey: "weapon-1", label: "Weapon 1", count: 2 }
-let activeGear = null;
-
-// Last roll results for Push (future)
+let activeGear      = null;
 let lastRollResults = null;
+let lastPushGroups  = null;
+let hasPushed       = false;
+let trayIsOpen      = false;
 
-/* -----------------------------------------------
-   Get aptitude value (trauma-adjusted if shown)
-   ----------------------------------------------- */
 function getAptitudeValue(apt) {
   const curEl = document.getElementById(`cur-${apt}`);
   if (curEl && curEl.textContent !== "") {
@@ -934,42 +917,28 @@ function getAptitudeValue(apt) {
   ) || 0);
 }
 
-/* -----------------------------------------------
-   Toggle aptitude — max 2, bumps oldest
-   ----------------------------------------------- */
 function toggleAptitude(apt) {
   const existing = aptitudeQueue.findIndex(a => a.apt === apt);
   if (existing !== -1) {
     aptitudeQueue.splice(existing, 1);
   } else {
     if (aptitudeQueue.length >= 2) aptitudeQueue.shift();
-    const count = getAptitudeValue(apt);
-    aptitudeQueue.push({ apt, count }); // 0 is valid — shows 0d6
+    aptitudeQueue.push({ apt, count: getAptitudeValue(apt) });
   }
   updateAptitudeIconStates();
   renderDiceTray();
-  hideDiceResult();
 }
 
-/* -----------------------------------------------
-   Toggle gear — max 1, bumps previous (option A)
-   ----------------------------------------------- */
 function toggleGear(slotKey, label, count) {
   if (activeGear?.slotKey === slotKey) {
-    // Deselect
     activeGear = null;
-  } else {
-    // Replace previous (or set first)
-    if (count > 0) activeGear = { slotKey, label, count };
+  } else if (count > 0) {
+    activeGear = { slotKey, label, count };
   }
   updateGearIconStates();
   renderDiceTray();
-  hideDiceResult();
 }
 
-/* -----------------------------------------------
-   Icon state sync
-   ----------------------------------------------- */
 function updateAptitudeIconStates() {
   const selected = aptitudeQueue.map(a => a.apt);
   document.querySelectorAll(".apt-die-icon").forEach(btn => {
@@ -984,143 +953,212 @@ function updateGearIconStates() {
   });
 }
 
-/* -----------------------------------------------
-   Raw counts
-   ----------------------------------------------- */
 function rawAptCount()  { return aptitudeQueue.reduce((s, a) => s + a.count, 0); }
 function rawGearCount() { return activeGear?.count ?? 0; }
 
-/* -----------------------------------------------
-   Difficulty-adjusted pool
-   Removes aptitude dice first, then gear
-   Returns { aptDice, gearDice, total }
-   ----------------------------------------------- */
 function adjustedPool() {
-  const diff     = Math.max(0, parseInt(
+  const diff = Math.max(0, parseInt(
     document.getElementById("dice-difficulty")?.value) || 0);
-  let aptDice    = rawAptCount();
-  let gearDice   = rawGearCount();
-
+  let aptDice  = rawAptCount();
+  let gearDice = rawGearCount();
   const aptRemove  = Math.min(diff, aptDice);
   aptDice         -= aptRemove;
   const gearRemove = Math.min(diff - aptRemove, gearDice);
   gearDice        -= gearRemove;
-
   return { aptDice, gearDice, total: aptDice + gearDice };
 }
 
-/* -----------------------------------------------
-   Build breakdown label
-   e.g. "2d6 (Finesse) + 3d6 (Exert) + 2d6 (Gear)"
-   ----------------------------------------------- */
-function buildBreakdownLabel() {
-  const { aptDice, gearDice } = adjustedPool();
-  const parts = [];
+function getThreshold() {
+  const active = document.querySelector(".threshold-btn--active");
+  return active ? parseInt(active.dataset.threshold) : 5;
+}
 
-  // Distribute adjusted aptitude dice across selections proportionally
-  let aptRemaining = aptDice;
-  aptitudeQueue.forEach(({ apt, count }, i) => {
-    const isLast    = i === aptitudeQueue.length - 1;
-    const allocated = isLast ? aptRemaining : Math.min(count, aptRemaining);
-    aptRemaining   -= allocated;
-    if (allocated > 0) {
-      const label = apt.charAt(0).toUpperCase() + apt.slice(1);
-      parts.push(`${allocated}d6 (${label})`);
-    }
-  });
-
-  if (gearDice > 0 && activeGear) {
-    parts.push(`${gearDice}d6 (${activeGear.label})`);
-  }
-
-  return parts.join(" + ");
+function countSuccesses(values, threshold) {
+  return values.filter(v => v >= threshold).length;
 }
 
 /* -----------------------------------------------
-   Build notation for Dice+
-   ----------------------------------------------- */
-function buildNotation() {
-  const { total } = adjustedPool();
-  return total > 0 ? `${total}d6` : "";
-}
-
-/* -----------------------------------------------
-   Render the tray
+   Render tray — columns of die slots
    ----------------------------------------------- */
 function renderDiceTray() {
-  const tray        = document.getElementById("dice-tray");
-  const display     = document.getElementById("dice-pool-display");
-  const handleCount = document.getElementById("dice-tray-count");
-  const rollBtn     = document.getElementById("dice-roll-btn");
-  const clearBtn    = document.getElementById("dice-clear-btn");
+  const display  = document.getElementById("dice-pool-display");
+  const rollBtn  = document.getElementById("dice-roll-btn");
+  const clearBtn = document.getElementById("dice-clear-btn");
+  if (!display) return;
 
-  const rawTotal         = rawAptCount() + rawGearCount();
-  const { aptDice, gearDice, total: netTotal } = adjustedPool();
-
-  // Handle badge
-  handleCount.textContent = netTotal > 0 ? buildBreakdownLabel() : "";
-
-  // Show tray always; show/hide body based on pool and collapsed state
-  tray.style.display = "block";
-  const body = tray.querySelector(".dice-tray__body");
-  if (body) {
-    const isCollapsed = body.dataset.collapsed === "true";
-    body.style.display = (rawTotal > 0 && !isCollapsed) ? "flex" : "none";
-  }
-
-  rollBtn.disabled  = netTotal === 0;
-  clearBtn.disabled = rawTotal === 0;
-
-  // Pool display — individual SVG die icons
-  display.innerHTML = "";
-
-  // How many apt dice are removed by difficulty
+  const { aptDice, gearDice, total } = adjustedPool();
   const aptRemoved  = rawAptCount() - aptDice;
   const gearRemoved = rawGearCount() - gearDice;
 
-  // Render aptitude dice — red icons, grouped by aptitude
-  let aptRemovedLeft = aptRemoved;
-  aptitudeQueue.forEach(({ apt, count }) => {
-    const label = apt.charAt(0).toUpperCase() + apt.slice(1);
-    for (let i = 0; i < count; i++) {
-      const removed = aptRemovedLeft > 0;
-      if (removed) aptRemovedLeft--;
-      display.appendChild(makeDieIcon("apt", label, removed));
-    }
-  });
+  rollBtn.disabled  = total === 0;
+  clearBtn.disabled = rawAptCount() + rawGearCount() === 0;
 
-  // Render gear dice — yellow icons
-  if (activeGear) {
+  display.innerHTML = "";
+
+  // --- Aptitude column ---
+  if (aptitudeQueue.length > 0) {
+    const col = document.createElement("div");
+    col.className = "dice-col";
+
+    let aptRemovedLeft = aptRemoved;
+    let dieIndex = 0; // track position across both aptitudes
+
+    aptitudeQueue.forEach(({ apt, count }, qi) => {
+      // Header for this aptitude
+      const hdr = document.createElement("div");
+      hdr.className = qi === 0
+        ? "dice-col__header dice-col__header--apt"
+        : "dice-col__subheader";
+      hdr.textContent = apt.charAt(0).toUpperCase() + apt.slice(1);
+      col.appendChild(hdr);
+
+      for (let i = 0; i < count; i++) {
+        const removed = aptRemovedLeft > 0;
+        if (removed) aptRemovedLeft--;
+
+        const slot = document.createElement("div");
+        slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
+
+        // If we have a result for this die, show pip; else show icon
+        const result = lastRollResults?.apt?.[dieIndex];
+        if (result !== undefined) {
+          slot.appendChild(makePip(result, "apt",
+            lastPushGroups?.apt?.[dieIndex]));
+        } else {
+          const img = document.createElement("img");
+          img.src = DIE_SVG_URL;
+          img.alt = apt;
+          img.className = "die-slot__icon die-slot__icon--apt";
+          slot.appendChild(img);
+        }
+        col.appendChild(slot);
+        dieIndex++;
+      }
+    });
+
+    display.appendChild(col);
+  }
+
+  // --- Gear column ---
+  if (activeGear && rawGearCount() > 0) {
+    const col = document.createElement("div");
+    col.className = "dice-col";
+
+    const hdr = document.createElement("div");
+    hdr.className = "dice-col__header dice-col__header--gear";
+    hdr.textContent = activeGear.label;
+    col.appendChild(hdr);
+
     let gearRemovedLeft = gearRemoved;
     for (let i = 0; i < activeGear.count; i++) {
       const removed = gearRemovedLeft > 0;
       if (removed) gearRemovedLeft--;
-      display.appendChild(makeDieIcon("gear", activeGear.label, removed));
+
+      const slot = document.createElement("div");
+      slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
+
+      const result = lastRollResults?.gear?.[i];
+      if (result !== undefined) {
+        slot.appendChild(makePip(result, "gear",
+          lastPushGroups?.gear?.[i]));
+      } else {
+        const img = document.createElement("img");
+        img.src = DIE_SVG_URL;
+        img.alt = activeGear.label;
+        img.className = "die-slot__icon die-slot__icon--gear";
+        slot.appendChild(img);
+      }
+      col.appendChild(slot);
     }
+
+    display.appendChild(col);
   }
 
-  // Breakdown label under pool
-  const breakdownEl = document.getElementById("dice-pool-breakdown");
-  if (breakdownEl) {
-    breakdownEl.textContent = netTotal > 0 ? buildBreakdownLabel() : "";
+  updatePushBtn();
+  updateSuccessBanner();
+
+  // Auto-open tray when dice are selected
+  if (rawAptCount() + rawGearCount() > 0 && !trayIsOpen) {
+    openTray();
   }
 }
 
 /* -----------------------------------------------
-   Create a single die icon element
+   Make a result pip element
    ----------------------------------------------- */
-function makeDieIcon(type, label, removed) {
-  const wrap = document.createElement("div");
-  wrap.className = `pool-die pool-die--${type}${removed ? " pool-die--removed" : ""}`;
-  wrap.title = label;
+function makePip(val, type, pushEntry) {
+  const threshold = getThreshold();
+  const isSuccess = val >= threshold;
+  const isOne     = val === 1;
+  const pushed    = pushEntry?.pushed ?? false;
+  const kept      = pushEntry !== undefined && !pushed;
 
-  const img = document.createElement("img");
-  img.src = DIE_SVG_URL;
-  img.alt = label;
-  img.className = "pool-die__img";
-  wrap.appendChild(img);
+  const pip = document.createElement("span");
+  pip.className = [
+    "die-slot__pip",
+    `die-slot__pip--${type}`,
+    isOne     ? "die-slot__pip--one"     : "",
+    isSuccess && !isOne ? "die-slot__pip--success" : "",
+    !isSuccess && !isOne ? "die-slot__pip--fail"  : "",
+    pushed ? "die-slot__pip--pushed" : "",
+    kept   ? "die-slot__pip--kept"   : ""
+  ].filter(Boolean).join(" ");
+  pip.textContent = val;
+  return pip;
+}
 
-  return wrap;
+/* -----------------------------------------------
+   Success banner
+   ----------------------------------------------- */
+function updateSuccessBanner() {
+  const banner = document.getElementById("dice-success-banner");
+  if (!banner) return;
+
+  if (!lastRollResults) {
+    banner.style.display = "none";
+    return;
+  }
+
+  const threshold = getThreshold();
+  const allVals   = [...(lastRollResults.apt || []), ...(lastRollResults.gear || [])];
+  const successes = countSuccesses(allVals, threshold);
+  const aptOnes   = (lastRollResults.apt  || []).filter(v => v === 1).length;
+  const gearOnes  = (lastRollResults.gear || []).filter(v => v === 1).length;
+  const totalOnes = aptOnes + gearOnes;
+
+  banner.innerHTML = "";
+  banner.style.display = "flex";
+  banner.className = "dice-tray__success-banner" +
+    (successes === 0 ? " success-banner__zero" : "");
+
+  const headline = document.createElement("span");
+  headline.textContent = successes === 0
+    ? `✗ No Successes (${threshold}+)`
+    : `✔ ${successes} Success${successes !== 1 ? "es" : ""} (${threshold}+)`;
+  if (hasPushed) headline.textContent += " — Pushed";
+  banner.appendChild(headline);
+
+  if (totalOnes > 0) {
+    const ones = document.createElement("span");
+    ones.className   = "result-ones-summary";
+    const parts = [];
+    if (aptOnes  > 0) parts.push(`${aptOnes} apt`);
+    if (gearOnes > 0) parts.push(`${gearOnes} gear`);
+    ones.textContent = `⚠ ${totalOnes} one${totalOnes !== 1 ? "s" : ""} (${parts.join(" + ")})`;
+    banner.appendChild(ones);
+  }
+}
+
+/* -----------------------------------------------
+   Push button state
+   ----------------------------------------------- */
+function updatePushBtn() {
+  const pushBtn = document.getElementById("dice-push-btn");
+  if (!pushBtn) return;
+  const hasResults = lastRollResults &&
+    (lastRollResults.apt?.length || lastRollResults.gear?.length);
+  pushBtn.disabled    = !hasResults || hasPushed;
+  pushBtn.textContent = hasPushed ? "Pushed" : "Push";
 }
 
 /* -----------------------------------------------
@@ -1130,208 +1168,89 @@ function clearDiceTray() {
   aptitudeQueue.length = 0;
   activeGear           = null;
   lastRollResults      = null;
+  lastPushGroups       = null;
+  hasPushed            = false;
   const diffInput = document.getElementById("dice-difficulty");
   if (diffInput) diffInput.value = "";
-  document.getElementById("dice-push-btn").disabled = true;
-  const banner = document.getElementById("dice-success-banner");
-  if (banner) { banner.style.display = "none"; banner.innerHTML = ""; }
   updateAptitudeIconStates();
   updateGearIconStates();
   renderDiceTray();
-  hideDiceResult();
 }
 
 /* -----------------------------------------------
-   Get current success threshold from UI (4, 5, or 6)
+   Tray open / close
    ----------------------------------------------- */
-function getThreshold() {
-  const active = document.querySelector(".threshold-btn--active");
-  return active ? parseInt(active.dataset.threshold) : 5;
+function openTray() {
+  trayIsOpen = true;
+  document.getElementById("dice-tray-panel")?.classList.add("is-open");
+  document.getElementById("dice-tray-tab")?.classList.add("is-open");
 }
+
+function closeTray() {
+  trayIsOpen = false;
+  document.getElementById("dice-tray-panel")?.classList.remove("is-open");
+  document.getElementById("dice-tray-tab")?.classList.remove("is-open");
+}
+
+document.getElementById("dice-tray-tab")
+  ?.addEventListener("click", () => trayIsOpen ? closeTray() : openTray());
+
+document.getElementById("dice-tray-close")
+  ?.addEventListener("click", closeTray);
 
 /* -----------------------------------------------
-   Count successes across a flat array of die values
-   ----------------------------------------------- */
-function countSuccesses(values, threshold) {
-  return values.filter(v => v >= threshold).length;
-}
-
-/* -----------------------------------------------
-   Result display — individual die results + success banner
-   showDiceResult({ apt: [...], gear: [...] })
-   or showDiceResult("error string")
-   ----------------------------------------------- */
-function showDiceResult(results) {
-  const el     = document.getElementById("dice-tray-result");
-  const banner = document.getElementById("dice-success-banner");
-  if (!el) return;
-  el.innerHTML = "";
-  el.style.display = "flex";
-
-  if (typeof results === "string") {
-    el.textContent = results;
-    if (banner) banner.style.display = "none";
-    return;
-  }
-
-  const threshold = getThreshold();
-  const allValues = [...(results.apt || []), ...(results.gear || [])];
-  const successes = countSuccesses(allValues, threshold);
-
-  // Success banner
-  if (banner) {
-    banner.innerHTML = "";
-    banner.style.display = "flex";
-    banner.className = "dice-tray__success-banner" + (successes === 0 ? " success-banner__zero" : "");
-    const label = document.createElement("span");
-    label.textContent = successes === 0
-      ? `No successes (${threshold}+ to hit)`
-      : `${successes} Success${successes !== 1 ? "es" : ""} on ${threshold}+`;
-    banner.appendChild(label);
-  }
-
-  // Die pip groups
-  function renderGroup(values, groupLabel, pipClass) {
-    if (!values || values.length === 0) return;
-    const group = document.createElement("div");
-    group.className = "result-group";
-
-    const lbl = document.createElement("span");
-    lbl.className   = "result-group-label";
-    lbl.textContent = groupLabel;
-    group.appendChild(lbl);
-
-    const pips = document.createElement("div");
-    pips.className = "result-group-pips";
-    values.forEach(val => {
-      const pip = document.createElement("span");
-      const isSuccess = val >= threshold;
-      const isOne     = val === 1;
-      pip.className = `result-pip ${pipClass}${isSuccess ? " result-pip--success" : ""}${isOne ? " result-pip--one" : ""}`;
-      pip.textContent = val;
-      pips.appendChild(pip);
-    });
-    group.appendChild(pips);
-    el.appendChild(group);
-  }
-
-  renderGroup(results.apt,  "Aptitude", "result-pip--apt");
-  renderGroup(results.gear, "Gear",     "result-pip--gear");
-}
-
-function hideDiceResult() {
-  const el = document.getElementById("dice-tray-result");
-  if (el) { el.innerHTML = ""; el.style.display = "none"; }
-}
-
-/* -----------------------------------------------
-   Dice+ ready check
-   ----------------------------------------------- */
-async function checkDicePlusReady() {
-  const requestId = crypto.randomUUID();
-  return new Promise((resolve) => {
-    const unsub = OBR.broadcast.onMessage("dice-plus/isReady", (event) => {
-      if ("ready" in event.data && event.data.requestId === requestId) {
-        unsub();
-        resolve(true);
-      }
-    });
-    OBR.broadcast.sendMessage(
-      "dice-plus/isReady",
-      { requestId, timestamp: Date.now() },
-      { destination: "ALL" }
-    );
-    setTimeout(() => { unsub(); resolve(false); }, 1500);
-  });
-}
-
-/* -----------------------------------------------
-   Local roll fallback — used when Dice+ is unavailable
-   ----------------------------------------------- */
-function rollLocal() {
-  const { aptDice, gearDice } = adjustedPool();
-  if (aptDice + gearDice <= 0) return;
-
-  const rollDie = () => Math.ceil(Math.random() * 6);
-  const aptResults  = Array.from({ length: aptDice  }, rollDie);
-  const gearResults = Array.from({ length: gearDice }, rollDie);
-
-  lastRollResults = { apt: aptResults, gear: gearResults };
-  showDiceResult(lastRollResults);
-
-  const rollBtn  = document.getElementById("dice-roll-btn");
-  const pushBtn  = document.getElementById("dice-push-btn");
-  rollBtn.disabled    = false;
-  rollBtn.textContent = "ROLL ALL";
-  pushBtn.disabled    = false;
-}
-
-/* -----------------------------------------------
-   Roll — tries Dice+ first, falls back to local
+   Roll
    ----------------------------------------------- */
 async function triggerRoll() {
-  const notation = buildNotation();
-  if (!notation) return;
+  const { aptDice, gearDice, total } = adjustedPool();
+  if (total === 0) return;
 
   const rollBtn = document.getElementById("dice-roll-btn");
   rollBtn.disabled    = true;
-  rollBtn.textContent = "Checking…";
+  rollBtn.textContent = "...";
+  hasPushed      = false;
+  lastPushGroups = null;
 
   const isReady = await checkDicePlusReady();
   if (!isReady) {
-    // Dice+ not available — roll locally instead
     rollBtn.disabled    = false;
-    rollBtn.textContent = "ROLL ALL";
+    rollBtn.textContent = "Roll";
     rollLocal();
     return;
   }
 
   const rollId = `roll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-  rollBtn.textContent = "Rolling…";
-
-  // Capture the split counts now before clearDiceTray wipes state
-  const { aptDice, gearDice } = adjustedPool();
 
   const resultUnsub = OBR.broadcast.onMessage(
-    `${DICE_SOURCE_ID}/roll-result`,
-    (event) => {
+    `${DICE_SOURCE_ID}/roll-result`, (event) => {
       const data = event.data;
       if (data.rollId !== rollId) return;
       resultUnsub();
       errorUnsub();
 
       const flatValues = data.result?.dice?.map(d => d.value)
-        ?? data.result?.rolls
-        ?? [];
+        ?? data.result?.rolls ?? [];
 
       if (flatValues.length > 0) {
-        // Split flat array into apt slice + gear slice
-        const splitResults = {
+        lastRollResults = {
           apt:  flatValues.slice(0, aptDice),
           gear: flatValues.slice(aptDice)
         };
-        lastRollResults = splitResults;
-        showDiceResult(splitResults);
-      } else if (data.result?.totalValue !== undefined) {
-        showDiceResult(`Total: ${data.result.totalValue}`);
       }
 
       rollBtn.disabled    = false;
-      rollBtn.textContent = "ROLL ALL";
-      document.getElementById("dice-push-btn").disabled = false;
+      rollBtn.textContent = "Roll";
+      renderDiceTray();
     }
   );
 
   const errorUnsub = OBR.broadcast.onMessage(
-    `${DICE_SOURCE_ID}/roll-error`,
-    (event) => {
-      const data = event.data;
-      if (data.rollId !== rollId) return;
+    `${DICE_SOURCE_ID}/roll-error`, (event) => {
+      if (event.data.rollId !== rollId) return;
       resultUnsub();
       errorUnsub();
-      // Fall back to local on error
       rollBtn.disabled    = false;
-      rollBtn.textContent = "ROLL ALL";
+      rollBtn.textContent = "Roll";
       rollLocal();
     }
   );
@@ -1339,72 +1258,94 @@ async function triggerRoll() {
   try {
     const playerId   = await OBR.player.getId();
     const playerName = await OBR.player.getName();
-    await OBR.broadcast.sendMessage(
-      "dice-plus/roll-request",
-      {
-        rollId,
-        playerId,
-        playerName,
-        rollTarget:   "everyone",
-        diceNotation: notation,
-        showResults:  false,
-        timestamp:    Date.now(),
-        source:       DICE_SOURCE_ID
-      },
-      { destination: "ALL" }
-    );
-  } catch (err) {
+    await OBR.broadcast.sendMessage("dice-plus/roll-request", {
+      rollId, playerId, playerName,
+      rollTarget: "everyone",
+      diceNotation: `${total}d6`,
+      showResults: false,
+      timestamp: Date.now(),
+      source: DICE_SOURCE_ID
+    }, { destination: "ALL" });
+  } catch {
     resultUnsub();
     errorUnsub();
-    // Fall back to local on broadcast error
     rollBtn.disabled    = false;
-    rollBtn.textContent = "ROLL ALL";
+    rollBtn.textContent = "Roll";
     rollLocal();
   }
 
-  // Safety timeout — fall back to local if no response
   setTimeout(() => {
     try { resultUnsub(); } catch {}
     try { errorUnsub();  } catch {}
-    if (rollBtn.textContent === "Rolling…") {
+    if (rollBtn.textContent === "...") {
       rollBtn.disabled    = false;
-      rollBtn.textContent = "ROLL ALL";
+      rollBtn.textContent = "Roll";
       rollLocal();
     }
   }, 15000);
 }
 
+function rollLocal() {
+  const { aptDice, gearDice } = adjustedPool();
+  if (aptDice + gearDice === 0) return;
+  const rollDie = () => Math.ceil(Math.random() * 6);
+  lastRollResults = {
+    apt:  Array.from({ length: aptDice  }, rollDie),
+    gear: Array.from({ length: gearDice }, rollDie)
+  };
+  hasPushed      = false;
+  lastPushGroups = null;
+  renderDiceTray();
+}
+
 /* -----------------------------------------------
-   Push — reroll non-1 failures, keep 1s and successes
+   Push
    ----------------------------------------------- */
 function triggerPush() {
-  if (!lastRollResults) return;
+  if (!lastRollResults || hasPushed) return;
   const threshold = getThreshold();
   const rollDie   = () => Math.ceil(Math.random() * 6);
 
   function pushGroup(values) {
     return values.map(v => {
-      // Keep: successes (>= threshold) and 1s (can't push past a complication)
-      if (v >= threshold || v === 1) return v;
-      return rollDie();
+      const kept = v >= threshold || v === 1;
+      return { val: kept ? v : rollDie(), pushed: !kept };
     });
   }
 
-  const pushed = {
-    apt:  pushGroup(lastRollResults.apt  || []),
-    gear: pushGroup(lastRollResults.gear || [])
+  const aptPushed  = pushGroup(lastRollResults.apt  || []);
+  const gearPushed = pushGroup(lastRollResults.gear || []);
+
+  lastPushGroups  = { apt: aptPushed, gear: gearPushed };
+  lastRollResults = {
+    apt:  aptPushed.map(d => d.val),
+    gear: gearPushed.map(d => d.val)
   };
-
-  lastRollResults = pushed;
-  showDiceResult(pushed);
-
-  // Push is one-shot — disable after use
-  document.getElementById("dice-push-btn").disabled = true;
+  hasPushed = true;
+  renderDiceTray();
 }
 
 /* -----------------------------------------------
-   Wire up aptitude die icons
+   Wire up controls
    ----------------------------------------------- */
+document.getElementById("dice-roll-btn")
+  ?.addEventListener("click", triggerRoll);
+document.getElementById("dice-clear-btn")
+  ?.addEventListener("click", clearDiceTray);
+document.getElementById("dice-push-btn")
+  ?.addEventListener("click", triggerPush);
+document.getElementById("dice-difficulty")
+  ?.addEventListener("input", () => renderDiceTray());
+
+document.querySelectorAll(".threshold-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".threshold-btn")
+      .forEach(b => b.classList.remove("threshold-btn--active"));
+    btn.classList.add("threshold-btn--active");
+    renderDiceTray();
+  });
+});
+
 document.querySelectorAll(".apt-die-icon").forEach(btn => {
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -1413,78 +1354,28 @@ document.querySelectorAll(".apt-die-icon").forEach(btn => {
 });
 
 /* -----------------------------------------------
-   Wire up tray controls
-   ----------------------------------------------- */
-document.getElementById("dice-roll-btn")
-  .addEventListener("click", triggerRoll);
-document.getElementById("dice-clear-btn")
-  .addEventListener("click", clearDiceTray);
-document.getElementById("dice-push-btn")
-  .addEventListener("click", triggerPush);
-document.getElementById("dice-difficulty")
-  .addEventListener("input", () => {
-    renderDiceTray();
-    // Re-run showDiceResult to update success count with same dice
-    if (lastRollResults) showDiceResult(lastRollResults);
-  });
-
-// Threshold buttons
-document.querySelectorAll(".threshold-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".threshold-btn").forEach(b => b.classList.remove("threshold-btn--active"));
-    btn.classList.add("threshold-btn--active");
-    // Recount successes immediately if results are showing
-    if (lastRollResults) showDiceResult(lastRollResults);
-  });
-});
-
-// Close button — always closes tray completely
-document.getElementById("dice-tray-close")
-  .addEventListener("click", (e) => {
-    e.stopPropagation();
-    clearDiceTray();
-  });
-
-// Handle click — toggle body open/closed
-document.getElementById("dice-tray-handle")
-  .addEventListener("click", (e) => {
-    // Don't toggle if the close button was clicked
-    if (e.target.closest("#dice-tray-close")) return;
-    const body = document.querySelector(".dice-tray__body");
-    if (!body) return;
-    const isHidden = body.dataset.collapsed === "true";
-    body.dataset.collapsed = isHidden ? "false" : "true";
-    body.style.display = isHidden ? "flex" : "none";
-  });
-
-/* -----------------------------------------------
-   Wire up row die icons (weapon/armor — baked into HTML)
+   Gear icon wiring (called after DOM generation)
    ----------------------------------------------- */
 function wireRowDieIcons() {
   document.querySelectorAll(".gear-die-icon--row").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const slotKey = btn.dataset.slotKey;
-      const n       = slotKey.split("-")[1];
-      const label   = slotKey.startsWith("weapon") ? `Weapon ${n}` : `Armor ${n}`;
+      const slotKey   = btn.dataset.slotKey;
+      const n         = slotKey.split("-")[1];
+      const label     = slotKey.startsWith("weapon") ? `Weapon ${n}` : `Armor ${n}`;
       const inputName = slotKey.startsWith("weapon")
-        ? `attr_weapon_gear_a_${n}`
-        : `attr_armor_gear_a_${n}`;
-      const input = document.querySelector(`input[name="${inputName}"]`);
-      const count = parseInt(input?.value) || 0;
+        ? `attr_weapon_gear_a_${n}` : `attr_armor_gear_a_${n}`;
+      const count = parseInt(
+        document.querySelector(`input[name="${inputName}"]`)?.value) || 0;
       toggleGear(slotKey, label, count);
     });
   });
 }
 
-/* -----------------------------------------------
-   Inject gear die icons into general gear rows only
-   ----------------------------------------------- */
 function injectGearDieIcons() {
   document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
-    const n        = i + 1;
-    const slotKey  = `gear-${n}`;
-    const label    = `Gear ${n}`;
+    const n       = i + 1;
+    const slotKey = `gear-${n}`;
     const valInput = row.querySelector(`input[name="attr_gear_val_${n}"]`);
     const valCell  = row.querySelector(".col-gear-val");
     if (!valCell || row.querySelector(".gear-die-icon")) return;
@@ -1492,22 +1383,37 @@ function injectGearDieIcons() {
     const btn = document.createElement("button");
     btn.className       = "gear-die-icon gear-die-icon--general";
     btn.dataset.slotKey = slotKey;
-    btn.title           = `Add ${label} dice`;
+    btn.title           = `Add Gear ${n} dice`;
 
     const img = document.createElement("img");
-    img.src       = DIE_SVG_URL;
-    img.alt       = "d6";
+    img.src = DIE_SVG_URL; img.alt = "d6";
     img.className = "die-icon-img";
     btn.appendChild(img);
 
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const count = parseInt(valInput?.value) || 0;
+      const nameInput = row.querySelector(`input[name="attr_gear_name_${n}"]`);
+      const label     = nameInput?.value?.trim() || `Gear ${n}`;
+      const count     = parseInt(valInput?.value) || 0;
       toggleGear(slotKey, label, count);
     });
 
     valCell.style.position = "relative";
     valCell.insertBefore(btn, valCell.firstChild);
+  });
+}
+
+async function checkDicePlusReady() {
+  const requestId = crypto.randomUUID();
+  return new Promise((resolve) => {
+    const unsub = OBR.broadcast.onMessage("dice-plus/isReady", (event) => {
+      if ("ready" in event.data && event.data.requestId === requestId) {
+        unsub(); resolve(true);
+      }
+    });
+    OBR.broadcast.sendMessage("dice-plus/isReady",
+      { requestId, timestamp: Date.now() }, { destination: "ALL" });
+    setTimeout(() => { unsub(); resolve(false); }, 1500);
   });
 }
 
