@@ -1080,6 +1080,7 @@ if (totalOnes > 0) {
   ones.textContent = "⚠ Stress: None";
 }
 banner.appendChild(ones);
+}
 
 /* -----------------------------------------------
    Push button state
