@@ -31,7 +31,7 @@ html, body {
   justify-content: space-between !important;
   align-items: center !important; 
   width: 420px !important;
-  height: 65px !important; /* Set back to 65px to perfectly match the tracker box height */
+  height: 65px !important;
   position: relative !important;
   background: transparent !important;
   box-sizing: border-box;
@@ -39,21 +39,19 @@ html, body {
   overflow: visible !important;
 }
 
-/* Left Side: Container acting as the exact window for your logo */
 .header-logo-container {
   width: 225px; 
-  height: 85px; /* Slices the window vertically to hide the rest of the file */
+  height: 85px;
   overflow: hidden;
 }
 
 .header-logo-container .sheet-logo-img {
-  width: 420px; /* Scales the original image back to its native sheet width */
+  width: 420px;
   height: auto;
   object-fit: fill; 
-  object-position: left top; /* Locks the alignment to the far top left corner */
+  object-position: left top;
 }
 
-/* Right Side: Tracker Box matching the height beautifully */
 .header-counter-box {
   display: flex;
   flex-direction: column;
@@ -64,7 +62,6 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Black Box Header (Accordion Style) */
 .counter-header-title {
   background-color: #000;
   color: #fff;
@@ -77,7 +74,6 @@ html, body {
   line-height: 1;
 }
 
-/* Content Area inside the border */
 .counter-body {
   display: flex;
   align-items: center;
@@ -105,23 +101,7 @@ html, body {
   margin: 0 4px;
   color: #000;
 }
-.sheet-combined-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: #ffffff;
-  box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  margin-bottom: 0;
-  position: relative; /* ADD THIS */
-}
 
-/* ================================================
-   HEADER, TABS & ACCORDION FLUSH STACKING
-   ================================================ */
 .sheet-combined-header {
   position: sticky;
   top: 0;
@@ -133,6 +113,7 @@ html, body {
   flex-direction: column;
   box-sizing: border-box;
   margin-bottom: 0;
+  position: relative;
 }
 
 /* ================================================
@@ -161,7 +142,6 @@ html, body {
   padding-top: 0 !important;
 }
 
-/* First accordion header sits flush under the tabs */
 .tab-content.active-tab .acc-section:first-child .acc-header {
   margin-top: 0 !important;
   border-top: none;
@@ -188,8 +168,8 @@ html, body {
 .edge-track {
   display: flex;
   align-items: center;
-  gap: 6px;                  
-  padding: 6px 8px;          
+  gap: 6px;
+  padding: 6px 8px;
   background: #fff;
   box-sizing: border-box;
 }
@@ -199,7 +179,7 @@ html, body {
   font-size: 18px;
   font-weight: bold;
   text-transform: uppercase;
-  margin-right: 6px;         
+  margin-right: 6px;
   white-space: nowrap;
 }
 
@@ -207,18 +187,18 @@ html, body {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  width: 22px !important;     
-  height: 22px !important;    
+  width: 22px !important;
+  height: 22px !important;
   display: inline-block;
-  position: relative !important; 
+  position: relative !important;
   background-color: transparent !important;
-  border: 1px solid #333333 !important; 
+  border: 1px solid #333333 !important;
   cursor: pointer;
   transition: all 0.15s ease;
   margin: 0;
   box-sizing: border-box;
   flex-shrink: 0;
-  border-radius: 2px;         
+  border-radius: 2px;
 }
 
 .edge-box:not(:checked):hover {
@@ -227,12 +207,12 @@ html, body {
 }
 
 .edge-box:checked {
-  background-color: #2ecc71 !important; 
+  background-color: #2ecc71 !important;
   border-color: #6cc6a0 !important;
 }
 
 .edge-box:checked:hover {
-  background-color: #27ae60 !important; 
+  background-color: #27ae60 !important;
   border-color: #1e8449 !important;
 }
 
@@ -246,7 +226,7 @@ html, body {
 
 .acc-header {
   display: flex;
-  justify-content: space-between; 
+  justify-content: space-between;
   align-items: center;
   width: 100%;
   padding: 6px 10px;
@@ -292,7 +272,7 @@ html, body {
 }
 
 /* ================================================
-   APTITUDES PANEL (RESERVED GRAPHIC & POSITIONING)
+   APTITUDES PANEL
    ================================================ */
 .sheet-panel {
   position: relative !important;
@@ -312,9 +292,6 @@ html, body {
   background: transparent !important;
   text-align: center;
   outline: none;
-}
-
-.aptitude-field {
   -moz-appearance: textfield;
 }
 
@@ -424,6 +401,8 @@ html, body {
 .features-list {
   padding-left: 24px;
   margin: 0;
+  margin-bottom: 10px !important;
+  padding-right: 15px;
   list-style: disc;
 }
 
@@ -449,7 +428,7 @@ html, body {
 }
 
 /* ================================================
-   DRIVES LIST & DIAMOND TRACKER ENGINE
+   DRIVES LIST & DIAMOND TRACKER
    ================================================ */
 .drives-list {
   padding-left: 24px;
@@ -463,10 +442,9 @@ html, body {
   margin-bottom: 8px;
 }
 
-/* Flexbox to keep the text line and the image sitting side-by-side */
 .drive-item {
   display: flex;
-  align-items: flex-end; 
+  align-items: flex-end;
   gap: 15px;
   width: 100%;
 }
@@ -486,16 +464,14 @@ html, body {
   line-height: 24px;
 }
 
-/* The Graphic Container */
 .drive-tracker {
   position: relative;
-  width: 80px;  /* Scaled down proportion of 133 */
-  height: 58px; /* Scaled down proportion of 97 */
+  width: 80px;
+  height: 58px;
   background: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_drive.jpg') no-repeat center center / contain;
   flex-shrink: 0;
 }
 
-/* Turns standard checkboxes into diamonds */
 .diamond-box {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -506,27 +482,21 @@ html, body {
   border: 1px solid #333;
   background-color: transparent;
   cursor: pointer;
-  transform: rotate(45deg); /* The magic diamond rotation */
+  transform: rotate(45deg);
   transition: all 0.15s ease;
   margin: 0;
 }
 
-.diamond-box:checked {background-color: #6cc6a0; border-color: #27ae60;
-}
+.diamond-box:checked          { background-color: #6cc6a0; border-color: #27ae60; }
+.diamond-box:hover            { border-color: #27ae60; background-color: #1e8449; }
+.diamond-box:checked:hover    { background-color: #1e8449; border-color: #27ae60; }
 
-.diamond-box:hover {border-color: #27ae60; background-color: #1e8449;
-}
-
-.diamond-box:checked:hover {background-color: #1e8449; border-color: #27ae60;
-}
-
-/* --- Diamond Positions (Adjust these % values to fit your graphic perfectly!) --- */
-.db-1 { left: 6%; top: 45%; }
-.db-2 { left: 35%; top: 45%; }
+.db-1 { left: 6%;     top: 45%; }
+.db-2 { left: 35%;    top: 45%; }
 .db-3 { left: 64.25%; top: 45%; }
 
 /* ================================================
-   FLAWS LIST STYLES (CAPPED AT 3)
+   FLAWS LIST
    ================================================ */
 .flaws-list {
   padding-left: 24px;
@@ -558,13 +528,13 @@ html, body {
 }
 
 /* ================================================
-   WEAPONS ACCORDION CONTENT & DYNAMIC ENGINE
+   WEAPONS
    ================================================ */
 .weapons-container {
   display: flex;
   flex-direction: column;
-  gap: 2px;                 
-  padding: 4px 0;           
+  gap: 2px;
+  padding: 4px 0;
   background-color: #ffffff;
   box-sizing: border-box;
 }
@@ -572,11 +542,11 @@ html, body {
 .weapon-block {
   display: flex;
   flex-direction: column;
-  gap: 2px;                                           
+  gap: 2px;
   width: 100%;
-  transition: all 0.25s ease-in-out; 
-  border-bottom: 1px solid #e0e0e0;  
-  padding-bottom: 4px;      
+  transition: all 0.25s ease-in-out;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 4px;
 }
 
 .weapons-headers {
@@ -594,25 +564,25 @@ html, body {
   font-size: 11px;
   font-weight: bold;
   text-transform: uppercase;
-  color: #111111;              
+  color: #111111;
   text-align: center;
-  white-space: nowrap;        
+  white-space: nowrap;
 }
 
 .weapon-row {
   position: relative;
   width: 100%;
-  height: 49px;            
+  height: 49px;
   background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_weapon.jpg');
-  background-size: 100% 100%; 
+  background-size: 100% 100%;
   background-repeat: no-repeat;
 }
 
 .weapon-features-row {
   display: flex;
   align-items: center;
-  width: 98%;                
-  padding-left: 28px;        
+  width: 98%;
+  padding-left: 28px;
   box-sizing: border-box;
 }
 
@@ -628,7 +598,7 @@ html, body {
 .weapon-features-row input {
   flex: 1;
   border: none !important;
-  border-bottom: 1px dashed #999 !important; 
+  border-bottom: 1px dashed #999 !important;
   background: transparent !important;
   font-size: 12px;
   font-family: inherit;
@@ -646,13 +616,11 @@ html, body {
   position: absolute;
   display: flex;
   flex-direction: column;
-  bottom: 16px;              
-  height: 18px;            
+  bottom: 16px;
+  height: 18px;
 }
 
-.field-wrap label {
-  display: none !important;
-}
+.field-wrap label { display: none !important; }
 
 .field-wrap input {
   width: 100%;
@@ -675,7 +643,7 @@ html, body {
 
 .gear-double-input {
   display: flex;
-  gap: 6px; 
+  gap: 6px;
   width: 100%;
   height: 100%;
 }
@@ -696,7 +664,7 @@ input.single-digit {
 .weapon-row .col-bulk, .weapons-headers .hdr-bulk     { left: 88.5%; width: 8.5%; }
 
 /* ================================================
-   WOUNDS ACCORDION
+   WOUNDS
    ================================================ */
 .wounds-container {
   display: flex;
@@ -724,9 +692,7 @@ input.single-digit {
   text-align: left;
 }
 
-.wounds-column-headers span:last-child {
-  text-align: right;
-}
+.wounds-column-headers span:last-child { text-align: right; }
 
 .wound-row {
   padding: 4px 0;
@@ -769,23 +735,18 @@ input.single-digit {
   transition: background 0.15s ease;
 }
 
-.wound-patch:checked {background-color: #6cc6a0; border-color: #27ae60;
-}
-
-.wound-patch:hover {border-color: #27ae60; background-color: #1e8449;
-}
-
-.wound-patch:checked:hover  {border-color: #27ae60; background-color: #1e8449;
-}
+.wound-patch:checked          { background-color: #6cc6a0; border-color: #27ae60; }
+.wound-patch:hover            { border-color: #27ae60; background-color: #1e8449; }
+.wound-patch:checked:hover    { border-color: #27ae60; background-color: #1e8449; }
 
 /* ================================================
-   ARMOR ACCORDION CONTENT
+   ARMOR
    ================================================ */
 .armor-container {
   display: flex;
   flex-direction: column;
-  gap: 2px;                 
-  padding: 4px 0;           
+  gap: 2px;
+  padding: 4px 0;
   background-color: #ffffff;
   box-sizing: border-box;
 }
@@ -795,15 +756,15 @@ input.single-digit {
   flex-direction: column;
   gap: 2px;
   width: 100%;
-  border-bottom: 1px solid #e0e0e0;  
-  padding-bottom: 4px;      
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 4px;
 }
 
 .armor-features-row {
   display: flex;
   align-items: center;
-  width: 98%;                
-  padding-left: 28px;        
+  width: 98%;
+  padding-left: 28px;
   box-sizing: border-box;
 }
 
@@ -819,7 +780,7 @@ input.single-digit {
 .armor-features-row input {
   flex: 1;
   border: none !important;
-  border-bottom: 1px dotted #999 !important; 
+  border-bottom: 1px dotted #999 !important;
   background: transparent !important;
   font-size: 14px;
   font-family: inherit;
@@ -871,7 +832,7 @@ input.single-digit {
   text-transform: uppercase;
   color: #111;
   text-align: center;
-  white-space: nowrap;        
+  white-space: nowrap;
 }
 
 .col-armor-name, .hdr-armor-name         { left: 2%;    width: 37%; }
@@ -883,12 +844,10 @@ input.single-digit {
 .hdr-armor-name { text-align: left !important; padding-left: 6px; }
 .col-armor-name input { text-align: left !important; padding-left: 6px; }
 
-.armor-row .col-armor-bulk input {
-  -moz-appearance: textfield;
-}
+.armor-row .col-armor-bulk input { -moz-appearance: textfield; }
 
-/* ================================================ 
-   GEAR ACCORDION TABLE & DIMENSIONS
+/* ================================================
+   GEAR TABLE
    ================================================ */
 .sheet-gear-container {
   background-color: #ffffff;
@@ -923,20 +882,18 @@ input.single-digit {
 
 .sheet-gear-container .gear-row {
   border-bottom: 1px dashed #cccccc;
-  height: 24px; 
+  height: 24px;
 }
 
-.col-gear-name, .hdr-gear-name { 
-  left: 2%; 
-  width: 75%; 
-}
-.col-gear-bulk, .hdr-gear-bulk { 
-  left: 88%; 
-  width: 10%; 
-}
+.col-gear-name, .hdr-gear-name { left: 2%;  width: 60%; }
+.col-gear-val,  .hdr-gear-val  { left: 74%; width: 12%; text-align: center; }
+.col-gear-bulk, .hdr-gear-bulk { left: 88%; width: 10%; }
 
 .hdr-gear-name { text-align: left !important; padding-left: 6px; }
 .col-gear-name input { text-align: left !important; padding-left: 6px; }
+
+.hdr-gear-val  { text-align: center !important; }
+.hdr-gear-bulk { text-align: center !important; }
 
 .sheet-gear-container .gear-row input {
   width: 100%;
@@ -954,24 +911,25 @@ input.single-digit {
   -moz-appearance: textfield;
 }
 
-/* Relics - Grid Headers */
-.relics-headers { 
-  display: flex; 
-  width: 100%; 
-  margin-bottom: 5px; 
+/* ================================================
+   RELICS
+   ================================================ */
+.relics-headers {
+  display: flex;
+  width: 100%;
+  margin-bottom: 5px;
 }
-.relics-headers span { 
-  font-size: 11px; 
-  font-weight: bold; 
-  text-transform: uppercase; 
+
+.relics-headers span {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
 }
-.hdr-rel-name { width: 30%; }
-.hdr-rel-type { width: 20%; }
+
+.hdr-rel-name   { width: 30%; }
+.hdr-rel-type   { width: 20%; }
 .hdr-rel-effect { width: 50%; }
 
-/* ================================================
-   RELICS-Auto Expand
-   ================================================ */
 .relic-row {
   width: 100%;
   margin-bottom: 5px;
@@ -993,9 +951,8 @@ input.single-digit {
   min-height: 30px;
 }
 
-
 /* ================================================
-   SPELLS & RITUALS LIST (FEATURES STYLE)
+   SPELLS
    ================================================ */
 #accordion-spells {
   width: 100%;
@@ -1005,7 +962,7 @@ input.single-digit {
 .spells-table-header {
   display: grid;
   grid-template-columns: 83% 17%;
-  padding: 4px 12px 4px 28px; 
+  padding: 4px 12px 4px 28px;
   box-sizing: border-box;
 }
 
@@ -1016,9 +973,7 @@ input.single-digit {
   color: #111;
 }
 
-.spells-table-header .hdr-diff {
-  text-align: center;
-}
+.spells-table-header .hdr-diff { text-align: center; }
 
 .spells-list {
   padding-left: 24px;
@@ -1077,9 +1032,7 @@ input.single-digit {
   margin-top: 0 !important;
   box-sizing: border-box;
 }
-/* ================================================
-   PORTRAIT & SUMMARY
-   ================================================ */
+
 .portrait-summary-row {
   display: flex;
   gap: 10px;
@@ -1088,9 +1041,7 @@ input.single-digit {
   box-sizing: border-box;
 }
 
-.portrait-side {
-  flex: 0 0 45%;
-}
+.portrait-side { flex: 0 0 45%; }
 
 .portrait-upload-label {
   display: flex;
@@ -1164,94 +1115,63 @@ input.single-digit {
 }
 
 /* ================================================
-   ACCORDION COHESION FIXES
+   ACCORDION COHESION
    ================================================ */
-/* Adds a matching border and background structure to the Aptitudes panel */
 .acc-body.sheet-panel {
   border: 1px solid #ccc !important;
-  border-top: none !important; /* Matches the seamless header connection */
-  background-color: #ffffff !important; /* Fills behind the graphic if it scales */
+  border-top: none !important;
+  background-color: #ffffff !important;
   box-sizing: border-box;
 }
 
-/* Prevents specialized padding overrides from breaking the uniform edge alignment */
 .acc-body.weapons-body,
 .acc-body.armor-body {
   padding: 10px !important;
 }
 
+.acc-body {
+  padding-bottom: 1px !important;
+}
+
+.features-list li textarea { margin-bottom: 4px; }
+
 /* ================================================
-   GLOBAL SPINNER REMOVAL (ALL FIELDS)
+   GLOBAL SPINNER REMOVAL
    ================================================ */
-/* Removes up/down spin arrows for Chrome, Safari, Edge, and Opera */
 #character-sheet input[type="number"]::-webkit-outer-spin-button,
 #character-sheet input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none !important;
   margin: 0 !important;
 }
 
-/* Removes up/down spin arrows for Firefox */
 #character-sheet input[type="number"] {
   -moz-appearance: textfield !important;
 }
 
 /* ================================================
-   FEATURES BOTTOM PADDING FIX
-   ================================================ */
-/* Adds safety padding to the bottom of all accordion bodies */
-.acc-body {
-  padding-bottom: 1px !important;
-}
-
-/* Fixes the features list spacing so it doesn't clip the bottom edge */
-.features-list {
-  margin-bottom: 10px !important;
-  padding-right: 15px; /* Gives a right-side safety buffer for typing */
-}
-
-.features-list li textarea {
-  margin-bottom: 4px;
-}
-
-/* ================================================
-   RESPONSIVE SCALING ENGINE
+   RESPONSIVE SCALING
    ================================================ */
 @media (max-width: 470px) {
-  #character-sheet { 
-    transform: scale(0.92); 
-    left: 15px;
-    top: 15px;
-  }
+  #character-sheet { transform: scale(0.92); left: 15px; top: 15px; }
 }
-
 @media (max-width: 410px) {
-  #character-sheet { 
-    transform: scale(0.82); 
-    left: 10px;
-    top: 10px;
-  }
+  #character-sheet { transform: scale(0.82); left: 10px; top: 10px; }
 }
-
 @media (max-width: 350px) {
-  #character-sheet { 
-    transform: scale(0.70); 
-    left: 5px;
-  }
+  #character-sheet { transform: scale(0.70); left: 5px; }
 }
 
 /* ================================================
-   FORCE PARAGRAPH & EDITABLE FIELD TYPOGRAPHY
+   TYPOGRAPHY FIXES
    ================================================ */
 .desc-text,
 .desc-field,
 .desc-field::before {
-font-family: "Century Gothic", AppleGothic, sans-serif !important;
+  font-family: "Century Gothic", AppleGothic, sans-serif !important;
 }
 
 /* ================================================
    APTITUDE DIE ICONS
-   Absolutely positioned inside .sheet-panel,
-   matching the same coordinate system as everything else.
    ================================================ */
 .apt-die-icon {
   position: absolute;
@@ -1269,13 +1189,11 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   justify-content: center;
 }
 
-/* Unselected — black, dim */
 .apt-die-icon:not(.apt-die-icon--selected) .die-icon-img {
   opacity: 0.4;
-  filter: brightness(0);        /* forces to pure black */
+  filter: brightness(0);
 }
 
-/* Hover — red */
 .apt-die-icon:hover .die-icon-img {
   opacity: 1;
   filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
@@ -1283,7 +1201,6 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
   transform: scale(1.15);
 }
 
-/* Selected — full red #C0392B glow */
 .apt-die-icon.apt-die-icon--selected .die-icon-img {
   opacity: 1;
   filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
@@ -1291,547 +1208,16 @@ font-family: "Century Gothic", AppleGothic, sans-serif !important;
           drop-shadow(0 0 3px rgba(192,57,43,0.9));
 }
 
-.apt-die-icon.left-apt  { left: 10%;   }
-.apt-die-icon.right-apt { left: 77%; }
+.apt-die-icon.left-apt  { left: 10%;  }
+.apt-die-icon.right-apt { left: 77%;  }
 
-.apt-die-icon.row-1 { top: 11.5%;    }
+.apt-die-icon.row-1 { top: 11.5%;  }
 .apt-die-icon.row-2 { top: 33.75%; }
-.apt-die-icon.row-3 { top: 56.25%;   }
-.apt-die-icon.row-4 { top: 78.5%; }
+.apt-die-icon.row-3 { top: 56.25%; }
+.apt-die-icon.row-4 { top: 78.5%;  }
 
 /* ================================================
-   DICE TRAY ENGINE v3 — Right panel
-   ================================================ */
-
-const aptitudeQueue = [];
-let activeGear      = null;
-let lastRollResults = null;
-let lastPushGroups  = null;
-let hasPushed       = false;
-let trayIsOpen      = false;
-
-function getAptitudeValue(apt) {
-  const curEl = document.getElementById(`cur-${apt}`);
-  if (curEl && curEl.textContent !== "") {
-    return Math.max(0, parseInt(curEl.textContent) || 0);
-  }
-  return Math.max(0, parseInt(
-    document.querySelector(`input[name="attr_${apt}"]`)?.value
-  ) || 0);
-}
-
-function toggleAptitude(apt) {
-  const existing = aptitudeQueue.findIndex(a => a.apt === apt);
-  if (existing !== -1) {
-    aptitudeQueue.splice(existing, 1);
-  } else {
-    if (aptitudeQueue.length >= 2) aptitudeQueue.shift();
-    aptitudeQueue.push({ apt, count: getAptitudeValue(apt) });
-  }
-  updateAptitudeIconStates();
-  renderDiceTray();
-}
-
-function toggleGear(slotKey, label, count) {
-  if (activeGear?.slotKey === slotKey) {
-    activeGear = null;
-  } else if (count > 0) {
-    activeGear = { slotKey, label, count };
-  }
-  updateGearIconStates();
-  renderDiceTray();
-}
-
-function updateAptitudeIconStates() {
-  const selected = aptitudeQueue.map(a => a.apt);
-  document.querySelectorAll(".apt-die-icon").forEach(btn => {
-    btn.classList.toggle("apt-die-icon--selected", selected.includes(btn.dataset.apt));
-  });
-}
-
-function updateGearIconStates() {
-  document.querySelectorAll(".gear-die-icon").forEach(btn => {
-    btn.classList.toggle("gear-die-icon--selected",
-      activeGear?.slotKey === btn.dataset.slotKey);
-  });
-}
-
-function rawAptCount()  { return aptitudeQueue.reduce((s, a) => s + a.count, 0); }
-function rawGearCount() { return activeGear?.count ?? 0; }
-
-function adjustedPool() {
-  const diff = Math.max(0, parseInt(
-    document.getElementById("dice-difficulty")?.value) || 0);
-  let aptDice  = rawAptCount();
-  let gearDice = rawGearCount();
-  const aptRemove  = Math.min(diff, aptDice);
-  aptDice         -= aptRemove;
-  const gearRemove = Math.min(diff - aptRemove, gearDice);
-  gearDice        -= gearRemove;
-  return { aptDice, gearDice, total: aptDice + gearDice };
-}
-
-function getThreshold() {
-  const active = document.querySelector(".threshold-btn--active");
-  return active ? parseInt(active.dataset.threshold) : 5;
-}
-
-function countSuccesses(values, threshold) {
-  return values.filter(v => v >= threshold).length;
-}
-
-/* -----------------------------------------------
-   Render tray — columns of die slots
-   ----------------------------------------------- */
-function renderDiceTray() {
-  const display  = document.getElementById("dice-pool-display");
-  const rollBtn  = document.getElementById("dice-roll-btn");
-  const clearBtn = document.getElementById("dice-clear-btn");
-  if (!display) return;
-
-  const { aptDice, gearDice, total } = adjustedPool();
-  const aptRemoved  = rawAptCount() - aptDice;
-  const gearRemoved = rawGearCount() - gearDice;
-
-  rollBtn.disabled  = total === 0;
-  clearBtn.disabled = rawAptCount() + rawGearCount() === 0;
-
-  display.innerHTML = "";
-
-  // --- Aptitude column ---
-  if (aptitudeQueue.length > 0) {
-    const col = document.createElement("div");
-    col.className = "dice-col";
-
-    let aptRemovedLeft = aptRemoved;
-    let dieIndex = 0; // track position across both aptitudes
-
-    aptitudeQueue.forEach(({ apt, count }, qi) => {
-      // Header for this aptitude
-      const hdr = document.createElement("div");
-      hdr.className = qi === 0
-        ? "dice-col__header dice-col__header--apt"
-        : "dice-col__subheader";
-      hdr.textContent = apt.charAt(0).toUpperCase() + apt.slice(1);
-      col.appendChild(hdr);
-
-      for (let i = 0; i < count; i++) {
-        const removed = aptRemovedLeft > 0;
-        if (removed) aptRemovedLeft--;
-
-        const slot = document.createElement("div");
-        slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
-
-        // If we have a result for this die, show pip; else show icon
-        const result = lastRollResults?.apt?.[dieIndex];
-        if (result !== undefined) {
-          slot.appendChild(makePip(result, "apt",
-            lastPushGroups?.apt?.[dieIndex]));
-        } else {
-          const img = document.createElement("img");
-          img.src = DIE_SVG_URL;
-          img.alt = apt;
-          img.className = "die-slot__icon die-slot__icon--apt";
-          slot.appendChild(img);
-        }
-        col.appendChild(slot);
-        dieIndex++;
-      }
-    });
-
-    display.appendChild(col);
-  }
-
-  // --- Gear column ---
-  if (activeGear && rawGearCount() > 0) {
-    const col = document.createElement("div");
-    col.className = "dice-col";
-
-    const hdr = document.createElement("div");
-    hdr.className = "dice-col__header dice-col__header--gear";
-    hdr.textContent = activeGear.label;
-    col.appendChild(hdr);
-
-    let gearRemovedLeft = gearRemoved;
-    for (let i = 0; i < activeGear.count; i++) {
-      const removed = gearRemovedLeft > 0;
-      if (removed) gearRemovedLeft--;
-
-      const slot = document.createElement("div");
-      slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
-
-      const result = lastRollResults?.gear?.[i];
-      if (result !== undefined) {
-        slot.appendChild(makePip(result, "gear",
-          lastPushGroups?.gear?.[i]));
-      } else {
-        const img = document.createElement("img");
-        img.src = DIE_SVG_URL;
-        img.alt = activeGear.label;
-        img.className = "die-slot__icon die-slot__icon--gear";
-        slot.appendChild(img);
-      }
-      col.appendChild(slot);
-    }
-
-    display.appendChild(col);
-  }
-
-  updatePushBtn();
-  updateSuccessBanner();
-
-  // Auto-open tray when dice are selected
-  if (rawAptCount() + rawGearCount() > 0 && !trayIsOpen) {
-    openTray();
-  }
-}
-
-/* -----------------------------------------------
-   Make a result pip element
-   ----------------------------------------------- */
-function makePip(val, type, pushEntry) {
-  const threshold = getThreshold();
-  const isSuccess = val >= threshold;
-  const isOne     = val === 1;
-  const pushed    = pushEntry?.pushed ?? false;
-  const kept      = pushEntry !== undefined && !pushed;
-
-  const pip = document.createElement("span");
-  pip.className = [
-    "die-slot__pip",
-    `die-slot__pip--${type}`,
-    isOne     ? "die-slot__pip--one"     : "",
-    isSuccess && !isOne ? "die-slot__pip--success" : "",
-    !isSuccess && !isOne ? "die-slot__pip--fail"  : "",
-    pushed ? "die-slot__pip--pushed" : "",
-    kept   ? "die-slot__pip--kept"   : ""
-  ].filter(Boolean).join(" ");
-  pip.textContent = val;
-  return pip;
-}
-
-/* -----------------------------------------------
-   Success banner
-   ----------------------------------------------- */
-function updateSuccessBanner() {
-  const banner = document.getElementById("dice-success-banner");
-  if (!banner) return;
-
-  if (!lastRollResults) {
-    banner.style.display = "none";
-    return;
-  }
-
-  const threshold = getThreshold();
-  const allVals   = [...(lastRollResults.apt || []), ...(lastRollResults.gear || [])];
-  const successes = countSuccesses(allVals, threshold);
-  const aptOnes   = (lastRollResults.apt  || []).filter(v => v === 1).length;
-  const gearOnes  = (lastRollResults.gear || []).filter(v => v === 1).length;
-  const totalOnes = aptOnes + gearOnes;
-
-  banner.innerHTML = "";
-  banner.style.display = "flex";
-  banner.className = "dice-tray__success-banner" +
-    (successes === 0 ? " success-banner__zero" : "");
-
-  const headline = document.createElement("span");
-  headline.textContent = successes === 0
-    ? `✗ No Successes (${threshold}+)`
-    : `✔ ${successes} Success${successes !== 1 ? "es" : ""} (${threshold}+)`;
-  if (hasPushed) headline.textContent += " — Pushed";
-  banner.appendChild(headline);
-
-  if (totalOnes > 0) {
-    const ones = document.createElement("span");
-    ones.className   = "result-ones-summary";
-    const parts = [];
-    if (aptOnes  > 0) parts.push(`${aptOnes} apt`);
-    if (gearOnes > 0) parts.push(`${gearOnes} gear`);
-    ones.textContent = `⚠ ${totalOnes} one${totalOnes !== 1 ? "s" : ""} (${parts.join(" + ")})`;
-    banner.appendChild(ones);
-  }
-}
-
-/* -----------------------------------------------
-   Push button state
-   ----------------------------------------------- */
-function updatePushBtn() {
-  const pushBtn = document.getElementById("dice-push-btn");
-  if (!pushBtn) return;
-  const hasResults = lastRollResults &&
-    (lastRollResults.apt?.length || lastRollResults.gear?.length);
-  pushBtn.disabled    = !hasResults || hasPushed;
-  pushBtn.textContent = hasPushed ? "Pushed" : "Push";
-}
-
-/* -----------------------------------------------
-   Clear
-   ----------------------------------------------- */
-function clearDiceTray() {
-  aptitudeQueue.length = 0;
-  activeGear           = null;
-  lastRollResults      = null;
-  lastPushGroups       = null;
-  hasPushed            = false;
-  const diffInput = document.getElementById("dice-difficulty");
-  if (diffInput) diffInput.value = "";
-  updateAptitudeIconStates();
-  updateGearIconStates();
-  renderDiceTray();
-}
-
-/* -----------------------------------------------
-   Tray open / close
-   ----------------------------------------------- */
-function openTray() {
-  trayIsOpen = true;
-  document.getElementById("dice-tray-panel")?.classList.add("is-open");
-  document.getElementById("dice-tray-tab")?.classList.add("is-open");
-}
-
-function closeTray() {
-  trayIsOpen = false;
-  document.getElementById("dice-tray-panel")?.classList.remove("is-open");
-  document.getElementById("dice-tray-tab")?.classList.remove("is-open");
-}
-
-document.getElementById("dice-tray-tab")
-  ?.addEventListener("click", () => trayIsOpen ? closeTray() : openTray());
-
-document.getElementById("dice-tray-close")
-  ?.addEventListener("click", closeTray);
-
-/* -----------------------------------------------
-   Roll
-   ----------------------------------------------- */
-async function triggerRoll() {
-  const { aptDice, gearDice, total } = adjustedPool();
-  if (total === 0) return;
-
-  const rollBtn = document.getElementById("dice-roll-btn");
-  rollBtn.disabled    = true;
-  rollBtn.textContent = "...";
-  hasPushed      = false;
-  lastPushGroups = null;
-
-  const isReady = await checkDicePlusReady();
-  if (!isReady) {
-    rollBtn.disabled    = false;
-    rollBtn.textContent = "Roll";
-    rollLocal();
-    return;
-  }
-
-  const rollId = `roll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-
-  const resultUnsub = OBR.broadcast.onMessage(
-    `${DICE_SOURCE_ID}/roll-result`, (event) => {
-      const data = event.data;
-      if (data.rollId !== rollId) return;
-      resultUnsub();
-      errorUnsub();
-
-      const flatValues = data.result?.dice?.map(d => d.value)
-        ?? data.result?.rolls ?? [];
-
-      if (flatValues.length > 0) {
-        lastRollResults = {
-          apt:  flatValues.slice(0, aptDice),
-          gear: flatValues.slice(aptDice)
-        };
-      }
-
-      rollBtn.disabled    = false;
-      rollBtn.textContent = "Roll";
-      renderDiceTray();
-    }
-  );
-
-  const errorUnsub = OBR.broadcast.onMessage(
-    `${DICE_SOURCE_ID}/roll-error`, (event) => {
-      if (event.data.rollId !== rollId) return;
-      resultUnsub();
-      errorUnsub();
-      rollBtn.disabled    = false;
-      rollBtn.textContent = "Roll";
-      rollLocal();
-    }
-  );
-
-  try {
-    const playerId   = await OBR.player.getId();
-    const playerName = await OBR.player.getName();
-    await OBR.broadcast.sendMessage("dice-plus/roll-request", {
-      rollId, playerId, playerName,
-      rollTarget: "everyone",
-      diceNotation: `${total}d6`,
-      showResults: false,
-      timestamp: Date.now(),
-      source: DICE_SOURCE_ID
-    }, { destination: "ALL" });
-  } catch {
-    resultUnsub();
-    errorUnsub();
-    rollBtn.disabled    = false;
-    rollBtn.textContent = "Roll";
-    rollLocal();
-  }
-
-  setTimeout(() => {
-    try { resultUnsub(); } catch {}
-    try { errorUnsub();  } catch {}
-    if (rollBtn.textContent === "...") {
-      rollBtn.disabled    = false;
-      rollBtn.textContent = "Roll";
-      rollLocal();
-    }
-  }, 15000);
-}
-
-function rollLocal() {
-  const { aptDice, gearDice } = adjustedPool();
-  if (aptDice + gearDice === 0) return;
-  const rollDie = () => Math.ceil(Math.random() * 6);
-  lastRollResults = {
-    apt:  Array.from({ length: aptDice  }, rollDie),
-    gear: Array.from({ length: gearDice }, rollDie)
-  };
-  hasPushed      = false;
-  lastPushGroups = null;
-  renderDiceTray();
-}
-
-/* -----------------------------------------------
-   Push
-   ----------------------------------------------- */
-function triggerPush() {
-  if (!lastRollResults || hasPushed) return;
-  const threshold = getThreshold();
-  const rollDie   = () => Math.ceil(Math.random() * 6);
-
-  function pushGroup(values) {
-    return values.map(v => {
-      const kept = v >= threshold || v === 1;
-      return { val: kept ? v : rollDie(), pushed: !kept };
-    });
-  }
-
-  const aptPushed  = pushGroup(lastRollResults.apt  || []);
-  const gearPushed = pushGroup(lastRollResults.gear || []);
-
-  lastPushGroups  = { apt: aptPushed, gear: gearPushed };
-  lastRollResults = {
-    apt:  aptPushed.map(d => d.val),
-    gear: gearPushed.map(d => d.val)
-  };
-  hasPushed = true;
-  renderDiceTray();
-}
-
-/* -----------------------------------------------
-   Wire up controls
-   ----------------------------------------------- */
-document.getElementById("dice-roll-btn")
-  ?.addEventListener("click", triggerRoll);
-document.getElementById("dice-clear-btn")
-  ?.addEventListener("click", clearDiceTray);
-document.getElementById("dice-push-btn")
-  ?.addEventListener("click", triggerPush);
-document.getElementById("dice-difficulty")
-  ?.addEventListener("input", () => renderDiceTray());
-
-document.querySelectorAll(".threshold-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".threshold-btn")
-      .forEach(b => b.classList.remove("threshold-btn--active"));
-    btn.classList.add("threshold-btn--active");
-    renderDiceTray();
-  });
-});
-
-document.querySelectorAll(".apt-die-icon").forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleAptitude(btn.dataset.apt);
-  });
-});
-
-/* -----------------------------------------------
-   Gear icon wiring (called after DOM generation)
-   ----------------------------------------------- */
-function wireRowDieIcons() {
-  document.querySelectorAll(".gear-die-icon--row").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const slotKey   = btn.dataset.slotKey;
-      const n         = slotKey.split("-")[1];
-      const label     = slotKey.startsWith("weapon") ? `Weapon ${n}` : `Armor ${n}`;
-      const inputName = slotKey.startsWith("weapon")
-        ? `attr_weapon_gear_a_${n}` : `attr_armor_gear_a_${n}`;
-      const count = parseInt(
-        document.querySelector(`input[name="${inputName}"]`)?.value) || 0;
-      toggleGear(slotKey, label, count);
-    });
-  });
-}
-
-function injectGearDieIcons() {
-  document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
-    const n       = i + 1;
-    const slotKey = `gear-${n}`;
-    const valInput = row.querySelector(`input[name="attr_gear_val_${n}"]`);
-    const valCell  = row.querySelector(".col-gear-val");
-    if (!valCell || row.querySelector(".gear-die-icon")) return;
-
-    const btn = document.createElement("button");
-    btn.className       = "gear-die-icon gear-die-icon--general";
-    btn.dataset.slotKey = slotKey;
-    btn.title           = `Add Gear ${n} dice`;
-
-    const img = document.createElement("img");
-    img.src = DIE_SVG_URL; img.alt = "d6";
-    img.className = "die-icon-img";
-    btn.appendChild(img);
-
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const nameInput = row.querySelector(`input[name="attr_gear_name_${n}"]`);
-      const label     = nameInput?.value?.trim() || `Gear ${n}`;
-      const count     = parseInt(valInput?.value) || 0;
-      toggleGear(slotKey, label, count);
-    });
-
-    valCell.style.position = "relative";
-    valCell.insertBefore(btn, valCell.firstChild);
-  });
-}
-
-async function checkDicePlusReady() {
-  const requestId = crypto.randomUUID();
-  return new Promise((resolve) => {
-    const unsub = OBR.broadcast.onMessage("dice-plus/isReady", (event) => {
-      if ("ready" in event.data && event.data.requestId === requestId) {
-        unsub(); resolve(true);
-      }
-    });
-    OBR.broadcast.sendMessage("dice-plus/isReady",
-      { requestId, timestamp: Date.now() }, { destination: "ALL" });
-    setTimeout(() => { unsub(); resolve(false); }, 1500);
-  });
-}
-
-/* ================================================
-   GEAR VALUE COLUMN (general gear table)
-   ================================================ */
-.col-gear-name, .hdr-gear-name { left: 2%;  width: 60%; }
-.col-gear-val,  .hdr-gear-val  { left: 74%; width: 12%; text-align: center; }
-.col-gear-bulk, .hdr-gear-bulk { left: 88%; width: 10%; }
-
-.hdr-gear-val  { text-align: center !important; }
-.hdr-gear-bulk { text-align: center !important; }
-
-/* ================================================
-   CHARACTER MENU — hamburger + dropdown
+   CHARACTER MENU
    ================================================ */
 .char-menu-btn {
   position: absolute;
@@ -1854,8 +1240,8 @@ async function checkDicePlusReady() {
   transition: background 0.15s;
 }
 
-.char-menu-btn:hover         { background: #e74c3c; }
-.char-menu-btn.is-open       { background: #a93226; }
+.char-menu-btn:hover   { background: #e74c3c; }
+.char-menu-btn.is-open { background: #a93226; }
 
 .char-menu-btn span {
   display: block;
@@ -1925,15 +1311,10 @@ async function checkDicePlusReady() {
   box-sizing: border-box;
 }
 
-/* label variant needs same reset */
-.char-menu-item--label {
-  display: flex;
-  cursor: pointer;
-}
+.char-menu-item--label { display: flex; cursor: pointer; }
 
 .char-menu-item:hover,
-.char-menu-item--label:hover { background: #c0392b; color: #fff; }
-
+.char-menu-item--label:hover  { background: #c0392b; color: #fff; }
 .char-menu-item:active,
 .char-menu-item--label:active { background: #a93226; color: #fff; }
 
@@ -1944,16 +1325,82 @@ async function checkDicePlusReady() {
 }
 
 /* ================================================
-   DICE TRAY — CLOSE BUTTON
+   DICE TRAY — Right-panel pop-out
    ================================================ */
 
+/* The tab button fixed to the right edge */
+#dice-tray {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  z-index: 200;
+  pointer-events: none; /* children re-enable */
+}
+
+.dice-tray__tab {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 56px;
+  background: #222;
+  border: none;
+  border-radius: 6px 0 0 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition: background 0.15s, right 0.25s ease;
+  z-index: 201;
+}
+
+.dice-tray__tab:hover { background: #444; }
+.dice-tray__tab.is-open { right: 120px; background: #333; }
+
+.dice-tray__tab-icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+/* The sliding panel */
+.dice-tray__panel {
+  position: absolute;
+  top: 0;
+  right: -120px; /* hidden off-screen */
+  width: 120px;
+  height: 100%;
+  background: #1a1a1a;
+  border-left: 1px solid #333;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 6px;
+  pointer-events: auto;
+  transition: right 0.25s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dice-tray__panel.is-open {
+  right: 0;
+}
+
+/* Close button — top right of panel */
 .dice-tray__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   background: transparent;
   border: none;
-  color: #666;
-  font-size: 14px;
+  color: #555;
+  font-size: 13px;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0;
   line-height: 1;
   transition: color 0.15s;
   font-family: inherit;
@@ -1961,8 +1408,292 @@ async function checkDicePlusReady() {
 
 .dice-tray__close:hover { color: #e74c3c; }
 
-/* Remove the old caret styles since handle no longer has one */
-.dice-tray--collapsed .dice-tray__handle-caret { display: none; }
+/* Section label */
+.dice-tray__section {
+  margin-bottom: 8px;
+}
+
+.dice-tray__section-label {
+  display: block;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+/* Threshold buttons */
+.threshold-btns {
+  display: flex;
+  gap: 3px;
+}
+
+.threshold-btn {
+  flex: 1;
+  padding: 4px 0;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 3px;
+  color: #888;
+  font-size: 10px;
+  font-weight: bold;
+  font-family: "Century Gothic", sans-serif;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.threshold-btn:hover            { background: #333; color: #ccc; }
+.threshold-btn--active          { background: #c0392b !important; border-color: #c0392b !important; color: #fff !important; }
+
+/* Difficulty input */
+.dice-tray__mod-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 3px;
+  color: #ccc;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: "Century Gothic", sans-serif;
+  text-align: center;
+  padding: 4px 0;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.dice-tray__mod-input::-webkit-outer-spin-button,
+.dice-tray__mod-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.dice-tray__mod-input:focus { border-color: #555; }
+
+/* Divider */
+.dice-tray__divider {
+  border: none;
+  border-top: 1px solid #2a2a2a;
+  margin: 6px 0;
+}
+
+/* Dice columns wrapper — side by side */
+.dice-tray__columns {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin-bottom: 6px;
+}
+
+/* Individual column */
+.dice-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* Column header (aptitude name or gear name) */
+.dice-col__header {
+  font-size: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding: 2px 2px 3px;
+  width: 100%;
+  border-bottom: 1px solid #333;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dice-col__header--apt  { color: #c0392b; }
+.dice-col__header--gear { color: #888; }
+
+/* Sub-header for second aptitude in same column */
+.dice-col__subheader {
+  font-size: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #c0392b;
+  text-align: center;
+  padding: 4px 2px 3px;
+  width: 100%;
+  border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Each die slot */
+.die-slot {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.die-slot--removed {
+  opacity: 0.2;
+}
+
+/* Die icon (before rolling) */
+.die-slot__icon {
+  width: 20px;
+  height: 20px;
+}
+
+.die-slot__icon--apt {
+  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
+          saturate(700%) hue-rotate(340deg) brightness(1.0);
+  opacity: 0.7;
+}
+
+.die-slot__icon--gear {
+  filter: brightness(0) invert(1);
+  opacity: 0.4;
+}
+
+/* Result pip (after rolling) */
+.die-slot__pip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  font-family: "Century Gothic", sans-serif;
+  line-height: 1;
+}
+
+.die-slot__pip--apt  { border: 1px solid #3a2a2a; }
+.die-slot__pip--gear { border: 1px solid #2a2a3a; }
+
+.die-slot__pip--success { background: #1a3a2a; color: #6cc6a0; border-color: #27ae60; }
+.die-slot__pip--fail    { background: #2a2a2a; color: #666;    border-color: #3a3a3a; }
+.die-slot__pip--one     { background: #3a1a1a; color: #c0392b; border-color: #c0392b; }
+.die-slot__pip--pushed  { opacity: 0.7; }
+.die-slot__pip--kept    { box-shadow: 0 0 0 1px rgba(255,255,255,0.15); }
+
+/* Action buttons */
+.dice-tray__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.dice-tray__btn {
+  width: 100%;
+  padding: 6px 0;
+  border: none;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  font-family: "Century Gothic", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.dice-tray__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.dice-tray__btn--roll  { background: #c0392b; color: #fff; }
+.dice-tray__btn--roll:not(:disabled):hover  { background: #e74c3c; }
+
+.dice-tray__btn--push  { background: #2a2a2a; color: #888; border: 1px solid #3a3a3a; }
+.dice-tray__btn--push:not(:disabled):hover  { background: #333; color: #ccc; }
+
+.dice-tray__btn--clear { background: transparent; color: #555; border: 1px solid #2a2a2a; }
+.dice-tray__btn--clear:not(:disabled):hover { color: #e74c3c; border-color: #e74c3c; }
+
+/* Success banner — pinned to bottom of panel */
+.dice-tray__success-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 4px;
+  border-top: 1px solid #2a2a2a;
+  margin-top: 6px;
+}
+
+.dice-tray__success-banner span:first-child {
+  font-size: 10px;
+  font-weight: bold;
+  color: #6cc6a0;
+  text-align: center;
+}
+
+.success-banner__zero span:first-child {
+  color: #c0392b;
+}
+
+.result-ones-summary {
+  font-size: 9px;
+  color: #c0392b;
+  text-align: center;
+}
+
+/* Gear die icon styles (shared) */
+.gear-die-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+
+.gear-die-icon .die-icon-img {
+  width: 14px;
+  height: 14px;
+  opacity: 0.35;
+  filter: brightness(0);
+}
+
+.gear-die-icon:hover .die-icon-img {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
+          saturate(600%) hue-rotate(330deg) brightness(1.1);
+  transform: scale(1.15);
+}
+
+.gear-die-icon--selected .die-icon-img {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
+          saturate(700%) hue-rotate(340deg) brightness(1.0)
+          drop-shadow(0 0 3px rgba(192,57,43,0.9));
+}
+
+.gear-die-icon--row {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  bottom: 18px;
+}
+
+.gear-die-icon--general {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+}
 
 /* ================================================
    PREGEN MODAL
