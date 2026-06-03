@@ -35,27 +35,6 @@
         <input type="file" id="char-import-input" accept=".json" style="display:none;">
       </label>
     </div>
-
-        <button id="char-menu-btn" class="char-menu-btn">
-      <span></span><span></span><span></span>
-    </button>
-    
-    <div id="char-menu-panel" class="char-menu-panel">
-      <div class="char-menu-panel__title">Character</div>
-      <button class="char-menu-item" id="char-new-btn">
-        <span class="char-menu-icon">✦</span> New Character
-      </button>
-      <button class="char-menu-item" id="char-pregen-btn">
-        <span class="char-menu-icon">◈</span> Choose Pregen
-      </button>
-      <button class="char-menu-item" id="char-export-btn">
-        <span class="char-menu-icon">↓</span> Export to File
-      </button>
-      <label class="char-menu-item char-menu-item--label" id="char-import-label">
-        <span class="char-menu-icon">↑</span> Import from File
-        <input type="file" id="char-import-input" accept=".json" style="display:none;">
-      </label>
-    </div>
     
     <div class="sheet-header-area">
       <div class="header-logo-container">
@@ -463,23 +442,6 @@
     </div>
     <p class="pregen-modal__subtitle">Select a pregen to load, or close to start from scratch.</p>
     <div class="pregen-card-grid" id="pregen-card-grid"></div>
-  </div>
-</div>
-
-<!-- ================================================
-     PREGEN MODAL
-     ================================================ -->
-<div id="pregen-modal" class="pregen-modal" aria-modal="true" role="dialog" aria-label="Choose a Pregen Character" style="display:none;">
-  <div class="pregen-modal__backdrop"></div>
-  <div class="pregen-modal__box">
-    <div class="pregen-modal__header">
-      <span class="pregen-modal__title">Choose a Character</span>
-      <button class="pregen-modal__close" id="pregen-close-btn" title="Close">✕</button>
-    </div>
-    <p class="pregen-modal__subtitle">Select a pregen to load, or close to start from scratch.</p>
-    <div class="pregen-card-grid" id="pregen-card-grid">
-      <!-- Cards injected by JS -->
-    </div>
   </div>
 </div>
 
