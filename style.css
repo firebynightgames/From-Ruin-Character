@@ -1619,6 +1619,7 @@ input.single-digit {
 .dice-tray__btn--clear { background: transparent; color: #555; border: 1px solid #2a2a2a; }
 .dice-tray__btn--clear:not(:disabled):hover { color: #e74c3c; border-color: #e74c3c; }
 
+/* Default state - grey */
 .result-ones-summary {
   font-size: 13px;
   color: #888;
@@ -1626,6 +1627,7 @@ input.single-digit {
   transition: color 0.15s ease;
 }
 
+/* After Push - red */
 .result-ones-summary--stress {
   color: #c0392b;
 }
