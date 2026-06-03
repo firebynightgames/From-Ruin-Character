@@ -1557,8 +1557,9 @@ input.single-digit {
 }
 
 .die-slot__icon--gear {
-  filter: brightness(0) invert(1);
-  opacity: 0.4;
+  filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
+          saturate(600%) hue-rotate(5deg) brightness(1.1);
+  opacity: 0.8;
 }
 
 /* Result pip (after rolling) */
@@ -1629,10 +1630,11 @@ input.single-digit {
 }
 
 .dice-tray__success-banner span:first-child {
-  font-size: 10px;
+  font-size: 15px;
   font-weight: bold;
   color: #6cc6a0;
   text-align: center;
+  line-height: 1.3;
 }
 
 .success-banner__zero span:first-child {
@@ -1640,7 +1642,7 @@ input.single-digit {
 }
 
 .result-ones-summary {
-  font-size: 9px;
+  font-size: 13px;
   color: #c0392b;
   text-align: center;
 }
