@@ -383,23 +383,25 @@
 
 </div><!-- end #character-sheet -->
 
+
+ <!-- ================================================
+     CHARACTER MENU BUTTON — inside sheet header
+     ================================================ -->
+<!-- Add this inside .sheet-combined-header, before .sheet-header-area: -->
+
 <!-- ================================================
-     DICE TRAY — Fixed panel, right side
+     DICE TRAY — Fixed right panel
      ================================================ -->
 <div id="dice-tray" class="dice-tray" aria-label="Dice Pool Tray">
 
-  <!-- Tab trigger on the right edge -->
   <button id="dice-tray-tab" class="dice-tray__tab" title="Dice Pool">
     <img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="dice" class="dice-tray__tab-icon">
   </button>
 
-  <!-- Panel body -->
   <div class="dice-tray__panel" id="dice-tray-panel">
 
-    <!-- Close button -->
     <button id="dice-tray-close" class="dice-tray__close" title="Close">✕</button>
 
-    <!-- Success threshold -->
     <div class="dice-tray__section">
       <span class="dice-tray__section-label">Success</span>
       <div class="threshold-btns">
@@ -409,28 +411,37 @@
       </div>
     </div>
 
-    <!-- Difficulty -->
     <div class="dice-tray__section">
       <span class="dice-tray__section-label">Difficulty</span>
       <input type="number" id="dice-difficulty" class="dice-tray__mod-input"
              min="0" max="20" placeholder="0">
     </div>
 
-    <!-- Dice columns -->
-    <div class="dice-tray__columns" id="dice-pool-display">
-      <!-- Injected by JS -->
-    </div>
+    <div class="dice-tray__columns" id="dice-pool-display"></div>
 
-    <!-- Action buttons -->
     <div class="dice-tray__actions">
       <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">Roll</button>
       <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled>Push</button>
       <button id="dice-clear-btn" class="dice-tray__btn dice-tray__btn--clear">Clear</button>
     </div>
 
-    <!-- Success banner -->
     <div id="dice-success-banner" class="dice-tray__success-banner" style="display:none;"></div>
 
+  </div>
+</div>
+
+<!-- ================================================
+     PREGEN MODAL
+     ================================================ -->
+<div id="pregen-modal" class="pregen-modal" aria-modal="true" role="dialog" aria-label="Choose a Pregen Character" style="display:none;">
+  <div class="pregen-modal__backdrop"></div>
+  <div class="pregen-modal__box">
+    <div class="pregen-modal__header">
+      <span class="pregen-modal__title">Choose a Character</span>
+      <button class="pregen-modal__close" id="pregen-close-btn" title="Close">✕</button>
+    </div>
+    <p class="pregen-modal__subtitle">Select a pregen to load, or close to start from scratch.</p>
+    <div class="pregen-card-grid" id="pregen-card-grid"></div>
   </div>
 </div>
 
