@@ -1337,18 +1337,18 @@ input.single-digit {
 
 /* The tab button fixed to the right edge */
 #dice-tray {
-  position: fixed;
-  top: 0;
-  right: 0;
+  position: relative;
+  width: 28px;
   height: 100%;
+  flex-shrink: 0;
   z-index: 200;
-  pointer-events: none; /* children re-enable */
+  transition: width 0.25s ease;
 }
 
 .dice-tray__tab {
   position: absolute;
   top: 50%;
-  right: 0;
+  left: 0;
   transform: translateY(-50%);
   width: 28px;
   height: 56px;
@@ -1365,7 +1365,9 @@ input.single-digit {
 }
 
 .dice-tray__tab:hover { background: #444; }
-.dice-tray__tab.is-open { right: 120px; background: #333; }
+#dice-tray.is-open {
+  width: 148px; /* tab + panel */
+}
 
 .dice-tray__tab-icon {
   width: 18px;
@@ -1378,7 +1380,7 @@ input.single-digit {
 .dice-tray__panel {
   position: absolute;
   top: 0;
-  right: -120px; /* hidden off-screen */
+  left: 28px;
   width: 120px;
   height: 100%;
   background: #1a1a1a;
@@ -1387,14 +1389,21 @@ input.single-digit {
   display: flex;
   flex-direction: column;
   padding: 8px 6px;
-  pointer-events: auto;
-  transition: right 0.25s ease;
   overflow-y: auto;
   overflow-x: hidden;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-8px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
 }
 
 .dice-tray__panel.is-open {
-  right: 0;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
 }
 
 /* Close button — top right of panel */
