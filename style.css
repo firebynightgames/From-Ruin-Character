@@ -1619,6 +1619,17 @@ input.single-digit {
 .dice-tray__btn--clear { background: transparent; color: #555; border: 1px solid #2a2a2a; }
 .dice-tray__btn--clear:not(:disabled):hover { color: #e74c3c; border-color: #e74c3c; }
 
+.result-ones-summary {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  transition: color 0.15s ease;
+}
+
+.result-ones-summary--stress {
+  color: #c0392b;
+}
+
 /* Success banner — pinned to bottom of panel */
 .dice-tray__success-banner {
   display: flex;
