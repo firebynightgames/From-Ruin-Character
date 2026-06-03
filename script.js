@@ -1075,7 +1075,7 @@ if (totalOnes > 0) {
       `${gearOnes} ${gearLabel} 1${gearOnes !== 1 ? "s" : ""}`
     );
   }
-  ones.textContent = `⚠ Stress: ${parts.join(", ")}`;
+  ones.textContent = `⚠ Stress: ${parts.join(" ")}`;
 } else {
   ones.textContent = "⚠ Stress: None";
 }
