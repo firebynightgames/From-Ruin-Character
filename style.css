@@ -1536,7 +1536,7 @@ input.single-digit {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
+  height: 36px;
   flex-shrink: 0;
 }
 
@@ -1546,8 +1546,8 @@ input.single-digit {
 
 /* Die icon (before rolling) */
 .die-slot__icon {
-  width: 20px;
-  height: 20px;
+  width: 48px;
+  height: 48px;
 }
 
 .die-slot__icon--apt {
@@ -1567,10 +1567,10 @@ input.single-digit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 25px;
   font-weight: bold;
   font-family: "Century Gothic", sans-serif;
   line-height: 1;
