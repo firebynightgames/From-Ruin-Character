@@ -1028,9 +1028,6 @@ function makePip(val, type, pushEntry) {
 /* -----------------------------------------------
    Success banner
    ----------------------------------------------- */
-/* -----------------------------------------------
-   Success banner
-   ----------------------------------------------- */
 function updateSuccessBanner() {
   const banner = document.getElementById("dice-success-banner");
   if (!banner) return;
@@ -1056,23 +1053,33 @@ function updateSuccessBanner() {
   if (hasPushed) headline.textContent += " — Pushed";
   banner.appendChild(headline);
 
-  if (totalOnes > 0) {
-    const ones = document.createElement("span");
-    ones.className = "result-ones-summary";
-    const parts = [];
-    if (aptOnes > 0) {
-      // Name the aptitude(s) that rolled 1s
-      const aptNames = aptitudeQueue.map(a => a.apt.charAt(0).toUpperCase() + a.apt.slice(1));
-      parts.push(`${aptOnes} ${aptNames.join("/")} 1${aptOnes !== 1 ? "s" : ""}`);
-    }
-    if (gearOnes > 0) {
-      const gearLabel = activeGear?.label || "Gear";
-      parts.push(`${gearOnes} ${gearLabel} 1${gearOnes !== 1 ? "s" : ""}`);
-    }
-    ones.textContent = `⚠ Stress: ${parts.join(", ")}`;
-    banner.appendChild(ones);
+  const ones = document.createElement("span");
+
+ones.className =
+  "result-ones-summary" +
+  (hasPushed && totalOnes > 0 ? " result-ones-summary--stress" : "");
+
+if (totalOnes > 0) {
+  const parts = [];
+  if (aptOnes > 0) {
+    const aptNames = aptitudeQueue.map(
+      a => a.apt.charAt(0).toUpperCase() + a.apt.slice(1)
+    );
+    parts.push(
+      `${aptOnes} ${aptNames.join("/")} 1${aptOnes !== 1 ? "s" : ""}`
+    );
   }
+  if (gearOnes > 0) {
+    const gearLabel = activeGear?.label || "Gear";
+    parts.push(
+      `${gearOnes} ${gearLabel} 1${gearOnes !== 1 ? "s" : ""}`
+    );
+  }
+  ones.textContent = `⚠ Stress: ${parts.join(", ")}`;
+} else {
+  ones.textContent = "⚠ Stress: None";
 }
+banner.appendChild(ones);
 
 /* -----------------------------------------------
    Push button state
