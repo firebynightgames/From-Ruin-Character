@@ -1033,7 +1033,8 @@ function updateSuccessBanner() {
   if (!banner) return;
 
   if (!lastRollResults) { banner.style.display = "none"; return; }
-
+   
+  const totalOnes = aptOnes + gearOnes;
   const threshold = getThreshold();
   const allVals   = [...(lastRollResults.apt || []), ...(lastRollResults.gear || [])];
   const successes = countSuccesses(allVals, threshold);
