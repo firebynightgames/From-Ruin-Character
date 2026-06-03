@@ -1654,12 +1654,6 @@ input.single-digit {
   color: #c0392b;
 }
 
-.result-ones-summary {
-  font-size: 13px;
-  color: #c0392b;
-  text-align: center;
-}
-
 /* Gear die icon styles (shared) */
 .gear-die-icon {
   background: transparent;
