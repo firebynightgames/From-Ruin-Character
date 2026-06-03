@@ -8,9 +8,16 @@ html, body {
   overflow: hidden;
 }
 
+#sheet-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  align-items: stretch;
+}
+
 #character-sheet {
-  position: relative;
-  width: 100%;
+  width: 420px;
+  flex-shrink: 0;
   height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
