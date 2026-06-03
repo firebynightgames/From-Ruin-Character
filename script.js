@@ -1039,7 +1039,9 @@ function updateSuccessBanner() {
   const successes = countSuccesses(allVals, threshold);
   const aptOnes   = (lastRollResults.apt  || []).filter(v => v === 1).length;
   const gearOnes  = (lastRollResults.gear || []).filter(v => v === 1).length;
-  const totalOnes = aptOnes + gearOnes;
+  if (hasPushed && totalOnes > 0) {
+  const warning = document.createElement("span");
+}
 
   banner.innerHTML = "";
   banner.style.display = "flex";
@@ -1284,13 +1286,32 @@ function wireRowDieIcons() {
   document.querySelectorAll(".gear-die-icon--row").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const slotKey   = btn.dataset.slotKey;
-      const n         = slotKey.split("-")[1];
-      const label     = slotKey.startsWith("weapon") ? `Weapon ${n}` : `Armor ${n}`;
-      const inputName = slotKey.startsWith("weapon")
-        ? `attr_weapon_gear_a_${n}` : `attr_armor_gear_a_${n}`;
-      const count = parseInt(
-        document.querySelector(`input[name="${inputName}"]`)?.value) || 0;
+
+      const slotKey = btn.dataset.slotKey;
+      const n = slotKey.split("-")[1];
+
+      const isWeapon = slotKey.startsWith("weapon");
+
+      const nameField = isWeapon
+        ? `attr_weapon_name_${n}`
+        : `attr_armor_name_${n}`;
+
+      const countField = isWeapon
+        ? `attr_weapon_gear_a_${n}`
+        : `attr_armor_gear_a_${n}`;
+
+      const itemName =
+        document.querySelector(`input[name="${nameField}"]`)
+          ?.value
+          ?.trim();
+
+      const label = itemName ||
+        (isWeapon ? `Weapon ${n}` : `Armor ${n}`);
+
+      const count =
+        parseInt(
+          document.querySelector(`input[name="${countField}"]`)?.value
+        ) || 0;
       toggleGear(slotKey, label, count);
     });
   });
