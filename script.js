@@ -1034,12 +1034,13 @@ function updateSuccessBanner() {
 
   if (!lastRollResults) { banner.style.display = "none"; return; }
    
-  const totalOnes = aptOnes + gearOnes;
+  
   const threshold = getThreshold();
   const allVals   = [...(lastRollResults.apt || []), ...(lastRollResults.gear || [])];
   const successes = countSuccesses(allVals, threshold);
   const aptOnes   = (lastRollResults.apt  || []).filter(v => v === 1).length;
   const gearOnes  = (lastRollResults.gear || []).filter(v => v === 1).length;
+  const totalOnes = aptOnes + gearOnes;
   if (hasPushed && totalOnes > 0) {
   const warning = document.createElement("span");
 }
