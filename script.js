@@ -905,12 +905,13 @@ function renderDiceTray() {
   display.innerHTML = "";
 
   // --- Aptitude column ---
+ // In renderDiceTray(), replace the aptitude column section:
   if (aptitudeQueue.length > 0) {
     const col = document.createElement("div");
     col.className = "dice-col";
 
     let aptRemovedLeft = aptRemoved;
-    let dieIndex = 0;
+    let resultIndex = 0; // counts only non-removed dice
 
     aptitudeQueue.forEach(({ apt, count }, qi) => {
       const hdr = document.createElement("div");
@@ -927,18 +928,24 @@ function renderDiceTray() {
         const slot = document.createElement("div");
         slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
 
-        const result = lastRollResults?.apt?.[dieIndex];
-        if (result !== undefined) {
-          slot.appendChild(makePip(result, "apt", lastPushGroups?.apt?.[dieIndex]));
-        } else {
+        if (!removed && lastRollResults?.apt?.[resultIndex] !== undefined) {
+          slot.appendChild(makePip(lastRollResults.apt[resultIndex],
+            "apt", lastPushGroups?.apt?.[resultIndex]));
+          resultIndex++;
+        } else if (!removed) {
           const img = document.createElement("img");
-          img.src = DIE_SVG_URL;
-          img.alt = apt;
+          img.src = DIE_SVG_URL; img.alt = apt;
+          img.className = "die-slot__icon die-slot__icon--apt";
+          slot.appendChild(img);
+          resultIndex++;
+        } else {
+          // removed die — show faded icon, no result
+          const img = document.createElement("img");
+          img.src = DIE_SVG_URL; img.alt = apt;
           img.className = "die-slot__icon die-slot__icon--apt";
           slot.appendChild(img);
         }
         col.appendChild(slot);
-        dieIndex++;
       }
     });
 
@@ -956,6 +963,7 @@ function renderDiceTray() {
     col.appendChild(hdr);
 
     let gearRemovedLeft = gearRemoved;
+    let gearResultIndex = 0;
     for (let i = 0; i < activeGear.count; i++) {
       const removed = gearRemovedLeft > 0;
       if (removed) gearRemovedLeft--;
@@ -963,13 +971,19 @@ function renderDiceTray() {
       const slot = document.createElement("div");
       slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
 
-      const result = lastRollResults?.gear?.[i];
-      if (result !== undefined) {
-        slot.appendChild(makePip(result, "gear", lastPushGroups?.gear?.[i]));
+      if (!removed && lastRollResults?.gear?.[gearResultIndex] !== undefined) {
+        slot.appendChild(makePip(lastRollResults.gear[gearResultIndex],
+          "gear", lastPushGroups?.gear?.[gearResultIndex]));
+        gearResultIndex++;
+      } else if (!removed) {
+        const img = document.createElement("img");
+        img.src = DIE_SVG_URL; img.alt = activeGear.label;
+        img.className = "die-slot__icon die-slot__icon--gear";
+        slot.appendChild(img);
+        gearResultIndex++;
       } else {
         const img = document.createElement("img");
-        img.src = DIE_SVG_URL;
-        img.alt = activeGear.label;
+        img.src = DIE_SVG_URL; img.alt = activeGear.label;
         img.className = "die-slot__icon die-slot__icon--gear";
         slot.appendChild(img);
       }
@@ -1041,11 +1055,18 @@ function updateSuccessBanner() {
 
   if (totalOnes > 0) {
     const ones = document.createElement("span");
-    ones.className   = "result-ones-summary";
+    ones.className = "result-ones-summary";
     const parts = [];
-    if (aptOnes  > 0) parts.push(`${aptOnes} apt`);
-    if (gearOnes > 0) parts.push(`${gearOnes} gear`);
-    ones.textContent = `⚠ ${totalOnes} one${totalOnes !== 1 ? "s" : ""} (${parts.join(" + ")})`;
+    if (aptOnes > 0) {
+      // Name the aptitude(s) that rolled 1s
+      const aptNames = aptitudeQueue.map(a => a.apt.charAt(0).toUpperCase() + a.apt.slice(1));
+      parts.push(`${aptOnes} ${aptNames.join("/")} 1${aptOnes !== 1 ? "s" : ""}`);
+    }
+    if (gearOnes > 0) {
+      const gearLabel = activeGear?.label || "Gear";
+      parts.push(`${gearOnes} ${gearLabel} 1${gearOnes !== 1 ? "s" : ""}`);
+    }
+    ones.textContent = `⚠ Stress: ${parts.join(", ")}`;
     banner.appendChild(ones);
   }
 }
@@ -1196,6 +1217,8 @@ function rollLocal() {
   };
   hasPushed      = false;
   lastPushGroups = null;
+  const rollBtn = document.getElementById("dice-roll-btn");
+  if (rollBtn) { rollBtn.disabled = false; rollBtn.textContent = "Roll"; }
   renderDiceTray();
 }
 
