@@ -1028,22 +1028,21 @@ function makePip(val, type, pushEntry) {
 /* -----------------------------------------------
    Success banner
    ----------------------------------------------- */
+/* -----------------------------------------------
+   Success banner
+   ----------------------------------------------- */
 function updateSuccessBanner() {
   const banner = document.getElementById("dice-success-banner");
   if (!banner) return;
 
   if (!lastRollResults) { banner.style.display = "none"; return; }
-   
-  
+
   const threshold = getThreshold();
   const allVals   = [...(lastRollResults.apt || []), ...(lastRollResults.gear || [])];
   const successes = countSuccesses(allVals, threshold);
   const aptOnes   = (lastRollResults.apt  || []).filter(v => v === 1).length;
   const gearOnes  = (lastRollResults.gear || []).filter(v => v === 1).length;
   const totalOnes = aptOnes + gearOnes;
-  if (hasPushed && totalOnes > 0) {
-  const warning = document.createElement("span");
-}
 
   banner.innerHTML = "";
   banner.style.display = "flex";
