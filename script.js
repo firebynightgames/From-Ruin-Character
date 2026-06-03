@@ -25,20 +25,14 @@ const character = {
 };
 
 /* ================================================
-   STORAGE KEY
+   CONSTANTS
    ================================================ */
 const STORAGE_KEY    = "com.firebynightgames.from-ruin/character";
-
-/* ================================================
-   DICE CONSTANTS — declared early so generators can use them
-   ================================================ */
 const DICE_SOURCE_ID = "com.firebynightgames.from-ruin";
 const DIE_SVG_URL    = "https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg";
 
 /* ================================================
    PAIR-ENGINE CHECKBOX GUARD
-   These are managed by the stress/trauma engine —
-   excluded from the general DOM scan.
    ================================================ */
 function isPairEngineCheckbox(el) {
   return el.type === "checkbox" && (
@@ -51,6 +45,9 @@ function isPairEngineCheckbox(el) {
   );
 }
 
+/* ================================================
+   SAVE
+   ================================================ */
 async function saveSheet() {
   const root   = document.getElementById("character-sheet");
   const named  = {};
@@ -105,7 +102,7 @@ async function saveSheet() {
 
   try {
     const playerKey = await getPlayerKey();
-    const existing = await OBR.room.getMetadata();
+    const existing  = await OBR.room.getMetadata();
     const existingBlock = (existing[STORAGE_KEY] ?? {});
     const merged = { ...existingBlock, [playerKey]: data };
     await OBR.room.setMetadata({ [STORAGE_KEY]: merged });
@@ -115,7 +112,7 @@ async function saveSheet() {
 }
 
 /* ================================================
-   LOAD — named + indexed hybrid
+   LOAD
    ================================================ */
 async function getPlayerKey() {
   const id = await OBR.player.getId();
@@ -125,12 +122,9 @@ async function getPlayerKey() {
 async function loadSheet() {
   try {
     const playerKey = await getPlayerKey();
-    const meta = await OBR.room.getMetadata();
-    const block = meta[STORAGE_KEY];
-    if (block && block[playerKey]) {
-      return block[playerKey];
-    }
-    // Cloud had nothing — try localStorage fallback
+    const meta      = await OBR.room.getMetadata();
+    const block     = meta[STORAGE_KEY];
+    if (block && block[playerKey]) return block[playerKey];
   } catch (err) {
     console.warn("[FromRuin] Cloud load failed, trying localStorage:", err);
   }
@@ -143,7 +137,6 @@ function restoreSheet(saved) {
   if (!saved) return;
   const root = document.getElementById("character-sheet");
 
-  // 1. Named fields (wound fields excluded — rebuilt in step 7)
   if (saved.named) {
     Object.entries(saved.named).forEach(([name, value]) => {
       const el = root.querySelector(`[name="${name}"]`);
@@ -153,7 +146,6 @@ function restoreSheet(saved) {
     });
   }
 
-  // 2. Id-only checkboxes
   if (saved.checks) {
     Object.entries(saved.checks).forEach(([id, checked]) => {
       const el = root.querySelector(`#${id}`);
@@ -161,14 +153,12 @@ function restoreSheet(saved) {
     });
   }
 
-  // 3. Contenteditable desc-fields
   if (saved.desc) {
     root.querySelectorAll(".desc-field[contenteditable]").forEach((el, i) => {
       if (saved.desc[i] !== undefined) el.innerHTML = saved.desc[i];
     });
   }
 
-  // 4. Features
   if (saved.features?.length) {
     const list = root.querySelector(".features-list");
     if (list) {
@@ -185,7 +175,6 @@ function restoreSheet(saved) {
     }
   }
 
-  // 5. Drives text
   if (saved.drives?.length) {
     const list = root.querySelector(".drives-list");
     if (list) {
@@ -210,7 +199,6 @@ function restoreSheet(saved) {
     }
   }
 
-  // 6. Flaws
   if (saved.flaws?.length) {
     const list = root.querySelector(".flaws-list");
     if (list) {
@@ -227,9 +215,8 @@ function restoreSheet(saved) {
     }
   }
 
-  // 7. Relics
   if (saved.relics?.length) {
-    const rows = root.querySelectorAll(".relic-row");
+    const rows = document.querySelectorAll(".relic-row");
     saved.relics.forEach((text, i) => {
       let row = rows[i];
       if (!row) {
@@ -237,15 +224,10 @@ function restoreSheet(saved) {
         row = relicContainer.querySelectorAll(".relic-row")[i];
       }
       const ta = row?.querySelector("textarea");
-      if (ta) {
-        ta.value = text;
-        ta.style.height = "auto";
-        ta.style.height = ta.scrollHeight + "px";
-      }
+      if (ta) { ta.value = text; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
     });
   }
 
-  // 9. Wounds
   if (saved.wounds?.length) {
     const container = root.querySelector("#wounds-container");
     if (container) {
@@ -265,10 +247,7 @@ function restoreSheet(saved) {
     }
   }
 
-  // 10. Pair state — aptitudes are in DOM so caps calculate correctly
   restorePairState(saved.pairState);
-
-  // 11. Re-sync derived UI
   syncSummary();
   calculateTotalBulk();
 }
@@ -277,24 +256,17 @@ function restoreSheet(saved) {
    RESTORE PAIR STATE
    ================================================ */
 function restorePairState(pairState) {
-  if (!pairState) {
-    updateAllPairs();
-    return;
-  }
+  if (!pairState) { updateAllPairs(); return; }
   const { stress, trauma, pairConditions } = pairState;
 
-  // Restore pair conditions first (they affect stress caps)
   Object.entries(pairConditions).forEach(([key, checked]) => {
     const el = document.getElementById(`cond-${key.replace("_", "-")}`);
     if (el) el.checked = !!checked;
     character.pairConditions[key] = !!checked;
   });
 
-  // Set caps based on current aptitude values — caps only, don't wipe checked state
   applyCapsOnly();
 
-  // Restore stress — write checked state directly based on cap, ignoring
-  // disabled state. Condition disabling is cosmetic and applied afterwards.
   Object.entries(stress).forEach(([key, arr]) => {
     const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
     if (!prefix) return;
@@ -308,7 +280,6 @@ function restorePairState(pairState) {
     });
   });
 
-  // Restore trauma
   Object.entries(trauma).forEach(([key, arr]) => {
     const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
     if (!prefix) return;
@@ -322,14 +293,12 @@ function restorePairState(pairState) {
     });
   });
 
-  // Apply disabled/opacity on top of the restored checked state
   updateAllPairs();
-
   updateCurrentAptitudes();
 }
 
 /* ================================================
-   TABS ROUTING
+   TABS
    ================================================ */
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', (evt) => {
@@ -341,11 +310,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
     const isGearTab = btn.dataset.tab === 'tab-2';
     const sheet = document.getElementById('character-sheet');
-    if (isGearTab) {
-      sheet.classList.add('gear-active');
-    } else {
-      sheet.classList.remove('gear-active');
-    }
+    isGearTab ? sheet.classList.add('gear-active') : sheet.classList.remove('gear-active');
 
     document.getElementById('xp-header').style.display    = isGearTab ? 'none'  : 'block';
     document.getElementById('xp-body').style.display      = isGearTab ? 'none'  : 'flex';
@@ -367,7 +332,6 @@ function calculateTotalBulk() {
 
   let threshold = 20;
   if (total > 20) threshold = Math.ceil((total - 20) / 5) * 5 + 20;
-
   const penalty = total <= 20 ? 0 : Math.ceil((total - 20) / 5);
   const maxed   = penalty >= 6;
 
@@ -475,7 +439,7 @@ if (armorContainer) {
 }
 
 /* ================================================
-   SPELLS LIST GENERATOR & AUTO-GROW
+   SPELLS LIST
    ================================================ */
 const spellsContainer = document.getElementById('spells-container');
 
@@ -510,7 +474,7 @@ if (spellsContainer) {
 }
 
 /* ================================================
-   WOUNDS GENERATOR
+   WOUNDS
    ================================================ */
 const APTITUDES = ['Finesse','Devise','Exert','Adapt','Sense','Resist','Deceive','Relate'];
 
@@ -551,10 +515,9 @@ if (woundsContainer) {
 }
 
 /* ================================================
-   RELIC GENERATOR
+   RELICS
    ================================================ */
 const relicContainer = document.getElementById('relics-container');
-
 let relicCount = 0;
 
 function addRelicRow() {
@@ -578,7 +541,7 @@ if (relicContainer) {
 }
 
 /* ================================================
-   FEATURES LIST — AUTO GROW + ADD NEW ITEM
+   FEATURES LIST
    ================================================ */
 const featuresList = document.querySelector('.features-list');
 if (featuresList) {
@@ -598,7 +561,7 @@ if (featuresList) {
 }
 
 /* ================================================
-   DRIVES LIST — AUTO GROW & SLOTS (MAX 3)
+   DRIVES LIST
    ================================================ */
 const drivesList = document.querySelector('.drives-list');
 if (drivesList) {
@@ -627,7 +590,7 @@ if (drivesList) {
 }
 
 /* ================================================
-   GEAR LIST — AUTO-EXPAND ROWS
+   GEAR TABLE
    ================================================ */
 const gearTable = document.querySelector('.sheet-gear-table');
 if (gearTable) {
@@ -656,7 +619,7 @@ if (gearTable) {
 }
 
 /* ================================================
-   FLAWS LIST — AUTO GROW & SLOTS (MAX 3)
+   FLAWS LIST
    ================================================ */
 const flawsList = document.querySelector('.flaws-list');
 if (flawsList) {
@@ -689,8 +652,8 @@ if (portraitUpload) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      portraitImg.src          = ev.target.result;
-      portraitImg.style.display = 'block';
+      portraitImg.src             = ev.target.result;
+      portraitImg.style.display   = 'block';
       portraitLabel.style.display = 'none';
     };
     reader.readAsDataURL(file);
@@ -726,7 +689,7 @@ document.querySelector('.desc-panel')?.addEventListener('input', syncSummary);
 syncSummary();
 
 /* ================================================
-   STORY FIELDS — AUTO GROW
+   STORY FIELDS AUTO GROW
    ================================================ */
 document.querySelectorAll('.story-field').forEach(field => {
   field.addEventListener('input', () => {
@@ -766,10 +729,8 @@ function updateCurrentAptitudes() {
 
 function updateStressTrauma(prefix) {
   const { key, apt1, apt2 } = PAIR_MAP[prefix];
-
   const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
   const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
-
   const stressCap       = Math.min(val1, val2);
   const traumaCap       = Math.max(val1, val2);
   const condBox         = document.getElementById(`cond-${key.replace("_", "-")}`);
@@ -798,8 +759,6 @@ function updateAllPairs() {
   Object.keys(PAIR_MAP).forEach(prefix => updateStressTrauma(prefix));
 }
 
-// Like updateAllPairs but ONLY sets disabled/opacity — never touches checked
-// state or the character model. Safe to call during restore.
 function applyCapsOnly() {
   Object.keys(PAIR_MAP).forEach(prefix => {
     const { key, apt1, apt2 } = PAIR_MAP[prefix];
@@ -825,7 +784,6 @@ function applyCapsOnly() {
   });
 }
 
-// Aptitude input listeners
 Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
   [apt1, apt2].forEach(apt => {
     document.querySelector(`input[name="attr_${apt}"]`)
@@ -833,13 +791,11 @@ Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
   });
 });
 
-// Pair condition listeners
 Object.values(PAIR_MAP).forEach(({ key }) => {
   document.getElementById(`cond-${key.replace("_", "-")}`)
     ?.addEventListener("change", updateAllPairs);
 });
 
-// Stress + trauma box listeners
 document.addEventListener("change", (e) => {
   if (e.target.classList.contains("stress-box") ||
       e.target.classList.contains("trauma-box")) {
@@ -848,58 +804,11 @@ document.addEventListener("change", (e) => {
   }
 });
 
-// Apply caps immediately so boxes are disabled before OBR loads
 updateAllPairs();
 
 /* ================================================
-   INIT
+   DICE TRAY ENGINE
    ================================================ */
-OBR.onReady(async () => {
-
-  // Clean up old localStorage versions
-  localStorage.removeItem("fromRuinCharacter_v1");
-  localStorage.removeItem("fromRuinCharacter_v2");
-  localStorage.removeItem("fromRuinCharacter_v3");
-  localStorage.removeItem("fromRuinCharacter_v4");
-  localStorage.removeItem("fromRuinCharacter_v5");
-  localStorage.removeItem("fromRuinCharacter_v6");
-  localStorage.removeItem("fromRuinCharacter_v7");
-  localStorage.removeItem("fromRuinCharacter_v8");
-  localStorage.removeItem("fromRuinCharacter_v9");
-  localStorage.removeItem("fromRuinCharacter_v10");
-  localStorage.removeItem("fromRuinCharacter_v11");
-  localStorage.removeItem("fromRuinCharacter_v12");
-  localStorage.removeItem("fromRuinCharacter_v13");
-  const saved = await loadSheet();
-  if (saved) {
-    restoreSheet(saved);
-  } else {
-    updateAllPairs();
-  }
-
-  // Autosave — delegate to sheet so dynamic rows are always covered
-  document.getElementById("character-sheet").addEventListener("input",  saveSheet);
-  document.getElementById("character-sheet").addEventListener("change", saveSheet);
-  document.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
-    el.addEventListener("input", saveSheet);
-    el.addEventListener("blur",  saveSheet);
-  });
-
-  // Re-save if room metadata is reset externally (e.g. hard reset wipes cloud)
-  OBR.room.onMetadataChange(async (meta) => {
-    const playerKey = await getPlayerKey();
-    const block = meta[STORAGE_KEY];
-    if (!block || !block[playerKey]) {
-      // Our data was lost — write it back immediately
-      saveSheet();
-    }
-  });
-});
-
-/* ================================================
-   DICE TRAY ENGINE v3 — Right panel
-   ================================================ */
-
 const aptitudeQueue = [];
 let activeGear      = null;
 let lastRollResults = null;
@@ -978,7 +887,7 @@ function countSuccesses(values, threshold) {
 }
 
 /* -----------------------------------------------
-   Render tray — columns of die slots
+   Render tray
    ----------------------------------------------- */
 function renderDiceTray() {
   const display  = document.getElementById("dice-pool-display");
@@ -1001,10 +910,9 @@ function renderDiceTray() {
     col.className = "dice-col";
 
     let aptRemovedLeft = aptRemoved;
-    let dieIndex = 0; // track position across both aptitudes
+    let dieIndex = 0;
 
     aptitudeQueue.forEach(({ apt, count }, qi) => {
-      // Header for this aptitude
       const hdr = document.createElement("div");
       hdr.className = qi === 0
         ? "dice-col__header dice-col__header--apt"
@@ -1019,11 +927,9 @@ function renderDiceTray() {
         const slot = document.createElement("div");
         slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
 
-        // If we have a result for this die, show pip; else show icon
         const result = lastRollResults?.apt?.[dieIndex];
         if (result !== undefined) {
-          slot.appendChild(makePip(result, "apt",
-            lastPushGroups?.apt?.[dieIndex]));
+          slot.appendChild(makePip(result, "apt", lastPushGroups?.apt?.[dieIndex]));
         } else {
           const img = document.createElement("img");
           img.src = DIE_SVG_URL;
@@ -1059,8 +965,7 @@ function renderDiceTray() {
 
       const result = lastRollResults?.gear?.[i];
       if (result !== undefined) {
-        slot.appendChild(makePip(result, "gear",
-          lastPushGroups?.gear?.[i]));
+        slot.appendChild(makePip(result, "gear", lastPushGroups?.gear?.[i]));
       } else {
         const img = document.createElement("img");
         img.src = DIE_SVG_URL;
@@ -1077,14 +982,13 @@ function renderDiceTray() {
   updatePushBtn();
   updateSuccessBanner();
 
-  // Auto-open tray when dice are selected
   if (rawAptCount() + rawGearCount() > 0 && !trayIsOpen) {
     openTray();
   }
 }
 
 /* -----------------------------------------------
-   Make a result pip element
+   Pip element
    ----------------------------------------------- */
 function makePip(val, type, pushEntry) {
   const threshold = getThreshold();
@@ -1097,9 +1001,9 @@ function makePip(val, type, pushEntry) {
   pip.className = [
     "die-slot__pip",
     `die-slot__pip--${type}`,
-    isOne     ? "die-slot__pip--one"     : "",
-    isSuccess && !isOne ? "die-slot__pip--success" : "",
-    !isSuccess && !isOne ? "die-slot__pip--fail"  : "",
+    isOne               ? "die-slot__pip--one"     : "",
+    isSuccess && !isOne ? "die-slot__pip--success"  : "",
+    !isSuccess && !isOne ? "die-slot__pip--fail"    : "",
     pushed ? "die-slot__pip--pushed" : "",
     kept   ? "die-slot__pip--kept"   : ""
   ].filter(Boolean).join(" ");
@@ -1114,10 +1018,7 @@ function updateSuccessBanner() {
   const banner = document.getElementById("dice-success-banner");
   if (!banner) return;
 
-  if (!lastRollResults) {
-    banner.style.display = "none";
-    return;
-  }
+  if (!lastRollResults) { banner.style.display = "none"; return; }
 
   const threshold = getThreshold();
   const allVals   = [...(lastRollResults.apt || []), ...(lastRollResults.gear || [])];
@@ -1354,7 +1255,7 @@ document.querySelectorAll(".apt-die-icon").forEach(btn => {
 });
 
 /* -----------------------------------------------
-   Gear icon wiring (called after DOM generation)
+   Gear icon wiring
    ----------------------------------------------- */
 function wireRowDieIcons() {
   document.querySelectorAll(".gear-die-icon--row").forEach(btn => {
@@ -1374,8 +1275,8 @@ function wireRowDieIcons() {
 
 function injectGearDieIcons() {
   document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
-    const n       = i + 1;
-    const slotKey = `gear-${n}`;
+    const n        = i + 1;
+    const slotKey  = `gear-${n}`;
     const valInput = row.querySelector(`input[name="attr_gear_val_${n}"]`);
     const valCell  = row.querySelector(".col-gear-val");
     if (!valCell || row.querySelector(".gear-die-icon")) return;
@@ -1419,10 +1320,6 @@ async function checkDicePlusReady() {
 
 /* ================================================
    PREGEN CHARACTERS
-   Edit the objects below to set your pregens.
-   Each pregen's `data` field is a full restoreSheet-
-   compatible save object — use Export to generate
-   real data, then paste it in here.
    ================================================ */
 const PREGENS = [
   {
@@ -1569,17 +1466,16 @@ function newCharacter() {
   syncSummary();
   calculateTotalBulk();
 }
+
 /* ================================================
-   PREGEN MODAL ENGINE
+   PREGEN MODAL
    ================================================ */
 function openPregenModal() {
   const modal = document.getElementById("pregen-modal");
   const grid  = document.getElementById("pregen-card-grid");
 
-  // Build cards
   grid.innerHTML = "";
   PREGENS.forEach((pregen, idx) => {
-    // Pull display info from desc array (positional: 0=name, 1=age, 3=people, 5=background)
     const desc       = pregen.data?.desc || [];
     const cardName   = desc[0] || pregen.name;
     const cardAge    = desc[1] || "";
@@ -1617,21 +1513,13 @@ function loadPregen(idx) {
   if (!confirm(`Load "${pregen.name}"? Your current sheet will be replaced.`)) return;
   closePregenModal();
   newCharacter();
-  setTimeout(() => {
-    restoreSheet(pregen.data);
-    saveSheet();
-  }, 50);
+  setTimeout(() => { restoreSheet(pregen.data); saveSheet(); }, 50);
 }
 
-// Close button
 document.getElementById("pregen-close-btn")
   .addEventListener("click", closePregenModal);
-
-// Backdrop click closes modal
 document.querySelector(".pregen-modal__backdrop")
   .addEventListener("click", closePregenModal);
-
-// Escape key closes modal
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closePregenModal();
 });
@@ -1734,7 +1622,48 @@ document.getElementById("char-import-input")?.addEventListener("change", (e) => 
 });
 
 /* ================================================
-   INIT CALLS
+   INIT
+   ================================================ */
+OBR.onReady(async () => {
+  localStorage.removeItem("fromRuinCharacter_v1");
+  localStorage.removeItem("fromRuinCharacter_v2");
+  localStorage.removeItem("fromRuinCharacter_v3");
+  localStorage.removeItem("fromRuinCharacter_v4");
+  localStorage.removeItem("fromRuinCharacter_v5");
+  localStorage.removeItem("fromRuinCharacter_v6");
+  localStorage.removeItem("fromRuinCharacter_v7");
+  localStorage.removeItem("fromRuinCharacter_v8");
+  localStorage.removeItem("fromRuinCharacter_v9");
+  localStorage.removeItem("fromRuinCharacter_v10");
+  localStorage.removeItem("fromRuinCharacter_v11");
+  localStorage.removeItem("fromRuinCharacter_v12");
+  localStorage.removeItem("fromRuinCharacter_v13");
+
+  const saved = await loadSheet();
+  if (saved) {
+    restoreSheet(saved);
+  } else {
+    updateAllPairs();
+  }
+
+  document.getElementById("character-sheet").addEventListener("input",  saveSheet);
+  document.getElementById("character-sheet").addEventListener("change", saveSheet);
+  document.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    el.addEventListener("input", saveSheet);
+    el.addEventListener("blur",  saveSheet);
+  });
+
+  OBR.room.onMetadataChange(async (meta) => {
+    const playerKey = await getPlayerKey();
+    const block = meta[STORAGE_KEY];
+    if (!block || !block[playerKey]) {
+      saveSheet();
+    }
+  });
+});
+
+/* ================================================
+   INIT CALLS (outside OBR.onReady — DOM is ready)
    ================================================ */
 injectGearDieIcons();
 wireRowDieIcons();
