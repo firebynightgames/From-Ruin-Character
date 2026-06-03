@@ -8,11 +8,8 @@
   <script type="module" src="script.js"></script>
 </head>
 <body>
+<div id="character-sheet">
 
-<div id="sheet-layout">
-
-  <div id="character-sheet">
-    
   <div class="sheet-combined-header">
 
     <!-- ============================================
@@ -384,93 +381,69 @@
   </div>
 </div> 
 
-  </div><!-- end #character-sheet -->
+</div><!-- end #character-sheet -->
 
-  <div id="dice-tray" class="dice-tray" aria-label="Dice Pool Tray">
 
-    <button id="dice-tray-tab"
-            class="dice-tray__tab"
-            title="Dice Pool">
-      <img
-        src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg"
-        alt="dice"
-        class="dice-tray__tab-icon">
-    </button>
+ <!-- ================================================
+     CHARACTER MENU BUTTON — inside sheet header
+     ================================================ -->
+<!-- Add this inside .sheet-combined-header, before .sheet-header-area: -->
 
-    <div class="dice-tray__panel" id="dice-tray-panel">
+<!-- ================================================
+     DICE TRAY — Fixed right panel
+     ================================================ -->
+<div id="dice-tray" class="dice-tray" aria-label="Dice Pool Tray">
 
-      <button id="dice-tray-close"
-              class="dice-tray__close"
-              title="Close">
-        ✕
-      </button>
+  <button id="dice-tray-tab" class="dice-tray__tab" title="Dice Pool">
+    <img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="dice" class="dice-tray__tab-icon">
+  </button>
 
-      <div class="dice-tray__section">
-        <span class="dice-tray__section-label">Success</span>
+  <div class="dice-tray__panel" id="dice-tray-panel">
 
-        <div class="threshold-btns">
-          <button class="threshold-btn" data-threshold="4">4+</button>
-          <button class="threshold-btn threshold-btn--active"
-                  data-threshold="5">
-            5+
-          </button>
-          <button class="threshold-btn" data-threshold="6">6+</button>
-        </div>
+    <button id="dice-tray-close" class="dice-tray__close" title="Close">✕</button>
+
+    <div class="dice-tray__section">
+      <span class="dice-tray__section-label">Success</span>
+      <div class="threshold-btns">
+        <button class="threshold-btn" data-threshold="4">4+</button>
+        <button class="threshold-btn threshold-btn--active" data-threshold="5">5+</button>
+        <button class="threshold-btn" data-threshold="6">6+</button>
       </div>
-
-      <div class="dice-tray__section">
-        <span class="dice-tray__section-label">Difficulty</span>
-
-        <input
-          type="number"
-          id="dice-difficulty"
-          class="dice-tray__mod-input"
-          min="0"
-          max="20"
-          placeholder="0">
-      </div>
-
-      <div
-        class="dice-tray__columns"
-        id="dice-pool-display">
-      </div>
-
-      <div class="dice-tray__actions">
-        <button id="dice-roll-btn"
-                class="dice-tray__btn dice-tray__btn--roll">
-          Roll
-        </button>
-
-        <button id="dice-push-btn"
-                class="dice-tray__btn dice-tray__btn--push"
-                disabled>
-          Push
-        </button>
-
-        <button id="dice-clear-btn"
-                class="dice-tray__btn dice-tray__btn--clear">
-          Clear
-        </button>
-      </div>
-
-      <div id="dice-success-banner"
-           class="dice-tray__success-banner"
-           style="display:none;">
-      </div>
-
     </div>
 
-  </div><!-- end #dice-tray -->
+    <div class="dice-tray__section">
+      <span class="dice-tray__section-label">Difficulty</span>
+      <input type="number" id="dice-difficulty" class="dice-tray__mod-input"
+             min="0" max="20" placeholder="0">
+    </div>
 
-</div><!-- end #sheet-layout -->
+    <div class="dice-tray__columns" id="dice-pool-display"></div>
 
+    <div class="dice-tray__actions">
+      <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">Roll</button>
+      <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled>Push</button>
+      <button id="dice-clear-btn" class="dice-tray__btn dice-tray__btn--clear">Clear</button>
+    </div>
 
-<div id="pregen-modal"
-     class="pregen-modal"
-     aria-modal="true"
-     role="dialog"
-     aria-label="Choose a Pregen Character"
-     style="display:none;">
+    <div id="dice-success-banner" class="dice-tray__success-banner" style="display:none;"></div>
+
+  </div>
+</div>
+
+<!-- ================================================
+     PREGEN MODAL
+     ================================================ -->
+<div id="pregen-modal" class="pregen-modal" aria-modal="true" role="dialog" aria-label="Choose a Pregen Character" style="display:none;">
+  <div class="pregen-modal__backdrop"></div>
+  <div class="pregen-modal__box">
+    <div class="pregen-modal__header">
+      <span class="pregen-modal__title">Choose a Character</span>
+      <button class="pregen-modal__close" id="pregen-close-btn" title="Close">✕</button>
+    </div>
+    <p class="pregen-modal__subtitle">Select a pregen to load, or close to start from scratch.</p>
+    <div class="pregen-card-grid" id="pregen-card-grid"></div>
+  </div>
+</div>
 
 </body>
 </html>
