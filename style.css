@@ -113,7 +113,6 @@ html, body {
   flex-direction: column;
   box-sizing: border-box;
   margin-bottom: 0;
-  position: relative;
 }
 
 /* ================================================
@@ -1339,7 +1338,7 @@ input.single-digit {
 }
 
 .dice-tray__tab {
-  position: absolute;
+  position: fixed;
   top: 50%;
   right: 0;
   transform: translateY(-50%);
