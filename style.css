@@ -17,7 +17,7 @@ body {
 }
 
 #character-sheet {
-  flex: 0 0 440px;
+  flex: 0 0 420px;
   margin-right: 110px;  /* ← add this */
   height: 100%;
   overflow-y: scroll;
@@ -38,7 +38,7 @@ body {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important; 
-  width: 370px !important;
+  width: 350px !important;
   height: 65px !important;
   position: relative !important;
   background: transparent !important;
