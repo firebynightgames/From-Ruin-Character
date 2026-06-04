@@ -1046,7 +1046,7 @@ function updateSuccessBanner() {
   headline.textContent = successes === 0
     ? `✗ No Successes (${threshold}+)`
     : `✔ ${successes} Success${successes !== 1 ? "es" : ""} (${threshold}+)`;
-  if (hasPushed) headline.textContent += " — Pushed";
+  if (hasPushed) headline.textContent += " *Pushed*";
   banner.appendChild(headline);
 
   const ones = document.createElement("span");
@@ -1067,7 +1067,9 @@ if (totalOnes > 0) {
     const gearLabel = activeGear?.label || "Gear";
     parts.push(`${gearOnes} ${gearLabel}`);
   }
-  ones.textContent = `⚠ Stress: ${parts.join(", ")}`;
+/*  ones.textContent = `⚠ Stress: ${parts.join("")}`;
+*/
+
 } else {
   ones.textContent = "⚠ Stress: None";
 }
