@@ -1053,27 +1053,6 @@ function makePip(val, type, pushEntry, globalIndex = 0) {
 /* -----------------------------------------------
    Pip element
    ----------------------------------------------- */
-function makePip(val, type, pushEntry) {
-  const threshold = getThreshold();
-  const isSuccess = val >= threshold;
-  const isOne     = val === 1;
-  const pushed    = pushEntry?.pushed ?? false;
-  const kept      = pushEntry !== undefined && !pushed;
-
-  const pip = document.createElement("span");
-  pip.className = [
-    "die-slot__pip",
-    `die-slot__pip--${type}`,
-    isOne               ? "die-slot__pip--one"     : "",
-    isSuccess && !isOne ? "die-slot__pip--success"  : "",
-    !isSuccess && !isOne ? "die-slot__pip--fail"    : "",
-    pushed ? "die-slot__pip--pushed" : "",
-    kept   ? "die-slot__pip--kept"   : ""
-  ].filter(Boolean).join(" ");
-  pip.textContent = val;
-  return pip;
-}
-
 function updateSuccessBanner() {
   const banner = document.getElementById("dice-success-banner");
   if (!banner) return;
