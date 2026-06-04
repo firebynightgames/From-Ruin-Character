@@ -1054,25 +1054,24 @@ function updateSuccessBanner() {
 ones.className =
   "result-ones-summary" +
   (hasPushed && totalOnes > 0 ? " result-ones-summary--stress" : "");
-
 if (totalOnes > 0) {
   const parts = [];
+
   if (aptOnes > 0) {
     const aptNames = aptitudeQueue.map(
       a => a.apt.charAt(0).toUpperCase() + a.apt.slice(1)
     );
-    parts.push(`${aptOnes} ${aptNames.join("/")}`);
+    parts.push(`${aptNames.join("/")}: ${aptOnes}`);
   }
+
   if (gearOnes > 0) {
     const gearLabel = activeGear?.label || "Gear";
-    parts.push(`${gearOnes} ${gearLabel}`);
+    parts.push(`${gearLabel}: ${gearOnes}`);
   }
-   
-ones.textContent = `⚠ Stress: ${parts.join("")}`;
+
+  ones.textContent = `⚠ Stress:\n${parts.join("\n")}`;
 } else {
   ones.textContent = "⚠ Stress: None";
-}
-banner.appendChild(ones);
 }
 
 /* -----------------------------------------------
