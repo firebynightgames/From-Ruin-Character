@@ -995,10 +995,6 @@ function renderDiceTray() {
 
   updatePushBtn();
   updateSuccessBanner();
-
-  if (rawAptCount() + rawGearCount() > 0 && !trayIsOpen) {
-    openTray();
-  }
 }
 
 /* -----------------------------------------------
@@ -1105,27 +1101,6 @@ function clearDiceTray() {
   updateGearIconStates();
   renderDiceTray();
 }
-
-/* -----------------------------------------------
-   Tray open / close
-   ----------------------------------------------- */
-function openTray() {
-  trayIsOpen = true;
-  document.getElementById("dice-tray-panel")?.classList.add("is-open");
-  document.getElementById("dice-tray-tab")?.classList.add("is-open");
-}
-
-function closeTray() {
-  trayIsOpen = false;
-  document.getElementById("dice-tray-panel")?.classList.remove("is-open");
-  document.getElementById("dice-tray-tab")?.classList.remove("is-open");
-}
-
-document.getElementById("dice-tray-tab")
-  ?.addEventListener("click", () => trayIsOpen ? closeTray() : openTray());
-
-document.getElementById("dice-tray-close")
-  ?.addEventListener("click", closeTray);
 
 /* -----------------------------------------------
    Roll
