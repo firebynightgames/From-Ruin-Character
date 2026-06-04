@@ -1,1784 +1,1696 @@
-/* ================================================
-   GLOBAL
-   ================================================ */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
-body {
-  display: flex;
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
-#character-sheet {
-  flex: 0 0 440px;
-  margin-right: 110px;  /* ← add this */
-  height: 100%;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  padding-bottom: 20px;
-  box-sizing: border-box;
-}
-
-#character-sheet,
-#character-sheet * {
-  font-family: "Century Gothic", sans-serif;
-}
+import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
 
 /* ================================================
-   HEADER AREA & PERFECT LOGO CROP
+   CHARACTER MODEL
    ================================================ */
-.sheet-header-area {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important; 
-  width: 540px !important;
-  height: 65px !important;
-  position: relative !important;
-  background: transparent !important;
-  box-sizing: border-box;
-  margin-bottom: 10px;
-  overflow: visible !important;
+const character = {
+  stress: {
+    finesse_devise: Array(6).fill(false),
+    exert_adapt:    Array(6).fill(false),
+    sense_resist:   Array(6).fill(false),
+    deceive_relate: Array(6).fill(false)
+  },
+  trauma: {
+    finesse_devise: Array(6).fill(false),
+    exert_adapt:    Array(6).fill(false),
+    sense_resist:   Array(6).fill(false),
+    deceive_relate: Array(6).fill(false)
+  },
+  pairConditions: {
+    finesse_devise: false,
+    exert_adapt:    false,
+    sense_resist:   false,
+    deceive_relate: false
+  }
+};
+
+/* ================================================
+   CONSTANTS
+   ================================================ */
+const STORAGE_KEY    = "com.firebynightgames.from-ruin/character";
+const DICE_SOURCE_ID = "com.firebynightgames.from-ruin";
+const DIE_SVG_URL    = "https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg";
+
+/* ================================================
+   PAIR-ENGINE CHECKBOX GUARD
+   ================================================ */
+function isPairEngineCheckbox(el) {
+  return el.type === "checkbox" && (
+    el.classList.contains("stress-box") ||
+    el.classList.contains("trauma-box") ||
+    el.id === "cond-finesse-devise" ||
+    el.id === "cond-exert-adapt"    ||
+    el.id === "cond-sense-resist"   ||
+    el.id === "cond-deceive-relate"
+  );
 }
 
-.header-logo-container {
-  width: 225px; 
-  height: 85px;
-  overflow: hidden;
+/* ================================================
+   SAVE
+   ================================================ */
+async function saveSheet() {
+  const root   = document.getElementById("character-sheet");
+  const named  = {};
+  const checks = {};
+  const desc   = [];
+
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    if (el.name.startsWith("attr_wound_")) return;
+    if (el.name.startsWith("attr_relic_")) return;
+    if (el.type === "checkbox") named[el.name] = el.checked;
+    else named[el.name] = el.value;
+  });
+
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    checks[el.id] = el.checked;
+  });
+
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    desc.push(el.innerHTML);
+  });
+
+  const features = [];
+  root.querySelectorAll(".features-list textarea").forEach(el => features.push(el.value));
+
+  const drives = [];
+  root.querySelectorAll(".drives-list textarea").forEach(el => drives.push(el.value));
+
+  const flaws = [];
+  root.querySelectorAll(".flaws-list textarea").forEach(el => flaws.push(el.value));
+
+  const wounds = [];
+  root.querySelectorAll(".wound-row").forEach(row => {
+    const apt     = row.querySelector("select")?.value ?? "";
+    const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
+    const dsc     = row.querySelector("input[name*='desc']")?.value ?? "";
+    const patched = row.querySelector("input.wound-patch")?.checked ?? false;
+    if (apt || sev || dsc || patched) wounds.push({ apt, sev, dsc, patched });
+  });
+
+  const relics = [];
+  root.querySelectorAll(".relic-row textarea").forEach(el => relics.push(el.value));
+
+  const pairState = {
+    stress:         character.stress,
+    trauma:         character.trauma,
+    pairConditions: character.pairConditions
+  };
+
+  const data = { named, checks, desc, features, drives, flaws, relics, wounds, pairState };
+
+  try {
+    const playerKey = await getPlayerKey();
+    const existing  = await OBR.room.getMetadata();
+    const existingBlock = (existing[STORAGE_KEY] ?? {});
+    const merged = { ...existingBlock, [playerKey]: data };
+    await OBR.room.setMetadata({ [STORAGE_KEY]: merged });
+  } catch (err) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
 }
 
-.header-logo-container .sheet-logo-img {
-  width: 420px;
-  height: auto;
-  object-fit: fill; 
-  object-position: left top;
+/* ================================================
+   LOAD
+   ================================================ */
+async function getPlayerKey() {
+  const id = await OBR.player.getId();
+  return `${STORAGE_KEY}.${id}`;
 }
 
-.header-counter-box {
-  display: flex;
-  flex-direction: column;
-  width: 140px; 
-  height: 65px; 
-  border: 2px solid #000;
-  background: #fff;
-  box-sizing: border-box;
+async function loadSheet() {
+  try {
+    const playerKey = await getPlayerKey();
+    const meta      = await OBR.room.getMetadata();
+    const block     = meta[STORAGE_KEY];
+    if (block && block[playerKey]) return block[playerKey];
+  } catch (err) {
+    console.warn("[FromRuin] Cloud load failed, trying localStorage:", err);
+  }
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
 }
 
-.counter-header-title {
-  background-color: #000;
-  color: #fff;
-  text-transform: uppercase;
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 1px;
-  text-align: center;
-  padding: 4px 0;
-  line-height: 1;
+function restoreSheet(saved) {
+  if (!saved) return;
+  const root = document.getElementById("character-sheet");
+
+  if (saved.named) {
+    Object.entries(saved.named).forEach(([name, value]) => {
+      const el = root.querySelector(`[name="${name}"]`);
+      if (!el) return;
+      if (el.type === "checkbox") el.checked = !!value;
+      else el.value = value ?? "";
+    });
+  }
+
+  if (saved.checks) {
+    Object.entries(saved.checks).forEach(([id, checked]) => {
+      const el = root.querySelector(`#${id}`);
+      if (el) el.checked = !!checked;
+    });
+  }
+
+  if (saved.desc) {
+    root.querySelectorAll(".desc-field[contenteditable]").forEach((el, i) => {
+      if (saved.desc[i] !== undefined) el.innerHTML = saved.desc[i];
+    });
+  }
+
+  if (saved.features?.length) {
+    const list = root.querySelector(".features-list");
+    if (list) {
+      saved.features.forEach((text, i) => {
+        let li = list.querySelectorAll("li")[i];
+        if (!li) {
+          li = document.createElement("li");
+          li.innerHTML = '<textarea placeholder="Add a feature..." rows="1"></textarea>';
+          list.appendChild(li);
+        }
+        const ta = li.querySelector("textarea");
+        if (ta) { ta.value = text; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+      });
+    }
+  }
+
+  if (saved.drives?.length) {
+    const list = root.querySelector(".drives-list");
+    if (list) {
+      saved.drives.forEach((text, i) => {
+        let li = list.querySelectorAll("li")[i];
+        if (!li && i < 3) {
+          li = document.createElement("li");
+          li.innerHTML = `
+            <div class="drive-item">
+              <textarea placeholder="Add a drive..." rows="1" name="attr_drive_${i + 1}"></textarea>
+              <div class="drive-tracker">
+                <input type="checkbox" name="attr_drive_${i + 1}_cb_1" class="diamond-box db-1">
+                <input type="checkbox" name="attr_drive_${i + 1}_cb_2" class="diamond-box db-2">
+                <input type="checkbox" name="attr_drive_${i + 1}_cb_3" class="diamond-box db-3">
+              </div>
+            </div>`;
+          list.appendChild(li);
+        }
+        const ta = li?.querySelector("textarea");
+        if (ta) { ta.value = text; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+      });
+    }
+  }
+
+  if (saved.flaws?.length) {
+    const list = root.querySelector(".flaws-list");
+    if (list) {
+      saved.flaws.forEach((text, i) => {
+        let li = list.querySelectorAll("li")[i];
+        if (!li && i < 3) {
+          li = document.createElement("li");
+          li.innerHTML = `<textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_${i + 1}"></textarea>`;
+          list.appendChild(li);
+        }
+        const ta = li?.querySelector("textarea");
+        if (ta) { ta.value = text; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+      });
+    }
+  }
+
+  if (saved.relics?.length) {
+    const rows = document.querySelectorAll(".relic-row");
+    saved.relics.forEach((text, i) => {
+      let row = rows[i];
+      if (!row) {
+        addRelicRow();
+        row = relicContainer.querySelectorAll(".relic-row")[i];
+      }
+      const ta = row?.querySelector("textarea");
+      if (ta) { ta.value = text; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+    });
+  }
+
+  if (saved.wounds?.length) {
+    const container = root.querySelector("#wounds-container");
+    if (container) {
+      container.querySelectorAll(".wound-row").forEach(r => r.remove());
+      saved.wounds.forEach((w, i) => {
+        const row = createWoundRow(i + 1);
+        container.appendChild(row);
+        row.querySelector("select").value = w.apt ?? "";
+        const sev = row.querySelector("input[name*='severity']");
+        const dsc = row.querySelector("input[name*='desc']");
+        const pat = row.querySelector("input.wound-patch");
+        if (sev) sev.value   = w.sev     ?? "";
+        if (dsc) dsc.value   = w.dsc     ?? "";
+        if (pat) pat.checked = !!w.patched;
+      });
+      container.appendChild(createWoundRow(saved.wounds.length + 1));
+    }
+  }
+
+  restorePairState(saved.pairState);
+  syncSummary();
+  calculateTotalBulk();
 }
 
-.counter-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-grow: 1;
-}
+/* ================================================
+   RESTORE PAIR STATE
+   ================================================ */
+function restorePairState(pairState) {
+  if (!pairState) { updateAllPairs(); return; }
+  const { stress, trauma, pairConditions } = pairState;
 
-.counter-body input[type="number"] {
-  width: 35px;
-  border: none;
-  background: transparent;
-  text-align: center;
-  font-size: 16px;
-  font-family: "Century Gothic", sans-serif;
-  font-weight: bold;
-}
+  Object.entries(pairConditions).forEach(([key, checked]) => {
+    const el = document.getElementById(`cond-${key.replace("_", "-")}`);
+    if (el) el.checked = !!checked;
+    character.pairConditions[key] = !!checked;
+  });
 
-.counter-body input[type="number"]:focus {
-  outline: none;
-}
+  applyCapsOnly();
 
-.box-slash {
-  font-size: 16px;
-  font-weight: bold;
-  margin: 0 4px;
-  color: #000;
-}
+  Object.entries(stress).forEach(([key, arr]) => {
+    const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
+    if (!prefix) return;
+    const { apt1, apt2 } = PAIR_MAP[prefix];
+    const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
+    const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
+    const stressCap = Math.min(val1, val2);
+    document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, i) => {
+      box.checked = i < stressCap ? !!arr[i] : false;
+      character.stress[key][i] = box.checked;
+    });
+  });
 
-.sheet-combined-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: #ffffff;
-  box-shadow: 0 6px 8px -6px rgba(0,0,0,0.3);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  margin-bottom: 0;
+  Object.entries(trauma).forEach(([key, arr]) => {
+    const prefix = Object.keys(PAIR_MAP).find(p => PAIR_MAP[p].key === key);
+    if (!prefix) return;
+    const { apt1, apt2 } = PAIR_MAP[prefix];
+    const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
+    const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
+    const traumaCap = Math.max(val1, val2);
+    document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, i) => {
+      box.checked = i < traumaCap ? !!arr[i] : false;
+      character.trauma[key][i] = box.checked;
+    });
+  });
+
+  updateAllPairs();
+  updateCurrentAptitudes();
 }
 
 /* ================================================
    TABS
    ================================================ */
-.tab-menu {
-  display: flex;
-  background: #222;
-  width: 100%;
-  margin-top: 5px;
-  margin-bottom: 0 !important;
-  box-sizing: border-box;
-}
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', (evt) => {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-#accordion,
-#accordion-gear,
-#accordion-spells {
-  width: 100%;
-  margin-top: 0 !important;
-  box-sizing: border-box;
-}
+    document.getElementById(btn.dataset.tab).classList.add('active-tab');
+    evt.currentTarget.classList.add('active');
 
-.tab-content {
-  display: none;
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
+    const isGearTab = btn.dataset.tab === 'tab-2';
+    const sheet = document.getElementById('character-sheet');
+    isGearTab ? sheet.classList.add('gear-active') : sheet.classList.remove('gear-active');
 
-.tab-content.active-tab .acc-section:first-child .acc-header {
-  margin-top: 0 !important;
-  border-top: none;
-}
-
-.tab-btn {
-  flex: 1;
-  background: #fff;
-  color: #000;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background 0.2s;
-}
-
-.tab-btn:hover       { background: #444; color: #fff; }
-.tab-btn.active      { background: #222; color: #fff; font-weight: bold; }
-.tab-content.active-tab { display: block; }
+    document.getElementById('xp-header').style.display    = isGearTab ? 'none'  : 'block';
+    document.getElementById('xp-body').style.display      = isGearTab ? 'none'  : 'flex';
+    document.getElementById('bulk-header').style.display  = isGearTab ? 'block' : 'none';
+    document.getElementById('bulk-body').style.display    = isGearTab ? 'flex'  : 'none';
+    document.getElementById('bulk-penalty').style.display = isGearTab ? 'block' : 'none';
+  });
+});
 
 /* ================================================
-   EDGE TRACK
+   BULK CALCULATION
    ================================================ */
-.edge-track {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  background: #fff;
-  box-sizing: border-box;
+function calculateTotalBulk() {
+  let total = 0;
+  document.querySelectorAll('input[name*="_bulk"]').forEach(input => {
+    const val = parseFloat(input.value);
+    if (!isNaN(val)) total += val;
+  });
+
+  let threshold = 20;
+  if (total > 20) threshold = Math.ceil((total - 20) / 5) * 5 + 20;
+  const penalty = total <= 20 ? 0 : Math.ceil((total - 20) / 5);
+  const maxed   = penalty >= 6;
+
+  const totalEl     = document.getElementById('bulk-total');
+  const thresholdEl = document.getElementById('bulk-threshold');
+  const penaltyEl   = document.getElementById('bulk-penalty');
+
+  if (totalEl)     { totalEl.textContent     = total;     totalEl.style.color     = maxed ? 'red' : '#000'; }
+  if (thresholdEl) { thresholdEl.textContent = threshold; thresholdEl.style.color = maxed ? 'red' : '#000'; }
+  if (penaltyEl) {
+    penaltyEl.textContent = penalty <= 0 ? '' : maxed ? '+6 Difficulty (Max)' : `+${penalty} Difficulty`;
+  }
 }
 
-.edge-label {
-  color: #000;
-  font-size: 18px;
-  font-weight: bold;
-  text-transform: uppercase;
-  margin-right: 6px;
-  white-space: nowrap;
-}
-
-.edge-box {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  width: 22px !important;
-  height: 22px !important;
-  display: inline-block;
-  position: relative !important;
-  background-color: transparent !important;
-  border: 1px solid #333333 !important;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  margin: 0;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  border-radius: 2px;
-}
-
-.edge-box:not(:checked):hover {
-  border-color: #27ae60 !important;
-  background-color: #1e8449 !important;
-}
-
-.edge-box:checked {
-  background-color: #2ecc71 !important;
-  border-color: #6cc6a0 !important;
-}
-
-.edge-box:checked:hover {
-  background-color: #27ae60 !important;
-  border-color: #1e8449 !important;
-}
+document.getElementById('character-sheet').addEventListener('input', (e) => {
+  if (e.target.name?.includes('_bulk')) calculateTotalBulk();
+});
+calculateTotalBulk();
 
 /* ================================================
-   ACCORDION
+   ACCORDION TOGGLES
    ================================================ */
-#accordion, #accordion-gear {
-  width: 100%;
-  box-sizing: border-box;
-}
+document.querySelectorAll('.acc-header').forEach(button => {
+  button.addEventListener('click', () => {
+    button.nextElementSibling.classList.toggle('open');
+  });
+});
 
-.acc-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 6px 10px;
-  background: #222;
-  color: #fff;
-  border: 1px solid #444;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  box-sizing: border-box;
-}
-
-.acc-header:hover { background: #444; }
-
-.acc-caret {
-  font-size: 9px;
-  transition: transform 0.2s ease-in-out;
-  display: inline-block;
-}
-
-.acc-header:has(+ .acc-body.open) .acc-caret {
-  transform: rotate(180deg);
-}
-
-.acc-body {
-  display: none;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ccc;
-  border-top: none;
-  font-size: 11px;
-  color: #333;
-  box-sizing: border-box;
-}
-
-.acc-body.open { display: block; }
-
-.acc-body.weapons-body,
-.acc-body.armor-body {
-  padding-top: 0;
-  padding-bottom: 0;
+/* ================================================
+   WEAPON BLOCK GENERATOR
+   ================================================ */
+const weaponContainer = document.getElementById('weapons-container');
+if (weaponContainer) {
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    html += `
+      <div class="weapon-block slot-${i}">
+        <div class="weapon-row">
+          <div class="field-wrap col-name">
+            <input type="text" name="attr_weapon_name_${i}" placeholder="-">
+          </div>
+          <button class="gear-die-icon gear-die-icon--row col-die" data-slot-key="weapon-${i}" title="Add Weapon ${i} gear dice">
+            <img src="${DIE_SVG_URL}" alt="d6" class="die-icon-img">
+          </button>
+          <div class="field-wrap col-gear">
+            <div class="gear-double-input">
+              <input type="number" class="single-digit" name="attr_weapon_gear_a_${i}" placeholder="-">
+              <input type="number" class="single-digit" name="attr_weapon_gear_b_${i}" placeholder="-">
+            </div>
+          </div>
+          <div class="field-wrap col-hand">
+            <input type="number" name="attr_weapon_hand_${i}" placeholder="-">
+          </div>
+          <div class="field-wrap col-size">
+            <input type="number" name="attr_weapon_size_${i}" placeholder="-">
+          </div>
+          <div class="field-wrap col-damage">
+            <input type="number" name="attr_weapon_damage_${i}" placeholder="-">
+          </div>
+          <div class="field-wrap col-bulk">
+            <input type="number" name="attr_weapon_bulk_${i}" placeholder="-">
+          </div>
+        </div>
+        <div class="weapon-features-row">
+          <label>Features:</label>
+          <input type="text" name="attr_weapon_features_${i}" placeholder="...">
+        </div>
+      </div>`;
+  }
+  weaponContainer.innerHTML = html;
 }
 
 /* ================================================
-   APTITUDES PANEL
+   ARMOR BLOCK GENERATOR
    ================================================ */
-.sheet-panel {
-  position: relative !important;
-  width: 100% !important;
-  max-width: 420px !important;
-  aspect-ratio: 420 / 524 !important;
-  height: auto !important;
-  padding: 0 !important;
-  border: none !important;
-  background: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_aptitudes.jpg") no-repeat center / 100% 100% !important;
-  box-sizing: border-box;
-}
-
-.aptitude-field {
-  position: absolute;
-  height: 11%;
-  font-size: 24px;
-  border: none !important;
-  background: transparent !important;
-  text-align: center;
-  outline: none;
-  -moz-appearance: textfield;
-}
-
-.left-apt  { left: 9.6%;   width: 12.6%; }
-.right-apt { left: 76.5%;  width: 12.6%; }
-
-.row-1 { top: 11%; }
-.row-2 { top: 33.175%; }
-.row-3 { top: 55.75%; }
-.row-4 { top: 78%; }
-
-.apt-current {
-  position: absolute;
-  font-size: 16px;
-  font-weight: bold;
-  color: #C0392B;
-  text-align: center;
-  pointer-events: none;
-  width: 12.6%;
-}
-
-.apt-current.left-apt  { left: 15%; }
-.apt-current.right-apt { left: 82%; }
-
-.apt-current.row-1 { top: 11.5%; }
-.apt-current.row-2 { top: 34%; }
-.apt-current.row-3 { top: 56.5%; }
-.apt-current.row-4 { top: 79%; }
-
-/* ================================================
-   CHECKBOXES — CONDITIONS, STRESS, TRAUMA
-   ================================================ */
-.condition-checkbox,
-.track {
-  position: absolute;
-  width: 4.5%;
-  height: 3.6%;
-  border: none !important;
-  cursor: pointer;
-  appearance: none;
-  background: transparent;
-  transition: background 0.15s ease;
-}
-
-.condition-checkbox:hover,
-.track:hover                  { background: rgba(244, 162, 89, 0.5); }
-.condition-checkbox:checked,
-.track:checked                { background: #f4a259 !important; }
-.condition-checkbox:checked:hover,
-.track:checked:hover          { background: #d9823f !important; }
-
-.condition-checkbox { left: 37.75%; }
-.cond-row-1 { top: 5.95%; }
-.cond-row-2 { top: 28.35%; }
-.cond-row-3 { top: 50.65%; }
-.cond-row-4 { top: 73.15%; }
-
-.col-1 { left: 42.8%; }
-.col-2 { left: 47.7%; }
-.col-3 { left: 52.675%; }
-.col-4 { left: 57.5%; }
-.col-5 { left: 62.5%; }
-.col-6 { left: 67.5%; }
-
-.stress.row-1 { top: 12.25%; }
-.stress.row-2 { top: 34.75%; }
-.stress.row-3 { top: 56.9%; }
-.stress.row-4 { top: 79.4%; }
-
-.trauma.row-1 { top: 17%; }
-.trauma.row-2 { top: 39.25%; }
-.trauma.row-3 { top: 61.5%; }
-.trauma.row-4 { top: 83.95%; }
-
-/* ================================================
-   DESCRIPTION PANEL
-   ================================================ */
-.desc-text {
-  white-space: normal;
-  line-height: 1.6;
-  font-size: 20px;
-  color: #222;
-}
-
-.desc-field {
-  display: inline-block;
-  min-width: 40px;
-  max-width: 100%;
-  padding: 2px 4px;
-  border-bottom: 2px dashed #222;
-  font-size: 20px;
-  line-height: 1.2;
-  outline: none;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.desc-field:empty::before {
-  content: attr(data-placeholder);
-  color: #999;
-  font-weight: bold;
+const armorContainer = document.getElementById('armor-container');
+if (armorContainer) {
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    html += `
+      <div class="armor-block armor-slot-${i}">
+        <div class="armor-row">
+          <div class="field-wrap col-armor-name">
+            <input type="text" name="attr_armor_name_${i}" placeholder="-">
+          </div>
+          <button class="gear-die-icon gear-die-icon--row col-die" data-slot-key="armor-${i}" title="Add Armor ${i} gear dice">
+            <img src="${DIE_SVG_URL}" alt="d6" class="die-icon-img">
+          </button>
+          <div class="field-wrap col-armor-gear">
+            <div class="gear-double-input">
+              <input type="number" class="single-digit" name="attr_armor_gear_a_${i}" placeholder="-">
+              <input type="number" class="single-digit" name="attr_armor_gear_b_${i}" placeholder="-">
+            </div>
+          </div>
+          <div class="field-wrap col-armor-features">
+            <input type="text" name="attr_armor_features_${i}" placeholder="...">
+          </div>
+          <div class="field-wrap col-armor-bulk">
+            <input type="number" name="attr_armor_bulk_${i}" placeholder="-">
+          </div>
+        </div>
+      </div>`;
+  }
+  armorContainer.innerHTML = html;
 }
 
 /* ================================================
-   FEATURES LIST
+   SPELLS LIST
    ================================================ */
-.features-list {
-  padding-left: 24px;
-  margin: 0;
-  margin-bottom: 10px !important;
-  padding-right: 15px;
-  list-style: disc;
+const spellsContainer = document.getElementById('spells-container');
+
+function createSpellRowHTML(index) {
+  return `
+    <li class="spell-item-node">
+      <div class="spell-item-grid">
+        <textarea name="attr_spell_desc_${index}" placeholder="Add a spell or ritual..." rows="1"></textarea>
+        <input type="number" name="attr_spell_difficulty_${index}" placeholder="-">
+      </div>
+    </li>`;
 }
 
-.features-list li {
-  margin-bottom: 12px;
-  vertical-align: top;
+if (spellsContainer) {
+  let html = '';
+  for (let i = 1; i <= 10; i++) html += createSpellRowHTML(i);
+  spellsContainer.innerHTML = html;
+
+  spellsContainer.addEventListener('input', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+
+    const all  = spellsContainer.querySelectorAll('.spell-item-grid textarea');
+    const last = all[all.length - 1];
+    if (e.target === last && last.value.trim() !== '') {
+      const div = document.createElement('div');
+      div.innerHTML = createSpellRowHTML(all.length + 1);
+      spellsContainer.appendChild(div.firstElementChild);
+    }
+  });
 }
-
-.features-list textarea {
-  width: 100%;
-  border: none;
-  border-bottom: 1px dashed #666;
-  background: transparent;
-  padding: 0 0 0 6px;
-  font-size: 16px;
-  font-weight: bold;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  vertical-align: top;
-  line-height: 24px;
-  background-size: 100% 24px;
-}
-
-/* ================================================
-   DRIVES LIST & DIAMOND TRACKER
-   ================================================ */
-.drives-list {
-  padding-left: 24px;
-  margin: 0;
-  margin-bottom: 10px !important;
-  padding-right: 15px;
-  list-style: disc;
-}
-
-.drives-list li {
-  margin-bottom: 8px;
-}
-
-.drive-item {
-  display: flex;
-  align-items: flex-end;
-  gap: 15px;
-  width: 100%;
-}
-
-.drive-item textarea {
-  flex: 1;
-  border: none;
-  border-bottom: 1px dashed #666;
-  background: transparent;
-  padding: 0 0 0 6px;
-  font-family: "Century Gothic", AppleGothic, sans-serif !important;
-  font-size: 16px;
-  font-weight: bold;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  line-height: 24px;
-}
-
-.drive-tracker {
-  position: relative;
-  width: 80px;
-  height: 58px;
-  background: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_drive.jpg') no-repeat center center / contain;
-  flex-shrink: 0;
-}
-
-.diamond-box {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  border: 1px solid #333;
-  background-color: transparent;
-  cursor: pointer;
-  transform: rotate(45deg);
-  transition: all 0.15s ease;
-  margin: 0;
-}
-
-.diamond-box:checked          { background-color: #6cc6a0; border-color: #27ae60; }
-.diamond-box:hover            { border-color: #27ae60; background-color: #1e8449; }
-.diamond-box:checked:hover    { background-color: #1e8449; border-color: #27ae60; }
-
-.db-1 { left: 6%;     top: 45%; }
-.db-2 { left: 35%;    top: 45%; }
-.db-3 { left: 64.25%; top: 45%; }
-
-/* ================================================
-   FLAWS LIST
-   ================================================ */
-.flaws-list {
-  padding-left: 24px;
-  margin: 0;
-  margin-bottom: 10px !important;
-  padding-right: 15px;
-  list-style: disc;
-}
-
-.flaws-list li {
-  margin-bottom: 12px;
-  vertical-align: top;
-}
-
-.flaws-list textarea {
-  width: 100%;
-  border: none;
-  border-bottom: 1px dashed #666;
-  background: transparent;
-  padding: 0 0 0 6px;
-  font-family: "Century Gothic", AppleGothic, sans-serif !important;
-  font-size: 16px;
-  font-weight: bold;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  vertical-align: top;
-  line-height: 24px;
-}
-
-/* ================================================
-   WEAPONS
-   ================================================ */
-.weapons-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 4px 0;
-  background-color: #ffffff;
-  box-sizing: border-box;
-}
-
-.weapon-block {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  transition: all 0.25s ease-in-out;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 4px;
-}
-
-.weapons-headers {
-  display: block;
-  position: relative;
-  width: 100%;
-  height: 18px;
-  margin-bottom: 4px;
-  box-sizing: border-box;
-}
-
-.weapons-headers span {
-  position: absolute;
-  bottom: 2px;
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #111111;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.weapon-row {
-  position: relative;
-  width: 100%;
-  height: 49px;
-  background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_weapon.jpg');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-}
-
-.weapon-features-row {
-  display: flex;
-  align-items: center;
-  width: 98%;
-  padding-left: 28px;
-  box-sizing: border-box;
-}
-
-.weapon-features-row label {
-  font-size: 11px;
-  font-weight: bold;
-  color: #555;
-  text-transform: uppercase;
-  margin-right: 6px;
-  white-space: nowrap;
-}
-
-.weapon-features-row input {
-  flex: 1;
-  border: none !important;
-  border-bottom: 1px dashed #999 !important;
-  background: transparent !important;
-  font-size: 12px;
-  font-family: inherit;
-  font-weight: normal;
-  color: #111;
-  padding: 1px 4px;
-  outline: none;
-}
-
-.weapon-features-row input:focus {
-  border-bottom-color: #222 !important;
-}
-
-.field-wrap {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  bottom: 16px;
-  height: 18px;
-}
-
-.field-wrap label { display: none !important; }
-
-.field-wrap input {
-  width: 100%;
-  height: 100%;
-  border: none !important;
-  background: transparent !important;
-  font-size: 14px;
-  font-family: inherit;
-  font-weight: bold;
-  color: #111;
-  padding: 0 2px;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.weapon-row .col-name input {
-  text-align: left;
-  padding-left: 6px;
-}
-
-.gear-double-input {
-  display: flex;
-  gap: 6px;
-  width: 100%;
-  height: 100%;
-}
-
-input.single-digit {
-  text-align: center;
-  padding: 0;
-  width: 100%;
-}
-
-.weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;    width: 37%; }
-.weapons-headers .hdr-name                            { text-align: left !important; padding-left: 6px; }
-.weapon-row .col-die                                  { left: 40%;   width: 4%;  }
-.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 44%;   width: 14%; }
-.weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 59%;   width: 9%; }
-.weapon-row .col-size, .weapons-headers .hdr-size     { left: 69%;   width: 9%; }
-.weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%; width: 9%; }
-.weapon-row .col-bulk, .weapons-headers .hdr-bulk     { left: 88.5%; width: 8.5%; }
 
 /* ================================================
    WOUNDS
    ================================================ */
-.wounds-container {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+const APTITUDES = ['Finesse','Devise','Exert','Adapt','Sense','Resist','Deceive','Relate'];
+
+function createWoundRow(index) {
+  const row = document.createElement('div');
+  row.className = 'wound-row';
+  row.innerHTML = `
+    <select name="attr_wound_apt_${index}">
+      <option value="">Select</option>
+      ${APTITUDES.map(a => `<option value="${a.toLowerCase()}">${a}</option>`).join('')}
+    </select>
+    <input type="text" name="attr_wound_severity_${index}" placeholder="Severity">
+    <input type="text" name="attr_wound_desc_${index}"     placeholder="Description">
+    <input type="checkbox" class="wound-patch" name="attr_wound_patch_${index}" style="justify-self:end;">`;
+  return row;
 }
 
-.wounds-column-headers,
-.wound-row {
-  display: grid;
-  grid-template-columns: 18% 15% 1fr 40px;
-  align-items: center;
-  gap: 6px;
-}
+const woundsContainer = document.getElementById('wounds-container');
+if (woundsContainer) {
+  const headers = document.createElement('div');
+  headers.className = 'wounds-column-headers';
+  headers.innerHTML = `
+    <span>Aptitude</span>
+    <span>Severity</span>
+    <span>Description</span>
+    <span style="text-align:right;">Patched</span>`;
+  woundsContainer.appendChild(headers);
+  woundsContainer.appendChild(createWoundRow(1));
 
-.wounds-column-headers {
-  margin-bottom: 4px;
-}
-
-.wounds-column-headers span {
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #111;
-  text-align: left;
-}
-
-.wounds-column-headers span:last-child { text-align: right; }
-
-.wound-row {
-  padding: 4px 0;
-  border-bottom: 1px dashed #ccc;
-}
-
-.wounds-container .wound-row:last-child { border-bottom: none; }
-
-.wound-row select,
-.wound-row input[type="text"] {
-  width: 100%;
-  border: none;
-  border-bottom: 1px dashed #666;
-  background: transparent;
-  font-family: "Century Gothic", sans-serif;
-  font-size: 13px;
-  color: #111;
-  padding: 2px 4px;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.wound-row select {
-  -webkit-appearance: none;
-  -moz-appearance: textfield;
-  appearance: textfield;
-  cursor: pointer;
-}
-
-.wound-patch {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border: 1px solid #333;
-  background: transparent;
-  border-radius: 2px;
-  cursor: pointer;
-  justify-self: end;
-  transition: background 0.15s ease;
-}
-
-.wound-patch:checked          { background-color: #6cc6a0; border-color: #27ae60; }
-.wound-patch:hover            { border-color: #27ae60; background-color: #1e8449; }
-.wound-patch:checked:hover    { border-color: #27ae60; background-color: #1e8449; }
-
-/* ================================================
-   ARMOR
-   ================================================ */
-.armor-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 4px 0;
-  background-color: #ffffff;
-  box-sizing: border-box;
-}
-
-.armor-block {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 4px;
-}
-
-.armor-features-row {
-  display: flex;
-  align-items: center;
-  width: 98%;
-  padding-left: 28px;
-  box-sizing: border-box;
-}
-
-.armor-features-row label {
-  font-size: 11px;
-  font-weight: bold;
-  color: #555;
-  text-transform: uppercase;
-  margin-right: 6px;
-  white-space: nowrap;
-}
-
-.armor-features-row input {
-  flex: 1;
-  border: none !important;
-  border-bottom: 1px dotted #999 !important;
-  background: transparent !important;
-  font-size: 14px;
-  font-family: inherit;
-  color: #111;
-  padding: 1px 4px;
-  outline: none;
-}
-
-.armor-features-row input:focus {
-  border-bottom-color: #222 !important;
-}
-
-/* Visibility engines */
-.slot-2, .slot-3, .slot-4, .slot-5 { display: none; opacity: 0; }
-.slot-1:not(:has(input[name="attr_weapon_name_1"]:placeholder-shown)) ~ .slot-2 { display: flex; opacity: 1; }
-.slot-2:not(:has(input[name="attr_weapon_name_2"]:placeholder-shown)) ~ .slot-3 { display: flex; opacity: 1; }
-.slot-3:not(:has(input[name="attr_weapon_name_3"]:placeholder-shown)) ~ .slot-4 { display: flex; opacity: 1; }
-.slot-4:not(:has(input[name="attr_weapon_name_4"]:placeholder-shown)) ~ .slot-5 { display: flex; opacity: 1; }
-
-.armor-slot-2, .armor-slot-3, .armor-slot-4, .armor-slot-5 { display: none; opacity: 0; }
-.armor-slot-1:not(:has(input[name="attr_armor_name_1"]:placeholder-shown)) ~ .armor-slot-2 { display: flex; opacity: 1; }
-.armor-slot-2:not(:has(input[name="attr_armor_name_2"]:placeholder-shown)) ~ .armor-slot-3 { display: flex; opacity: 1; }
-.armor-slot-3:not(:has(input[name="attr_armor_name_3"]:placeholder-shown)) ~ .armor-slot-4 { display: flex; opacity: 1; }
-.armor-slot-4:not(:has(input[name="attr_armor_name_4"]:placeholder-shown)) ~ .armor-slot-5 { display: flex; opacity: 1; }
-
-.armor-row {
-  position: relative;
-  width: 100%;
-  height: 49px;
-  background-image: url('https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_armor.jpg');
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-}
-
-.armor-headers {
-  display: block;
-  position: relative;
-  width: 100%;
-  height: 18px;
-  margin-bottom: 4px;
-  box-sizing: border-box;
-}
-
-.armor-headers span {
-  position: absolute;
-  bottom: 2px;
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #111;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.col-armor-name, .hdr-armor-name         { left: 2%;    width: 37%; }
-.armor-row .col-die                      { left: 40%;   width: 4%;  }
-.col-armor-gear, .hdr-armor-gear         { left: 44%;   width: 14%; }
-.col-armor-features, .hdr-armor-features { left: 59%;   width: 28%; }
-.col-armor-bulk, .hdr-armor-bulk         { left: 88%;   width: 10%; }
-
-.hdr-armor-name { text-align: left !important; padding-left: 6px; }
-.col-armor-name input { text-align: left !important; padding-left: 6px; }
-
-.armor-row .col-armor-bulk input { -moz-appearance: textfield; }
-
-/* ================================================
-   GEAR TABLE
-   ================================================ */
-.sheet-gear-container {
-  background-color: #ffffff;
-  position: relative;
-  width: 100%;
-  min-height: 74px;
-  margin-bottom: 6px;
-  box-sizing: border-box;
-}
-
-.gear-headers, .gear-row {
-  position: relative;
-  width: 100%;
-  height: 24px;
-}
-
-.gear-headers span, .gear-row .field-wrap {
-  position: absolute;
-  height: 20px;
-  top: 2px;
-}
-
-.gear-headers span {
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: bold;
-  color: #111;
-  text-align: center;
-  white-space: nowrap;
-  text-transform: uppercase;
-}
-
-.sheet-gear-container .gear-row {
-  border-bottom: 1px dashed #cccccc;
-  height: 24px;
-}
-
-.col-gear-name, .hdr-gear-name { left: 2%;  width: 60%; }
-.col-gear-val,  .hdr-gear-val  { left: 74%; width: 12%; text-align: center; }
-.col-gear-bulk, .hdr-gear-bulk { left: 88%; width: 10%; }
-
-.hdr-gear-name { text-align: left !important; padding-left: 6px; }
-.col-gear-name input { text-align: left !important; padding-left: 6px; }
-
-.hdr-gear-val  { text-align: center !important; }
-.hdr-gear-bulk { text-align: center !important; }
-
-.sheet-gear-container .gear-row input {
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  border: none;
-  background: transparent;
-  padding: 0;
-  font-size: 11px;
-  line-height: 1;
-}
-
-.sheet-gear-container .gear-row input[type="number"] {
-  text-align: center;
-  -moz-appearance: textfield;
+  woundsContainer.addEventListener('input', (e) => {
+    if (!e.target.matches('input[type="text"]')) return;
+    const rows    = woundsContainer.querySelectorAll('.wound-row');
+    const lastRow = rows[rows.length - 1];
+    if (e.target.closest('.wound-row') === lastRow && e.target.value.trim() !== '') {
+      woundsContainer.appendChild(createWoundRow(rows.length + 1));
+    }
+  });
 }
 
 /* ================================================
    RELICS
    ================================================ */
-.relics-headers {
-  display: flex;
-  width: 100%;
-  margin-bottom: 5px;
+const relicContainer = document.getElementById('relics-container');
+let relicCount = 0;
+
+function addRelicRow() {
+  relicCount++;
+  const row = document.createElement('div');
+  row.className = 'relic-row';
+  row.innerHTML = `<textarea name="attr_relic_${relicCount}" rows="1" placeholder="Name, Type, Effect..."></textarea>`;
+  if (relicContainer) relicContainer.appendChild(row);
 }
 
-.relics-headers span {
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.hdr-rel-name   { width: 30%; }
-.hdr-rel-type   { width: 20%; }
-.hdr-rel-effect { width: 50%; }
-
-.relic-row {
-  width: 100%;
-  margin-bottom: 5px;
-  overflow: visible;
-}
-
-.relic-row textarea {
-  width: 100%;
-  border: none;
-  border-bottom: 1px dashed #666;
-  background: transparent;
-  padding: 5px 0;
-  font-family: inherit;
-  font-size: 13px;
-  resize: none;
-  overflow: hidden;
-  display: block;
-  box-sizing: border-box;
-  min-height: 30px;
+if (relicContainer) {
+  for (let i = 0; i < 3; i++) addRelicRow();
+  relicContainer.addEventListener('input', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+    const rows    = relicContainer.querySelectorAll('.relic-row');
+    const lastRow = rows[rows.length - 1];
+    if (e.target.closest('.relic-row') === lastRow && e.target.value.trim() !== '') addRelicRow();
+  });
 }
 
 /* ================================================
-   SPELLS
+   FEATURES LIST
    ================================================ */
-#accordion-spells {
-  width: 100%;
-  box-sizing: border-box;
-}
+const featuresList = document.querySelector('.features-list');
+if (featuresList) {
+  featuresList.addEventListener('input', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
 
-.spells-table-header {
-  display: grid;
-  grid-template-columns: 83% 17%;
-  padding: 4px 12px 4px 28px;
-  box-sizing: border-box;
-}
-
-.spells-table-header span {
-  font-size: 11px;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #111;
-}
-
-.spells-table-header .hdr-diff { text-align: center; }
-
-.spells-list {
-  padding-left: 24px;
-  margin: 0;
-  list-style: decimal;
-}
-
-.spells-list li {
-  margin-bottom: 12px;
-  display: list-item;
-}
-
-.spell-item-grid {
-  display: grid;
-  grid-template-columns: 83% 17%;
-  align-items: end;
-  width: 100%;
-  box-sizing: border-box;
-  padding-right: 4px;
-}
-
-.spell-item-grid textarea {
-  width: 100%;
-  border: none;
-  border-bottom: 1px dashed #666;
-  background: transparent;
-  padding: 0 0 0 6px;
-  font-size: 16px;
-  font-weight: bold;
-  outline: none;
-  resize: none;
-  overflow: hidden;
-  vertical-align: bottom;
-  line-height: 24px;
-}
-
-.spell-item-grid input[type="number"] {
-  width: 85%;
-  margin-left: auto;
-  height: 22px;
-  border: 1px solid #333;
-  background: #fff;
-  font-size: 14px;
-  font-weight: bold;
-  text-align: center;
-  outline: none;
-  box-sizing: border-box;
-  -moz-appearance: textfield;
+    const items = featuresList.querySelectorAll('textarea');
+    const last  = items[items.length - 1];
+    if (e.target === last && last.value.trim() !== '') {
+      const li = document.createElement('li');
+      li.innerHTML = '<textarea placeholder="Add a feature..." rows="1"></textarea>';
+      featuresList.appendChild(li);
+    }
+  });
 }
 
 /* ================================================
-   STORY TAB
+   DRIVES LIST
    ================================================ */
-#accordion-story {
-  width: 100%;
-  margin-top: 0 !important;
-  box-sizing: border-box;
-}
+const drivesList = document.querySelector('.drives-list');
+if (drivesList) {
+  drivesList.addEventListener('input', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
 
-.portrait-summary-row {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.portrait-side { flex: 0 0 45%; }
-
-.portrait-upload-label {
-  display: flex;
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  border: 2px dashed #666;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 13px;
-  color: #999;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-#portrait-img {
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
-  display: block;
-}
-
-.summary-side {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 2px;
-}
-
-.summary-line {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  border-bottom: 1px dashed #ccc;
-  padding-bottom: 4px;
-}
-
-.summary-label {
-  font-size: 9px;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #999;
-  line-height: 1;
-}
-
-.summary-value {
-  font-size: 13px;
-  font-weight: bold;
-  color: #222;
-  line-height: 1.3;
-  min-height: 16px;
-}
-
-.story-field {
-  width: 100% !important;
-  min-height: 120px;
-  border: none !important;
-  border-bottom: 1px dashed #666 !important;
-  background: transparent !important;
-  font-family: "Century Gothic", sans-serif !important;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #222;
-  resize: none !important;
-  overflow: hidden;
-  outline: none;
-  box-sizing: border-box;
-  padding: 4px 0;
-  display: block;
+    const items = drivesList.querySelectorAll('textarea');
+    const last  = items[items.length - 1];
+    if (e.target === last && last.value.trim() !== '' && items.length < 3) {
+      const idx = items.length + 1;
+      const li  = document.createElement('li');
+      li.innerHTML = `
+        <div class="drive-item">
+          <textarea placeholder="Add a drive..." rows="1" name="attr_drive_${idx}"></textarea>
+          <div class="drive-tracker">
+            <input type="checkbox" name="attr_drive_${idx}_cb_1" class="diamond-box db-1">
+            <input type="checkbox" name="attr_drive_${idx}_cb_2" class="diamond-box db-2">
+            <input type="checkbox" name="attr_drive_${idx}_cb_3" class="diamond-box db-3">
+          </div>
+        </div>`;
+      drivesList.appendChild(li);
+    }
+  });
 }
 
 /* ================================================
-   ACCORDION COHESION
+   GEAR TABLE
    ================================================ */
-.acc-body.sheet-panel {
-  border: 1px solid #ccc !important;
-  border-top: none !important;
-  background-color: #ffffff !important;
-  box-sizing: border-box;
-  padding: 0 !important;
-}
-
-.acc-body.weapons-body,
-.acc-body.armor-body {
-  padding: 10px !important;
-}
-
-.acc-body {
-  padding-bottom: 1px !important;
-}
-
-.features-list li textarea { margin-bottom: 4px; }
-
-/* ================================================
-   GLOBAL SPINNER REMOVAL
-   ================================================ */
-#character-sheet input[type="number"]::-webkit-outer-spin-button,
-#character-sheet input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none !important;
-  margin: 0 !important;
-}
-
-#character-sheet input[type="number"] {
-  -moz-appearance: textfield !important;
+const gearTable = document.querySelector('.sheet-gear-table');
+if (gearTable) {
+  gearTable.addEventListener('input', (e) => {
+    if (!e.target.matches('.gear-row .col-gear-name input')) return;
+    const container = gearTable.querySelector('.sheet-gear-container');
+    const allInputs = container.querySelectorAll('.gear-row .col-gear-name input');
+    const last      = allInputs[allInputs.length - 1];
+    if (e.target === last && last.value.trim() !== '') {
+      const idx    = allInputs.length + 1;
+      const newRow = document.createElement('div');
+      newRow.className = 'gear-row';
+      newRow.innerHTML = `
+        <div class="field-wrap col-gear-name">
+          <input type="text" name="attr_gear_name_${idx}" placeholder="-">
+        </div>
+        <div class="field-wrap col-gear-val">
+          <input type="number" name="attr_gear_val_${idx}" placeholder="-">
+        </div>
+        <div class="field-wrap col-gear-bulk">
+          <input type="number" name="attr_gear_bulk_${idx}" placeholder="-">
+        </div>`;
+      container.appendChild(newRow);
+    }
+  });
 }
 
 /* ================================================
-   RESPONSIVE SCALING
+   FLAWS LIST
    ================================================ */
-@media (max-width: 470px) {
-  #character-sheet { zoom: 0.92; left: 15px; top: 15px; }
-}
-@media (max-width: 410px) {
-  #character-sheet { zoom: 0.82; left: 10px; top: 10px; }
-}
-@media (max-width: 350px) {
-  #character-sheet { zoom: 0.70; left: 5px; }
+const flawsList = document.querySelector('.flaws-list');
+if (flawsList) {
+  flawsList.addEventListener('input', (e) => {
+    if (e.target.tagName !== 'TEXTAREA') return;
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+
+    const items = flawsList.querySelectorAll('textarea');
+    const last  = items[items.length - 1];
+    if (e.target === last && last.value.trim() !== '' && items.length < 3) {
+      const idx = items.length + 1;
+      const li  = document.createElement('li');
+      li.innerHTML = `<textarea placeholder="Add a flaw..." rows="1" name="attr_flaw_${idx}"></textarea>`;
+      flawsList.appendChild(li);
+    }
+  });
 }
 
 /* ================================================
-   TYPOGRAPHY FIXES
+   PORTRAIT UPLOAD
    ================================================ */
-.desc-text,
-.desc-field,
-.desc-field::before {
-  font-family: "Century Gothic", AppleGothic, sans-serif !important;
+const portraitUpload = document.getElementById('portrait-upload');
+const portraitImg    = document.getElementById('portrait-img');
+const portraitLabel  = document.querySelector('.portrait-upload-label');
+
+if (portraitUpload) {
+  portraitUpload.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      portraitImg.src             = ev.target.result;
+      portraitImg.style.display   = 'block';
+      portraitLabel.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 /* ================================================
-   APTITUDE DIE ICONS
+   SUMMARY PANEL SYNC
    ================================================ */
-.apt-die-icon {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  transition: transform 0.1s;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const summaryMap = {
+  'sum-name':       'NAME',
+  'sum-age':        'AGE',
+  'sum-people':     'PEOPLE',
+  'sum-origin':     'ORIGIN',
+  'sum-background': 'BACKGROUND',
+  'sum-flaw':       'FLAW',
+  'sum-momento':    'MOMENTO',
+  'sum-event':      'EVENT'
+};
+
+function syncSummary() {
+  document.querySelectorAll('.desc-field').forEach(field => {
+    const placeholder = field.dataset.placeholder;
+    const id = Object.keys(summaryMap).find(k => summaryMap[k] === placeholder);
+    if (id) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = field.textContent.trim();
+    }
+  });
 }
 
-.apt-die-icon:not(.apt-die-icon--selected) .die-icon-img {
-  opacity: 0.4;
-  filter: brightness(0);
-}
-
-.apt-die-icon:hover .die-icon-img {
-  opacity: 1;
-  filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
-          saturate(600%) hue-rotate(330deg) brightness(1.1);
-  transform: scale(1.15);
-}
-
-.apt-die-icon.apt-die-icon--selected .die-icon-img {
-  opacity: 1;
-  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
-          saturate(700%) hue-rotate(340deg) brightness(1.0)
-          drop-shadow(0 0 3px rgba(192,57,43,0.9));
-}
-
-.apt-die-icon.left-apt  { left: 10%;  }
-.apt-die-icon.right-apt { left: 77%;  }
-
-.apt-die-icon.row-1 { top: 11.5%;  }
-.apt-die-icon.row-2 { top: 33.75%; }
-.apt-die-icon.row-3 { top: 56.25%; }
-.apt-die-icon.row-4 { top: 78.5%;  }
+document.querySelector('.desc-panel')?.addEventListener('input', syncSummary);
+syncSummary();
 
 /* ================================================
-   CHARACTER MENU
+   STORY FIELDS AUTO GROW
    ================================================ */
-.char-menu-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 110;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  width: 34px;
-  height: 34px;
-  background: #c0392b;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 6px;
-  box-sizing: border-box;
-  transition: background 0.15s;
+document.querySelectorAll('.story-field').forEach(field => {
+  field.addEventListener('input', () => {
+    field.style.height = 'auto';
+    field.style.height = field.scrollHeight + 'px';
+  });
+});
+
+/* ================================================
+   PAIR-BASED STRESS / TRAUMA ENGINE
+   ================================================ */
+const PAIR_MAP = {
+  fd: { key: "finesse_devise", apt1: "finesse", apt2: "devise" },
+  ea: { key: "exert_adapt",    apt1: "exert",   apt2: "adapt"  },
+  sr: { key: "sense_resist",   apt1: "sense",   apt2: "resist" },
+  dr: { key: "deceive_relate", apt1: "deceive", apt2: "relate" }
+};
+
+function updateCurrentAptitudes() {
+  Object.values(PAIR_MAP).forEach(({ key, apt1, apt2 }) => {
+    const traumaCount = character.trauma[key].filter(v => v).length;
+    [apt1, apt2].forEach(apt => {
+      const base    = parseInt(document.querySelector(`input[name="attr_${apt}"]`)?.value) || 0;
+      const current = Math.max(0, base - traumaCount);
+      const el      = document.getElementById(`cur-${apt}`);
+      if (el) {
+        if (traumaCount > 0 && base > 0) {
+          el.textContent = current;
+          el.style.color = current === 0 ? "red" : "rgba(255,0,0,0.7)";
+        } else {
+          el.textContent = "";
+        }
+      }
+    });
+  });
 }
 
-.char-menu-btn:hover   { background: #e74c3c; }
-.char-menu-btn.is-open { background: #a93226; }
+function updateStressTrauma(prefix) {
+  const { key, apt1, apt2 } = PAIR_MAP[prefix];
+  const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
+  const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
+  const stressCap       = Math.min(val1, val2);
+  const traumaCap       = Math.max(val1, val2);
+  const condBox         = document.getElementById(`cond-${key.replace("_", "-")}`);
+  const conditionActive = condBox?.checked ?? false;
 
-.char-menu-btn span {
-  display: block;
-  width: 18px;
-  height: 2px;
-  background: #fff;
-  border-radius: 1px;
-  transition: transform 0.2s, opacity 0.2s;
-  pointer-events: none;
+  document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, i) => {
+    const allowed      = i < stressCap;
+    box.disabled       = !allowed || conditionActive;
+    box.style.opacity  = conditionActive ? "0.5" : "1";
+    if (!allowed) box.checked = false;
+    character.stress[key][i] = box.checked;
+  });
+
+  document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, i) => {
+    const allowed = i < traumaCap;
+    box.disabled  = !allowed;
+    if (!allowed) box.checked = false;
+    character.trauma[key][i] = box.checked;
+  });
+
+  character.pairConditions[key] = conditionActive;
+  updateCurrentAptitudes();
 }
 
-.char-menu-btn.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-.char-menu-btn.is-open span:nth-child(2) { opacity: 0; }
-.char-menu-btn.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-
-.char-menu-panel {
-  position: absolute;
-  top: 46px;
-  right: 8px;
-  z-index: 111;
-  width: 175px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 5px 0;
-  transform-origin: top right;
-  transform: scale(0.92);
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+function updateAllPairs() {
+  Object.keys(PAIR_MAP).forEach(prefix => updateStressTrauma(prefix));
 }
 
-.char-menu-panel.open {
-  transform: scale(1);
-  opacity: 1;
-  pointer-events: auto;
+function applyCapsOnly() {
+  Object.keys(PAIR_MAP).forEach(prefix => {
+    const { key, apt1, apt2 } = PAIR_MAP[prefix];
+    const val1 = parseInt(document.querySelector(`input[name="attr_${apt1}"]`)?.value) || 0;
+    const val2 = parseInt(document.querySelector(`input[name="attr_${apt2}"]`)?.value) || 0;
+    const stressCap       = Math.min(val1, val2);
+    const traumaCap       = Math.max(val1, val2);
+    const condBox         = document.getElementById(`cond-${key.replace("_", "-")}`);
+    const conditionActive = condBox?.checked ?? false;
+
+    document.querySelectorAll(`.stress-box.${prefix}`).forEach((box, i) => {
+      const allowed     = i < stressCap;
+      box.disabled      = !allowed || conditionActive;
+      box.style.opacity = conditionActive ? "0.5" : "1";
+      if (!allowed) box.checked = false;
+    });
+
+    document.querySelectorAll(`.trauma-box.${prefix}`).forEach((box, i) => {
+      const allowed = i < traumaCap;
+      box.disabled  = !allowed;
+      if (!allowed) box.checked = false;
+    });
+  });
 }
 
-.char-menu-panel__title {
-  font-size: 9px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #555;
-  padding: 4px 14px 6px;
-  border-bottom: 1px solid #2a2a2a;
-  margin-bottom: 3px;
+Object.values(PAIR_MAP).forEach(({ apt1, apt2 }) => {
+  [apt1, apt2].forEach(apt => {
+    document.querySelector(`input[name="attr_${apt}"]`)
+      ?.addEventListener("input", updateAllPairs);
+  });
+});
+
+Object.values(PAIR_MAP).forEach(({ key }) => {
+  document.getElementById(`cond-${key.replace("_", "-")}`)
+    ?.addEventListener("change", updateAllPairs);
+});
+
+document.addEventListener("change", (e) => {
+  if (e.target.classList.contains("stress-box") ||
+      e.target.classList.contains("trauma-box")) {
+    const prefix = [...e.target.classList].find(c => ["fd","ea","sr","dr"].includes(c));
+    if (prefix) updateStressTrauma(prefix);
+  }
+});
+
+updateAllPairs();
+
+/* ================================================
+   DICE TRAY ENGINE
+   ================================================ */
+const aptitudeQueue = [];
+let activeGear      = null;
+let lastRollResults = null;
+let lastPushGroups  = null;
+let hasPushed       = false;
+let trayIsOpen      = false;
+
+function getAptitudeValue(apt) {
+  const curEl = document.getElementById(`cur-${apt}`);
+  if (curEl && curEl.textContent !== "") {
+    return Math.max(0, parseInt(curEl.textContent) || 0);
+  }
+  return Math.max(0, parseInt(
+    document.querySelector(`input[name="attr_${apt}"]`)?.value
+  ) || 0);
 }
 
-.char-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 9px 14px;
-  background: transparent;
-  border: none;
-  color: #ccc;
-  font-family: "Century Gothic", sans-serif;
-  font-size: 12px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  text-align: left;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-  box-sizing: border-box;
+function toggleAptitude(apt) {
+  const existing = aptitudeQueue.findIndex(a => a.apt === apt);
+  if (existing !== -1) {
+    aptitudeQueue.splice(existing, 1);
+  } else {
+    if (aptitudeQueue.length >= 2) aptitudeQueue.shift();
+    aptitudeQueue.push({ apt, count: getAptitudeValue(apt) });
+  }
+  updateAptitudeIconStates();
+  renderDiceTray();
 }
 
-.char-menu-item--label { display: flex; cursor: pointer; }
+function toggleGear(slotKey, label, count) {
+  if (activeGear?.slotKey === slotKey) {
+    activeGear = null;
+  } else if (count > 0) {
+    activeGear = { slotKey, label, count };
+  }
+  updateGearIconStates();
+  renderDiceTray();
+}
 
-.char-menu-item:hover,
-.char-menu-item--label:hover  { background: #c0392b; color: #fff; }
-.char-menu-item:active,
-.char-menu-item--label:active { background: #a93226; color: #fff; }
+function updateAptitudeIconStates() {
+  const selected = aptitudeQueue.map(a => a.apt);
+  document.querySelectorAll(".apt-die-icon").forEach(btn => {
+    btn.classList.toggle("apt-die-icon--selected", selected.includes(btn.dataset.apt));
+  });
+}
 
-.char-menu-icon {
-  font-size: 13px;
-  line-height: 1;
-  flex-shrink: 0;
+function updateGearIconStates() {
+  document.querySelectorAll(".gear-die-icon").forEach(btn => {
+    btn.classList.toggle("gear-die-icon--selected",
+      activeGear?.slotKey === btn.dataset.slotKey);
+  });
+}
+
+function rawAptCount()  { return aptitudeQueue.reduce((s, a) => s + a.count, 0); }
+function rawGearCount() { return activeGear?.count ?? 0; }
+
+function adjustedPool() {
+  const diff = Math.max(0, parseInt(
+    document.getElementById("dice-difficulty")?.value) || 0);
+  let aptDice  = rawAptCount();
+  let gearDice = rawGearCount();
+  const aptRemove  = Math.min(diff, aptDice);
+  aptDice         -= aptRemove;
+  const gearRemove = Math.min(diff - aptRemove, gearDice);
+  gearDice        -= gearRemove;
+  return { aptDice, gearDice, total: aptDice + gearDice };
+}
+
+function getThreshold() {
+  const active = document.querySelector(".threshold-btn--active");
+  return active ? parseInt(active.dataset.threshold) : 5;
+}
+
+function countSuccesses(values, threshold) {
+  return values.filter(v => v >= threshold).length;
+}
+
+/* -----------------------------------------------
+   Render tray
+   ----------------------------------------------- */
+function renderDiceTray() {
+  const display  = document.getElementById("dice-pool-display");
+  const rollBtn  = document.getElementById("dice-roll-btn");
+  const clearBtn = document.getElementById("dice-clear-btn");
+  if (!display) return;
+
+  const { aptDice, gearDice, total } = adjustedPool();
+  const aptRemoved  = rawAptCount() - aptDice;
+  const gearRemoved = rawGearCount() - gearDice;
+
+  rollBtn.disabled  = total === 0;
+  clearBtn.disabled = rawAptCount() + rawGearCount() === 0;
+
+  display.innerHTML = "";
+
+  // --- Aptitude column ---
+ // In renderDiceTray(), replace the aptitude column section:
+  if (aptitudeQueue.length > 0) {
+    const col = document.createElement("div");
+    col.className = "dice-col";
+
+    let aptRemovedLeft = aptRemoved;
+    let resultIndex = 0; // counts only non-removed dice
+
+    aptitudeQueue.forEach(({ apt, count }, qi) => {
+      const hdr = document.createElement("div");
+      hdr.className = qi === 0
+        ? "dice-col__header dice-col__header--apt"
+        : "dice-col__subheader";
+      hdr.textContent = apt.charAt(0).toUpperCase() + apt.slice(1);
+      col.appendChild(hdr);
+
+      for (let i = 0; i < count; i++) {
+        const removed = aptRemovedLeft > 0;
+        if (removed) aptRemovedLeft--;
+
+        const slot = document.createElement("div");
+        slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
+
+        if (!removed && lastRollResults?.apt?.[resultIndex] !== undefined) {
+          slot.appendChild(makePip(lastRollResults.apt[resultIndex],
+            "apt", lastPushGroups?.apt?.[resultIndex]));
+          resultIndex++;
+        } else if (!removed) {
+          const img = document.createElement("img");
+          img.src = DIE_SVG_URL; img.alt = apt;
+          img.className = "die-slot__icon die-slot__icon--apt";
+          slot.appendChild(img);
+          resultIndex++;
+        } else {
+          // removed die — show faded icon, no result
+          const img = document.createElement("img");
+          img.src = DIE_SVG_URL; img.alt = apt;
+          img.className = "die-slot__icon die-slot__icon--apt";
+          slot.appendChild(img);
+        }
+        col.appendChild(slot);
+      }
+    });
+
+    display.appendChild(col);
+  }
+
+  // --- Gear column ---
+  if (activeGear && rawGearCount() > 0) {
+    const col = document.createElement("div");
+    col.className = "dice-col";
+
+    const hdr = document.createElement("div");
+    hdr.className = "dice-col__header dice-col__header--gear";
+    hdr.textContent = activeGear.label;
+    col.appendChild(hdr);
+
+    let gearRemovedLeft = gearRemoved;
+    let gearResultIndex = 0;
+    for (let i = 0; i < activeGear.count; i++) {
+      const removed = gearRemovedLeft > 0;
+      if (removed) gearRemovedLeft--;
+
+      const slot = document.createElement("div");
+      slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
+
+      if (!removed && lastRollResults?.gear?.[gearResultIndex] !== undefined) {
+        slot.appendChild(makePip(lastRollResults.gear[gearResultIndex],
+          "gear", lastPushGroups?.gear?.[gearResultIndex]));
+        gearResultIndex++;
+      } else if (!removed) {
+        const img = document.createElement("img");
+        img.src = DIE_SVG_URL; img.alt = activeGear.label;
+        img.className = "die-slot__icon die-slot__icon--gear";
+        slot.appendChild(img);
+        gearResultIndex++;
+      } else {
+        const img = document.createElement("img");
+        img.src = DIE_SVG_URL; img.alt = activeGear.label;
+        img.className = "die-slot__icon die-slot__icon--gear";
+        slot.appendChild(img);
+      }
+      col.appendChild(slot);
+    }
+
+    display.appendChild(col);
+  }
+
+  updatePushBtn();
+  updateSuccessBanner();
+}
+
+/* -----------------------------------------------
+   Pip element
+   ----------------------------------------------- */
+function makePip(val, type, pushEntry) {
+  const threshold = getThreshold();
+  const isSuccess = val >= threshold;
+  const isOne     = val === 1;
+  const pushed    = pushEntry?.pushed ?? false;
+  const kept      = pushEntry !== undefined && !pushed;
+
+  const pip = document.createElement("span");
+  pip.className = [
+    "die-slot__pip",
+    `die-slot__pip--${type}`,
+    isOne               ? "die-slot__pip--one"     : "",
+    isSuccess && !isOne ? "die-slot__pip--success"  : "",
+    !isSuccess && !isOne ? "die-slot__pip--fail"    : "",
+    pushed ? "die-slot__pip--pushed" : "",
+    kept   ? "die-slot__pip--kept"   : ""
+  ].filter(Boolean).join(" ");
+  pip.textContent = val;
+  return pip;
+}
+
+/* -----------------------------------------------
+   Success banner
+   ----------------------------------------------- */
+function updateSuccessBanner() {
+  const banner = document.getElementById("dice-success-banner");
+  if (!banner) return;
+
+  if (!lastRollResults) { banner.style.display = "none"; return; }
+
+  const threshold = getThreshold();
+  const allVals   = [...(lastRollResults.apt || []), ...(lastRollResults.gear || [])];
+  const successes = countSuccesses(allVals, threshold);
+  const aptOnes   = (lastRollResults.apt  || []).filter(v => v === 1).length;
+  const gearOnes  = (lastRollResults.gear || []).filter(v => v === 1).length;
+  const totalOnes = aptOnes + gearOnes;
+
+  banner.innerHTML = "";
+  banner.style.display = "flex";
+  banner.className = "dice-tray__success-banner" +
+    (successes === 0 ? " success-banner__zero" : "");
+
+  const headline = document.createElement("span");
+  headline.textContent = successes === 0
+    ? `✗ No Successes (${threshold}+)`
+    : `✔ ${successes} Success${successes !== 1 ? "es" : ""} (${threshold}+)`;
+  if (hasPushed) headline.textContent += " — Pushed";
+  banner.appendChild(headline);
+
+  const ones = document.createElement("span");
+
+ones.className =
+  "result-ones-summary" +
+  (hasPushed && totalOnes > 0 ? " result-ones-summary--stress" : "");
+
+if (totalOnes > 0) {
+  const parts = [];
+  if (aptOnes > 0) {
+    const aptNames = aptitudeQueue.map(
+      a => a.apt.charAt(0).toUpperCase() + a.apt.slice(1)
+    );
+    parts.push(`${aptOnes} ${aptNames.join("/")}`);
+  }
+  if (gearOnes > 0) {
+    const gearLabel = activeGear?.label || "Gear";
+    parts.push(`${gearOnes} ${gearLabel}`);
+  }
+  ones.textContent = `⚠ Stress: ${parts.join(", ")}`;
+} else {
+  ones.textContent = "⚠ Stress: None";
+}
+banner.appendChild(ones);
+}
+
+/* -----------------------------------------------
+   Push button state
+   ----------------------------------------------- */
+function updatePushBtn() {
+  const pushBtn = document.getElementById("dice-push-btn");
+  if (!pushBtn) return;
+  const hasResults = lastRollResults &&
+    (lastRollResults.apt?.length || lastRollResults.gear?.length);
+  pushBtn.disabled    = !hasResults || hasPushed;
+  pushBtn.textContent = hasPushed ? "Pushed" : "Push";
+}
+
+/* -----------------------------------------------
+   Clear
+   ----------------------------------------------- */
+function clearDiceTray() {
+  aptitudeQueue.length = 0;
+  activeGear           = null;
+  lastRollResults      = null;
+  lastPushGroups       = null;
+  hasPushed            = false;
+  const diffInput = document.getElementById("dice-difficulty");
+  if (diffInput) diffInput.value = "";
+  updateAptitudeIconStates();
+  updateGearIconStates();
+  renderDiceTray();
+}
+
+/* -----------------------------------------------
+   Roll
+   ----------------------------------------------- */
+async function triggerRoll() {
+  const { aptDice, gearDice, total } = adjustedPool();
+  if (total === 0) return;
+
+  const rollBtn = document.getElementById("dice-roll-btn");
+  rollBtn.disabled    = true;
+  rollBtn.textContent = "...";
+  hasPushed      = false;
+  lastPushGroups = null;
+
+  const isReady = await checkDicePlusReady();
+  if (!isReady) {
+    rollBtn.disabled    = false;
+    rollBtn.textContent = "Roll";
+    rollLocal();
+    return;
+  }
+
+  const rollId = `roll_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+  const resultUnsub = OBR.broadcast.onMessage(
+    `${DICE_SOURCE_ID}/roll-result`, (event) => {
+      const data = event.data;
+      if (data.rollId !== rollId) return;
+      resultUnsub();
+      errorUnsub();
+
+      const flatValues = data.result?.dice?.map(d => d.value)
+        ?? data.result?.rolls ?? [];
+
+      if (flatValues.length > 0) {
+        lastRollResults = {
+          apt:  flatValues.slice(0, aptDice),
+          gear: flatValues.slice(aptDice)
+        };
+      }
+
+      rollBtn.disabled    = false;
+      rollBtn.textContent = "Roll";
+      renderDiceTray();
+    }
+  );
+
+  const errorUnsub = OBR.broadcast.onMessage(
+    `${DICE_SOURCE_ID}/roll-error`, (event) => {
+      if (event.data.rollId !== rollId) return;
+      resultUnsub();
+      errorUnsub();
+      rollBtn.disabled    = false;
+      rollBtn.textContent = "Roll";
+      rollLocal();
+    }
+  );
+
+  try {
+    const playerId   = await OBR.player.getId();
+    const playerName = await OBR.player.getName();
+    await OBR.broadcast.sendMessage("dice-plus/roll-request", {
+      rollId, playerId, playerName,
+      rollTarget: "everyone",
+      diceNotation: `${total}d6`,
+      showResults: false,
+      timestamp: Date.now(),
+      source: DICE_SOURCE_ID
+    }, { destination: "ALL" });
+  } catch {
+    resultUnsub();
+    errorUnsub();
+    rollBtn.disabled    = false;
+    rollBtn.textContent = "Roll";
+    rollLocal();
+  }
+
+  setTimeout(() => {
+    try { resultUnsub(); } catch {}
+    try { errorUnsub();  } catch {}
+    if (rollBtn.textContent === "...") {
+      rollBtn.disabled    = false;
+      rollBtn.textContent = "Roll";
+      rollLocal();
+    }
+  }, 15000);
+}
+
+function rollLocal() {
+  const { aptDice, gearDice } = adjustedPool();
+  if (aptDice + gearDice === 0) return;
+  const rollDie = () => Math.ceil(Math.random() * 6);
+  lastRollResults = {
+    apt:  Array.from({ length: aptDice  }, rollDie),
+    gear: Array.from({ length: gearDice }, rollDie)
+  };
+  hasPushed      = false;
+  lastPushGroups = null;
+  const rollBtn = document.getElementById("dice-roll-btn");
+  if (rollBtn) { rollBtn.disabled = false; rollBtn.textContent = "Roll"; }
+  renderDiceTray();
+}
+
+/* -----------------------------------------------
+   Push
+   ----------------------------------------------- */
+function triggerPush() {
+  if (!lastRollResults || hasPushed) return;
+  const threshold = getThreshold();
+  const rollDie   = () => Math.ceil(Math.random() * 6);
+
+  function pushGroup(values) {
+    return values.map(v => {
+      const kept = v >= threshold || v === 1;
+      return { val: kept ? v : rollDie(), pushed: !kept };
+    });
+  }
+
+  const aptPushed  = pushGroup(lastRollResults.apt  || []);
+  const gearPushed = pushGroup(lastRollResults.gear || []);
+
+  lastPushGroups  = { apt: aptPushed, gear: gearPushed };
+  lastRollResults = {
+    apt:  aptPushed.map(d => d.val),
+    gear: gearPushed.map(d => d.val)
+  };
+  hasPushed = true;
+  renderDiceTray();
+}
+
+/* -----------------------------------------------
+   Wire up controls
+   ----------------------------------------------- */
+document.getElementById("dice-roll-btn")
+  ?.addEventListener("click", triggerRoll);
+document.getElementById("dice-clear-btn")
+  ?.addEventListener("click", clearDiceTray);
+document.getElementById("dice-push-btn")
+  ?.addEventListener("click", triggerPush);
+document.getElementById("dice-difficulty")
+  ?.addEventListener("input", () => renderDiceTray());
+
+document.querySelectorAll(".threshold-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".threshold-btn")
+      .forEach(b => b.classList.remove("threshold-btn--active"));
+    btn.classList.add("threshold-btn--active");
+    renderDiceTray();
+  });
+});
+
+document.querySelectorAll(".apt-die-icon").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleAptitude(btn.dataset.apt);
+  });
+});
+
+/* -----------------------------------------------
+   Gear icon wiring
+   ----------------------------------------------- */
+function wireRowDieIcons() {
+  document.querySelectorAll(".gear-die-icon--row").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      const slotKey = btn.dataset.slotKey;
+      const n = slotKey.split("-")[1];
+
+      const isWeapon = slotKey.startsWith("weapon");
+
+      const nameField = isWeapon
+        ? `attr_weapon_name_${n}`
+        : `attr_armor_name_${n}`;
+
+      const countField = isWeapon
+        ? `attr_weapon_gear_a_${n}`
+        : `attr_armor_gear_a_${n}`;
+
+      const itemName =
+        document.querySelector(`input[name="${nameField}"]`)
+          ?.value
+          ?.trim();
+
+      const label = itemName ||
+        (isWeapon ? `Weapon ${n}` : `Armor ${n}`);
+
+      const count =
+        parseInt(
+          document.querySelector(`input[name="${countField}"]`)?.value
+        ) || 0;
+      toggleGear(slotKey, label, count);
+
+    });
+  });
+}
+
+function injectGearDieIcons() {
+  document.querySelectorAll(".sheet-gear-container .gear-row").forEach((row, i) => {
+    const n        = i + 1;
+    const slotKey  = `gear-${n}`;
+    const valInput = row.querySelector(`input[name="attr_gear_val_${n}"]`);
+    const valCell  = row.querySelector(".col-gear-val");
+    if (!valCell || row.querySelector(".gear-die-icon")) return;
+
+    const btn = document.createElement("button");
+    btn.className       = "gear-die-icon gear-die-icon--general";
+    btn.dataset.slotKey = slotKey;
+    btn.title           = `Add Gear ${n} dice`;
+
+    const img = document.createElement("img");
+    img.src = DIE_SVG_URL; img.alt = "d6";
+    img.className = "die-icon-img";
+    btn.appendChild(img);
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const nameInput = row.querySelector(`input[name="attr_gear_name_${n}"]`);
+      const label     = nameInput?.value?.trim() || `Gear ${n}`;
+      const count     = parseInt(valInput?.value) || 0;
+      toggleGear(slotKey, label, count);
+    });
+
+    valCell.style.position = "relative";
+    valCell.insertBefore(btn, valCell.firstChild);
+  });
+}
+
+async function checkDicePlusReady() {
+  const requestId = crypto.randomUUID();
+  return new Promise((resolve) => {
+    const unsub = OBR.broadcast.onMessage("dice-plus/isReady", (event) => {
+      if ("ready" in event.data && event.data.requestId === requestId) {
+        unsub(); resolve(true);
+      }
+    });
+    OBR.broadcast.sendMessage("dice-plus/isReady",
+      { requestId, timestamp: Date.now() }, { destination: "ALL" });
+    setTimeout(() => { unsub(); resolve(false); }, 1500);
+  });
 }
 
 /* ================================================
-   DICE TRAY — Right-panel pop-out
+   PREGEN CHARACTERS
    ================================================ */
-#dice-tray {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 110px;
-  height: 100%;
-  z-index: 200;
-}
+const PREGENS = [
+  {
+    name:    "Mira Ashveil",
+    background: "Smuggler",
+    tagline: "She always has a way out — usually through someone else's wall.",
+    aptitudeTags: ["Finesse 4", "Deceive 3", "Adapt 3"],
+    data: {
+      named: {
+        attr_finesse: "4", attr_devise: "1", attr_exert: "2",
+        attr_adapt: "3",   attr_sense: "2",  attr_resist: "1",
+        attr_deceive: "3", attr_relate: "2",
+        attr_advances_left: "3", attr_advances_right: "10"
+      },
+      checks: {},
+      desc: [
+        "Mira Ashveil", "32-year-old", "impulsive",
+        "Vashari", "narrowly escaped", "smuggler",
+        "a cracked compass", "a debt that never got repaid"
+      ],
+      features: [
+        "Always has a hidden exit route planned before entering any building.",
+        "Can forge travel documents given an hour and the right supplies."
+      ],
+      drives:   ["Get the cargo through, no matter the cost."],
+      flaws:    ["Trusts no one completely — not even her closest allies."],
+      relics:   ["", "", ""],
+      wounds:   [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  },
+  {
+    name:    "Corryn Dusk",
+    background: "Soldier",
+    tagline: "The war ended. He didn't get the message.",
+    aptitudeTags: ["Exert 4", "Resist 3", "Sense 3"],
+    data: {
+      named: {
+        attr_finesse: "2", attr_devise: "1", attr_exert: "4",
+        attr_adapt: "2",   attr_sense: "3",  attr_resist: "3",
+        attr_deceive: "1", attr_relate: "2",
+        attr_advances_left: "3", attr_advances_right: "10"
+      },
+      checks: {},
+      desc: [
+        "Corryn Dusk", "40-year-old", "stubborn",
+        "Halteri", "survived", "soldier",
+        "a rusted medal", "the siege of Vael Hold"
+      ],
+      features: [
+        "Trained to keep moving under fire — ignores the first Condition each encounter.",
+        "Can read a battlefield at a glance; always acts first in structured chaos."
+      ],
+      drives:   ["Protect whoever's left standing beside me."],
+      flaws:    ["Solves problems with force long after subtlety would've worked better."],
+      relics:   ["", "", ""],
+      wounds:   [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  },
+  {
+    name:    "Sable",
+    background: "Arcanist",
+    tagline: "She collects secrets the way other people collect scars.",
+    aptitudeTags: ["Devise 4", "Sense 3", "Relate 3"],
+    data: {
+      named: {
+        attr_finesse: "2", attr_devise: "4", attr_exert: "1",
+        attr_adapt: "2",   attr_sense: "3",  attr_resist: "1",
+        attr_deceive: "2", attr_relate: "3",
+        attr_advances_left: "3", attr_advances_right: "10"
+      },
+      checks: {},
+      desc: [
+        "Sable", "27-year-old", "obsessive",
+        "Orvyn", "sought out", "arcanist",
+        "a sealed letter she's never opened", "a ritual gone wrong in the Deep"
+      ],
+      features: [
+        "Can read residual arcane traces left by rituals up to a week old.",
+        "Knows three languages no living person officially teaches."
+      ],
+      drives:   ["Understand what the Deep actually is before it claims me."],
+      flaws:    ["Will delay action indefinitely if she thinks there's more to learn first."],
+      relics:   ["", "", ""],
+      wounds:   [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  }
+];
 
-.dice-tray__panel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 110px;
-  height: 100%;
-  background: #1a1a1a;
-  border-left: 1px solid #333;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  padding: 8px 6px;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* Section label */
-.dice-tray__section {
-  margin-bottom: 8px;
-}
-
-.dice-tray__section-label {
-  display: block;
-  font-size: 9px;
-  font-weight: bold;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: #555;
-  margin-bottom: 4px;
-}
-
-/* Threshold buttons */
-.threshold-btns {
-  display: flex;
-  gap: 3px;
-}
-
-.threshold-btn {
-  flex: 1;
-  padding: 4px 0;
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  border-radius: 3px;
-  color: #888;
-  font-size: 10px;
-  font-weight: bold;
-  font-family: "Century Gothic", sans-serif;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-}
-
-.threshold-btn:hover            { background: #333; color: #ccc; }
-.threshold-btn--active          { background: #c0392b !important; border-color: #c0392b !important; color: #fff !important; }
-
-/* Difficulty input */
-.dice-tray__mod-input {
-  width: 100%;
-  box-sizing: border-box;
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  border-radius: 3px;
-  color: #ccc;
-  font-size: 13px;
-  font-weight: bold;
-  font-family: "Century Gothic", sans-serif;
-  text-align: center;
-  padding: 4px 0;
-  outline: none;
-  -moz-appearance: textfield;
-}
-
-.dice-tray__mod-input::-webkit-outer-spin-button,
-.dice-tray__mod-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-.dice-tray__mod-input:focus { border-color: #555; }
-
-/* Divider */
-.dice-tray__divider {
-  border: none;
-  border-top: 1px solid #2a2a2a;
-  margin: 6px 0;
-}
-
-/* Dice columns wrapper — side by side */
-.dice-tray__columns {
-  display: flex;
-  gap: 4px;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  margin-bottom: 6px;
-}
-
-/* Individual column */
-.dice-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  min-width: 0;
-}
-
-/* Column header (aptitude name or gear name) */
-.dice-col__header {
-  font-size: 8px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-align: center;
-  padding: 2px 2px 3px;
-  width: 100%;
-  border-bottom: 1px solid #333;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dice-col__header--apt  { color: #c0392b; }
-.dice-col__header--gear { color: #888; }
-
-/* Sub-header for second aptitude in same column */
-.dice-col__subheader {
-  font-size: 8px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #c0392b;
-  text-align: center;
-  padding: 4px 2px 3px;
-  width: 100%;
-  border-bottom: 1px solid #2a2a2a;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Each die slot */
-.die-slot {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px;
-  flex-shrink: 0;
-}
-
-.die-slot--removed {
-  opacity: 0.2;
-}
-
-/* Die icon (before rolling) */
-.die-slot__icon {
-  width: 42px;
-  height: 42px;
-}
-
-.die-slot__icon--apt {
-  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
-          saturate(700%) hue-rotate(340deg) brightness(1.0);
-  opacity: 0.7;
-}
-
-.die-slot__icon--gear {
-  filter: brightness(0) saturate(100%) invert(85%) sepia(80%)
-          saturate(600%) hue-rotate(5deg) brightness(1.1);
-  opacity: 0.8;
-}
-
-/* Result pip (after rolling) */
-.die-slot__pip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 4px;
-  font-size: 25px;
-  font-weight: bold;
-  font-family: "Century Gothic", sans-serif;
-  line-height: 1;
-}
-
-.die-slot__pip--apt  { border: 1px solid #3a2a2a; }
-.die-slot__pip--gear { border: 1px solid #2a2a3a; }
-
-.die-slot__pip--success { background: #1a3a2a; color: #6cc6a0; border-color: #27ae60; }
-.die-slot__pip--fail    { background: #2a2a2a; color: #666;    border-color: #3a3a3a; }
-.die-slot__pip--one     { background: #3a1a1a; color: #c0392b; border-color: #c0392b; }
-.die-slot__pip--pushed  { opacity: 0.7; }
-.die-slot__pip--kept    { box-shadow: 0 0 0 1px rgba(255,255,255,0.15); }
-
-/* Action buttons */
-.dice-tray__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: auto;
-  padding-top: 6px;
-}
-
-.dice-tray__btn {
-  width: 100%;
-  padding: 6px 0;
-  border: none;
-  border-radius: 3px;
-  font-size: 10px;
-  font-weight: bold;
-  font-family: "Century Gothic", sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-}
-
-.dice-tray__btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-.dice-tray__btn--roll  { background: #c0392b; color: #fff; }
-.dice-tray__btn--roll:not(:disabled):hover  { background: #e74c3c; }
-
-.dice-tray__btn--push  { background: #2a2a2a; color: #888; border: 1px solid #3a3a3a; }
-.dice-tray__btn--push:not(:disabled):hover  { background: #333; color: #ccc; }
-
-.dice-tray__btn--clear { background: transparent; color: #555; border: 1px solid #2a2a2a; }
-.dice-tray__btn--clear:not(:disabled):hover { color: #e74c3c; border-color: #e74c3c; }
-
-/* Default state - grey */
-.result-ones-summary {
-  font-size: 13px;
-  color: #888;
-  text-align: center;
-  transition: color 0.15s ease;
-}
-
-/* After Push - red */
-.result-ones-summary--stress {
-  color: #c0392b;
-}
-
-/* Success banner — pinned to bottom of panel */
-.dice-tray__success-banner {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 6px 4px;
-  border-top: 1px solid #2a2a2a;
-  margin-top: 6px;
-}
-
-.dice-tray__success-banner span:first-child {
-  font-size: 15px;
-  font-weight: bold;
-  color: #6cc6a0;
-  text-align: center;
-  line-height: 1.3;
-}
-
-.success-banner__zero span:first-child {
-  color: #c0392b;
-}
-
-/* Gear die icon styles (shared) */
-.gear-die-icon {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.1s;
-}
-
-.gear-die-icon .die-icon-img {
-  width: 14px;
-  height: 14px;
-  opacity: 0.35;
-  filter: brightness(0);
-}
-
-.gear-die-icon:hover .die-icon-img {
-  opacity: 1;
-  filter: brightness(0) saturate(100%) invert(27%) sepia(90%)
-          saturate(600%) hue-rotate(330deg) brightness(1.1);
-  transform: scale(1.15);
-}
-
-.gear-die-icon--selected .die-icon-img {
-  opacity: 1;
-  filter: brightness(0) saturate(100%) invert(18%) sepia(96%)
-          saturate(700%) hue-rotate(340deg) brightness(1.0)
-          drop-shadow(0 0 3px rgba(192,57,43,0.9));
-}
-
-.gear-die-icon--row {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  bottom: 18px;
-}
-
-.gear-die-icon--general {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
+/* ================================================
+   NEW CHARACTER
+   ================================================ */
+function newCharacter() {
+  const root = document.getElementById("character-sheet");
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (el.type === "checkbox") el.checked = false;
+    else el.value = "";
+  });
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    el.checked = false;
+  });
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    el.innerHTML = "";
+  });
+  ["features-list", "drives-list", "flaws-list"].forEach(cls => {
+    const list = root.querySelector(`.${cls}`);
+    if (!list) return;
+    list.querySelectorAll("li").forEach((li, i) => { if (i > 0) li.remove(); });
+    const ta = list.querySelector("textarea");
+    if (ta) { ta.value = ""; ta.style.height = ""; }
+  });
+  const wc = root.querySelector("#wounds-container");
+  if (wc) {
+    wc.querySelectorAll(".wound-row").forEach(r => r.remove());
+    wc.appendChild(createWoundRow(1));
+  }
+  if (relicContainer) {
+    relicContainer.innerHTML = "";
+    relicCount = 0;
+    for (let i = 0; i < 3; i++) addRelicRow();
+  }
+  Object.keys(character.stress).forEach(k => character.stress[k].fill(false));
+  Object.keys(character.trauma).forEach(k => character.trauma[k].fill(false));
+  Object.keys(character.pairConditions).forEach(k => character.pairConditions[k] = false);
+  updateAllPairs();
+  clearDiceTray();
+  localStorage.removeItem(STORAGE_KEY);
+  saveSheet();
+  root.scrollTop = 0;
+  syncSummary();
+  calculateTotalBulk();
 }
 
 /* ================================================
    PREGEN MODAL
    ================================================ */
-.pregen-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+function openPregenModal() {
+  const modal = document.getElementById("pregen-modal");
+  const grid  = document.getElementById("pregen-card-grid");
+
+  grid.innerHTML = "";
+  PREGENS.forEach((pregen, idx) => {
+    const desc       = pregen.data?.desc || [];
+    const cardName   = desc[0] || pregen.name;
+    const cardAge    = desc[1] || "";
+    const cardPeople = desc[3] || "";
+    const cardBg     = desc[5] || "";
+    const preview    = [cardAge, cardPeople, cardBg].filter(Boolean).join(" · ");
+
+    const card = document.createElement("div");
+    card.className = "pregen-card";
+    card.innerHTML = `
+      <div class="pregen-card__name">${cardName}</div>
+      <div class="pregen-card__tagline">${pregen.tagline}</div>
+      <div class="pregen-card__meta">
+        <span class="pregen-card__tag">${preview}</span>
+        ${pregen.aptitudeTags.map(t => `<span class="pregen-card__tag pregen-card__tag--apt">${t}</span>`).join("")}
+      </div>
+      <button class="pregen-card__select-btn">Select</button>
+    `;
+    card.addEventListener("click", () => loadPregen(idx));
+    grid.appendChild(card);
+  });
+
+  modal.style.display = "flex";
+  document.body.style.overflow = "hidden";
 }
 
-.pregen-modal__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
+function closePregenModal() {
+  const modal = document.getElementById("pregen-modal");
+  modal.style.display = "none";
+  document.body.style.overflow = "";
 }
 
-.pregen-modal__box {
-  position: relative;
-  background: #1a1a1a;
-  border: 1px solid #444;
-  border-radius: 6px;
-  width: 90%;
-  max-width: 380px;
-  max-height: 80vh;
-  overflow-y: auto;
-  padding: 16px;
-  z-index: 1;
+function loadPregen(idx) {
+  const pregen = PREGENS[idx];
+  if (!confirm(`Load "${pregen.name}"? Your current sheet will be replaced.`)) return;
+  closePregenModal();
+  newCharacter();
+  setTimeout(() => { restoreSheet(pregen.data); saveSheet(); }, 50);
 }
 
-.pregen-modal__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
+document.getElementById("pregen-close-btn")
+  .addEventListener("click", closePregenModal);
+document.querySelector(".pregen-modal__backdrop")
+  .addEventListener("click", closePregenModal);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closePregenModal();
+});
 
-.pregen-modal__title {
-  font-size: 12px;
-  font-weight: bold;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-}
+/* ================================================
+   CHARACTER MENU
+   ================================================ */
+const charMenuBtn   = document.getElementById("char-menu-btn");
+const charMenuPanel = document.getElementById("char-menu-panel");
 
-.pregen-modal__close {
-  background: transparent;
-  border: none;
-  color: #666;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  transition: color 0.15s;
-}
+charMenuBtn?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  charMenuPanel?.classList.toggle("open");
+});
 
-.pregen-modal__close:hover { color: #e74c3c; }
+document.addEventListener("click", () => {
+  charMenuPanel?.classList.remove("open");
+});
 
-.pregen-modal__subtitle {
-  font-size: 11px;
-  color: #555;
-  margin: 0 0 12px;
-  font-style: italic;
-}
+document.getElementById("char-new-btn")?.addEventListener("click", () => {
+  charMenuPanel?.classList.remove("open");
+  if (!confirm("Start a new character? All current data will be cleared.")) return;
+  newCharacter();
+});
 
-.pregen-card-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+document.getElementById("char-pregen-btn")?.addEventListener("click", () => {
+  charMenuPanel?.classList.remove("open");
+  openPregenModal();
+});
 
-.pregen-card {
-  background: #222;
-  border: 1px solid #333;
-  border-radius: 4px;
-  padding: 10px 12px;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
+document.getElementById("char-export-btn")?.addEventListener("click", async () => {
+  charMenuPanel?.classList.remove("open");
+  const root   = document.getElementById("character-sheet");
+  const named  = {};
+  const checks = {};
+  const desc   = [];
 
-.pregen-card:hover { border-color: #e74c3c; }
+  root.querySelectorAll("input[name], textarea[name]").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    if (el.name.startsWith("attr_wound_")) return;
+    if (el.name.startsWith("attr_relic_")) return;
+    if (el.type === "checkbox") named[el.name] = el.checked;
+    else named[el.name] = el.value;
+  });
+  root.querySelectorAll("input[type='checkbox'][id]:not([name])").forEach(el => {
+    if (isPairEngineCheckbox(el)) return;
+    checks[el.id] = el.checked;
+  });
+  root.querySelectorAll(".desc-field[contenteditable]").forEach(el => desc.push(el.innerHTML));
 
-.pregen-card__name {
-  font-size: 13px;
-  font-weight: bold;
-  color: #fff;
-  margin-bottom: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+  const features = [], drives = [], flaws = [], relics = [], wounds = [];
+  root.querySelectorAll(".features-list textarea").forEach(el => features.push(el.value));
+  root.querySelectorAll(".drives-list textarea").forEach(el => drives.push(el.value));
+  root.querySelectorAll(".flaws-list textarea").forEach(el => flaws.push(el.value));
+  root.querySelectorAll(".relic-row textarea").forEach(el => relics.push(el.value));
+  root.querySelectorAll(".wound-row").forEach(row => {
+    const apt     = row.querySelector("select")?.value ?? "";
+    const sev     = row.querySelector("input[name*='severity']")?.value ?? "";
+    const dsc     = row.querySelector("input[name*='desc']")?.value ?? "";
+    const patched = row.querySelector("input.wound-patch")?.checked ?? false;
+    if (apt || sev || dsc || patched) wounds.push({ apt, sev, dsc, patched });
+  });
 
-.pregen-card__tagline {
-  font-size: 11px;
-  color: #777;
-  margin-bottom: 8px;
-  font-style: italic;
-  line-height: 1.4;
-}
+  const data = {
+    named, checks, desc, features, drives, flaws, relics, wounds,
+    pairState: {
+      stress:         character.stress,
+      trauma:         character.trauma,
+      pairConditions: character.pairConditions
+    }
+  };
 
-.pregen-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
+  const charName = data.desc[0]?.trim() || "character";
+  const slug     = charName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const blob     = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a        = document.createElement("a");
+  a.href         = URL.createObjectURL(blob);
+  a.download     = `from-ruin-${slug}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+});
 
-.pregen-card__tag {
-  font-size: 10px;
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  color: #888;
-  padding: 2px 7px;
-  border-radius: 3px;
-  font-weight: bold;
-  letter-spacing: 0.3px;
-}
+document.getElementById("char-import-input")?.addEventListener("change", (e) => {
+  charMenuPanel?.classList.remove("open");
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = "";
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    let data;
+    try { data = JSON.parse(ev.target.result); }
+    catch { alert("Could not read that file — make sure it's a valid From Ruin export."); return; }
+    if (!confirm("Import this character? Your current sheet will be replaced.")) return;
+    newCharacter();
+    setTimeout(() => { restoreSheet(data); saveSheet(); }, 50);
+  };
+  reader.readAsText(file);
+});
 
-.pregen-card__tag--apt {
-  border-color: rgba(192,57,43,0.5);
-  color: #c0392b;
-  background: rgba(192,57,43,0.08);
-}
+/* ================================================
+   INIT
+   ================================================ */
+OBR.onReady(async () => {
+  localStorage.removeItem("fromRuinCharacter_v1");
+  localStorage.removeItem("fromRuinCharacter_v2");
+  localStorage.removeItem("fromRuinCharacter_v3");
+  localStorage.removeItem("fromRuinCharacter_v4");
+  localStorage.removeItem("fromRuinCharacter_v5");
+  localStorage.removeItem("fromRuinCharacter_v6");
+  localStorage.removeItem("fromRuinCharacter_v7");
+  localStorage.removeItem("fromRuinCharacter_v8");
+  localStorage.removeItem("fromRuinCharacter_v9");
+  localStorage.removeItem("fromRuinCharacter_v10");
+  localStorage.removeItem("fromRuinCharacter_v11");
+  localStorage.removeItem("fromRuinCharacter_v12");
+  localStorage.removeItem("fromRuinCharacter_v13");
 
-.pregen-card__select-btn { display: none; }
+  const saved = await loadSheet();
+  if (saved) {
+    restoreSheet(saved);
+  } else {
+    updateAllPairs();
+  }
+
+  document.getElementById("character-sheet").addEventListener("input",  saveSheet);
+  document.getElementById("character-sheet").addEventListener("change", saveSheet);
+  document.querySelectorAll(".desc-field[contenteditable]").forEach(el => {
+    el.addEventListener("input", saveSheet);
+    el.addEventListener("blur",  saveSheet);
+  });
+
+  OBR.room.onMetadataChange(async (meta) => {
+    const playerKey = await getPlayerKey();
+    const block = meta[STORAGE_KEY];
+    if (!block || !block[playerKey]) {
+      saveSheet();
+    }
+  });
+});
+
+/* ================================================
+   INIT CALLS (outside OBR.onReady — DOM is ready)
+   ================================================ */
+injectGearDieIcons();
+wireRowDieIcons();
+renderDiceTray();
+openTray();
