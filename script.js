@@ -932,7 +932,7 @@ function renderDiceTray() {
       const slot = document.createElement("div");
       slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
       if (!removed && lastRollResults?.apt?.[aptResultIndex] !== undefined) {
-        slot.appendChild(makePip(lastRollResults.apt[aptResultIndex], "apt", lastPushGroups?.apt?.[aptResultIndex]));
+        slot.appendChild(makePip(lastRollResults.apt[aptResultIndex], "apt", lastPushGroups?.apt?.[aptResultIndex], aptResultIndex));
         aptResultIndex++;
       } else if (!removed) {
         const img = document.createElement("img");
@@ -967,7 +967,7 @@ function renderDiceTray() {
       const slot = document.createElement("div");
       slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
       if (!removed && lastRollResults?.gear?.[gearResultIndex] !== undefined) {
-        slot.appendChild(makePip(lastRollResults.gear[gearResultIndex], "gear", lastPushGroups?.gear?.[gearResultIndex]));
+        slot.appendChild(makePip(lastRollResults.gear[gearResultIndex], "gear", lastPushGroups?.gear?.[gearResultIndex], (lastRollResults.apt?.length ?? 0) + gearResultIndex));
         gearResultIndex++;
       } else if (!removed) {
         const img = document.createElement("img");
@@ -999,7 +999,7 @@ function renderDiceTray() {
       const slot = document.createElement("div");
       slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
       if (!removed && lastRollResults?.apt?.[aptResultIndex] !== undefined) {
-        slot.appendChild(makePip(lastRollResults.apt[aptResultIndex], "apt", lastPushGroups?.apt?.[aptResultIndex]));
+        slot.appendChild(makePip(lastRollResults.apt[aptResultIndex], "apt", lastPushGroups?.apt?.[aptResultIndex], aptResultIndex));
         aptResultIndex++;
       } else if (!removed) {
         const img = document.createElement("img");
@@ -1022,6 +1022,32 @@ function renderDiceTray() {
 
   updatePushBtn();
   updateSuccessBanner();
+}
+function makePip(val, type, pushEntry, globalIndex = 0) {
+  const threshold = getThreshold();
+  const isSuccess = val >= threshold;
+  const isOne     = val === 1;
+  const pushed    = pushEntry?.pushed ?? false;
+  const kept      = pushEntry !== undefined && !pushed;
+
+  const pip = document.createElement("span");
+  pip.className = [
+    "die-slot__pip",
+    `die-slot__pip--${type}`,
+    isOne                ? "die-slot__pip--one"    : "",
+    isSuccess && !isOne  ? "die-slot__pip--success" : "",
+    !isSuccess && !isOne ? "die-slot__pip--fail"    : "",
+    pushed ? "die-slot__pip--pushed" : "",
+    kept   ? "die-slot__pip--kept"   : ""
+  ].filter(Boolean).join(" ");
+  pip.textContent = val;
+
+  if (!kept) {
+    pip.style.animationDelay = `${globalIndex * 120}ms`;
+    pip.classList.add("die-slot__pip--animating");
+  }
+
+  return pip;
 }
 
 /* -----------------------------------------------
