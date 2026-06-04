@@ -8,6 +8,15 @@ html, body {
   overflow: hidden;
 }
 
+body {
+  display: flex;
+}
+
+#character-sheet {
+  max-width: calc(100% - 120px); /* leave room for tray when open */
+  flex-shrink: 0;
+}
+
 #character-sheet {
   position: relative;
   width: 100%;
@@ -1151,13 +1160,13 @@ input.single-digit {
    RESPONSIVE SCALING
    ================================================ */
 @media (max-width: 470px) {
-  #character-sheet { transform: scale(0.92); left: 15px; top: 15px; }
+  #character-sheet { zoom: 0.92; left: 15px; top: 15px; }
 }
 @media (max-width: 410px) {
-  #character-sheet { transform: scale(0.82); left: 10px; top: 10px; }
+  #character-sheet { zoom: 0.82; left: 10px; top: 10px; }
 }
 @media (max-width: 350px) {
-  #character-sheet { transform: scale(0.70); left: 5px; }
+  #character-sheet { zoom: 0.70; left: 5px; }
 }
 
 /* ================================================
