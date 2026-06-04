@@ -1670,6 +1670,7 @@ input.single-digit {
 
 .die-slot__pip--animating {
   animation: pip-spin 0.5s ease-out forwards;
+  opacity: 0;
 }
 
 /* ================================================
