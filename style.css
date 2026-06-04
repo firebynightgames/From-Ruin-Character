@@ -10,18 +10,19 @@ html, body {
 
 body {
   display: flex;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 #character-sheet {
-  position: relative;
-  width: 100%;
-  max-width: calc(100vw - 110px); /* never wider than viewport minus tray */
+  flex: 0 0 470px;   /* fixed width, never shrinks */
   height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
   padding-bottom: 20px;
   box-sizing: border-box;
-  flex-shrink: 0;   /* ← add this */
 }
 
 #character-sheet,
