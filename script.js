@@ -1021,9 +1021,6 @@ function makePip(val, type, pushEntry) {
   return pip;
 }
 
-/* -----------------------------------------------
-   Success banner
-   ----------------------------------------------- */
 function updateSuccessBanner() {
   const banner = document.getElementById("dice-success-banner");
   if (!banner) return;
@@ -1046,32 +1043,18 @@ function updateSuccessBanner() {
   headline.textContent = successes === 0
     ? `✗ No Successes (${threshold}+)`
     : `✔ ${successes} Success${successes !== 1 ? "es" : ""} (${threshold}+)`;
-  if (hasPushed) headline.textContent += " *Pushed*";
+  if (hasPushed) headline.textContent += "Pushed";
   banner.appendChild(headline);
 
-  const ones = document.createElement("span");
-
-ones.className =
-  "result-ones-summary" +
-  (hasPushed && totalOnes > 0 ? " result-ones-summary--stress" : "");
-if (totalOnes > 0) {
-  const parts = [];
-
-  if (aptOnes > 0) {
-    const aptNames = aptitudeQueue.map(
-      a => a.apt.charAt(0).toUpperCase() + a.apt.slice(1)
-    );
-    parts.push(`${aptNames.join("/")}: ${aptOnes}`);
+  if (totalOnes > 0) {
+    const ones = document.createElement("span");
+    ones.className   = "result-ones-summary";
+    const parts = [];
+    if (aptOnes  > 0) parts.push(`${aptOnes} apt`);
+    if (gearOnes > 0) parts.push(`${gearOnes} gear`);
+    ones.textContent = `⚠ ${totalOnes} one${totalOnes !== 1 ? "s" : ""} (${parts.join(" + ")})`;
+    banner.appendChild(ones);
   }
-
-  if (gearOnes > 0) {
-    const gearLabel = activeGear?.label || "Gear";
-    parts.push(`${gearLabel}: ${gearOnes}`);
-  }
-
-  ones.textContent = `⚠ Stress:\n${parts.join("\n")}`;
-} else {
-  ones.textContent = "⚠ Stress: None";
 }
 
 /* -----------------------------------------------
