@@ -1067,9 +1067,8 @@ if (totalOnes > 0) {
     const gearLabel = activeGear?.label || "Gear";
     parts.push(`${gearOnes} ${gearLabel}`);
   }
-/*  ones.textContent = `⚠ Stress: ${parts.join("")}`;
-*/
-
+   
+ones.textContent = `⚠ Stress: ${parts.join("")}`;
 } else {
   ones.textContent = "⚠ Stress: None";
 }
