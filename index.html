@@ -8,6 +8,48 @@
   <script type="module" src="script.js?v=0.252"></script>
 </head>
 <body>
+
+  <!-- ================================================
+     DICE TRAY — Fixed right panel
+     ================================================ -->
+<div id="dice-tray" class="dice-tray" aria-label="Dice Pool Tray">
+
+  <button id="dice-tray-tab" class="dice-tray__tab" title="Dice Pool">
+    <img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="dice" class="dice-tray__tab-icon">
+  </button>
+
+  <div class="dice-tray__panel" id="dice-tray-panel">
+
+    <button id="dice-tray-close" class="dice-tray__close" title="Close">✕</button>
+
+    <div class="dice-tray__section">
+      <span class="dice-tray__section-label">Success</span>
+      <div class="threshold-btns">
+        <button class="threshold-btn" data-threshold="4">4+</button>
+        <button class="threshold-btn threshold-btn--active" data-threshold="5">5+</button>
+        <button class="threshold-btn" data-threshold="6">6+</button>
+      </div>
+    </div>
+
+    <div class="dice-tray__section">
+      <span class="dice-tray__section-label">Difficulty</span>
+      <input type="number" id="dice-difficulty" class="dice-tray__mod-input"
+             min="0" max="20" placeholder="0">
+    </div>
+
+    <div class="dice-tray__columns" id="dice-pool-display"></div>
+
+    <div class="dice-tray__actions">
+      <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">Roll</button>
+      <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled>Push</button>
+      <button id="dice-clear-btn" class="dice-tray__btn dice-tray__btn--clear">Clear</button>
+    </div>
+
+    <div id="dice-success-banner" class="dice-tray__success-banner" style="display:none;"></div>
+
+  </div>
+</div>
+
 <div id="character-sheet">
 
   <div class="sheet-combined-header">
@@ -382,53 +424,6 @@
 </div> 
 
 </div><!-- end #character-sheet -->
-
-
- <!-- ================================================
-     CHARACTER MENU BUTTON — inside sheet header
-     ================================================ -->
-<!-- Add this inside .sheet-combined-header, before .sheet-header-area: -->
-
-<!-- ================================================
-     DICE TRAY — Fixed right panel
-     ================================================ -->
-<div id="dice-tray" class="dice-tray" aria-label="Dice Pool Tray">
-
-  <button id="dice-tray-tab" class="dice-tray__tab" title="Dice Pool">
-    <img src="https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/main/dice-six-faces-six.svg" alt="dice" class="dice-tray__tab-icon">
-  </button>
-
-  <div class="dice-tray__panel" id="dice-tray-panel">
-
-    <button id="dice-tray-close" class="dice-tray__close" title="Close">✕</button>
-
-    <div class="dice-tray__section">
-      <span class="dice-tray__section-label">Success</span>
-      <div class="threshold-btns">
-        <button class="threshold-btn" data-threshold="4">4+</button>
-        <button class="threshold-btn threshold-btn--active" data-threshold="5">5+</button>
-        <button class="threshold-btn" data-threshold="6">6+</button>
-      </div>
-    </div>
-
-    <div class="dice-tray__section">
-      <span class="dice-tray__section-label">Difficulty</span>
-      <input type="number" id="dice-difficulty" class="dice-tray__mod-input"
-             min="0" max="20" placeholder="0">
-    </div>
-
-    <div class="dice-tray__columns" id="dice-pool-display"></div>
-
-    <div class="dice-tray__actions">
-      <button id="dice-roll-btn"  class="dice-tray__btn dice-tray__btn--roll">Roll</button>
-      <button id="dice-push-btn"  class="dice-tray__btn dice-tray__btn--push" disabled>Push</button>
-      <button id="dice-clear-btn" class="dice-tray__btn dice-tray__btn--clear">Clear</button>
-    </div>
-
-    <div id="dice-success-banner" class="dice-tray__success-banner" style="display:none;"></div>
-
-  </div>
-</div>
 
 <!-- ================================================
      PREGEN MODAL
