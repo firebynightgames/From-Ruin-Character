@@ -1659,6 +1659,20 @@ input.single-digit {
 }
 
 /* ================================================
+   ANIMATION
+   ================================================ */
+@keyframes pip-spin {
+  0%   { transform: rotate(0deg) scale(0.5); opacity: 0; }
+  60%  { transform: rotate(300deg) scale(1.1); opacity: 1; }
+  80%  { transform: rotate(340deg) scale(0.95); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.die-slot__pip--animating {
+  animation: pip-spin 0.5s ease-out forwards;
+}
+
+/* ================================================
    PREGEN MODAL
    ================================================ */
 .pregen-modal {
