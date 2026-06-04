@@ -1065,17 +1065,13 @@ if (totalOnes > 0) {
     const aptNames = aptitudeQueue.map(
       a => a.apt.charAt(0).toUpperCase() + a.apt.slice(1)
     );
-    parts.push(
-      `${aptOnes} ${aptNames.join("/")} 1${aptOnes !== 1 ? "s" : ""}`
-    );
+    parts.push(`${aptOnes} ${aptNames.join("/")}`);
   }
   if (gearOnes > 0) {
     const gearLabel = activeGear?.label || "Gear";
-    parts.push(
-      `${gearOnes} ${gearLabel} 1${gearOnes !== 1 ? "s" : ""}`
-    );
+    parts.push(`${gearOnes} ${gearLabel}`);
   }
-  ones.textContent = `⚠ Stress: ${parts.join(" ")}`;
+  ones.textContent = `⚠ Stress: ${parts.join(", ")}`;
 } else {
   ones.textContent = "⚠ Stress: None";
 }
