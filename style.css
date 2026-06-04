@@ -17,7 +17,7 @@ body {
 }
 
 #character-sheet {
-  flex: 0 0 470px;   /* fixed width, never shrinks */
+  flex: 0 0 440px;   /* fixed width, never shrinks */
   height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
