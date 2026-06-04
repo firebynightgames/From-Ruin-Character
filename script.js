@@ -904,76 +904,70 @@ function renderDiceTray() {
 
   display.innerHTML = "";
 
-  // --- Aptitude column ---
- // In renderDiceTray(), replace the aptitude column section:
-  if (aptitudeQueue.length > 0) {
-    const col = document.createElement("div");
-    col.className = "dice-col";
+  // Build left column: apt[0] + gear stacked
+  // Build right column: apt[1]
+  const hasApt0  = aptitudeQueue.length >= 1;
+  const hasApt1  = aptitudeQueue.length >= 2;
+  const hasGear  = activeGear && rawGearCount() > 0;
 
-    let aptRemovedLeft = aptRemoved;
-    let resultIndex = 0; // counts only non-removed dice
+  const leftCol  = document.createElement("div");
+  leftCol.className = "dice-col";
+  const rightCol = document.createElement("div");
+  rightCol.className = "dice-col";
 
-    aptitudeQueue.forEach(({ apt, count }, qi) => {
-      const hdr = document.createElement("div");
-      hdr.className = qi === 0
-        ? "dice-col__header dice-col__header--apt"
-        : "dice-col__subheader";
-      hdr.textContent = apt.charAt(0).toUpperCase() + apt.slice(1);
-      col.appendChild(hdr);
+  let aptRemovedLeft = aptRemoved;
+  let aptResultIndex = 0;
 
-      for (let i = 0; i < count; i++) {
-        const removed = aptRemovedLeft > 0;
-        if (removed) aptRemovedLeft--;
+  // --- Left column: first aptitude ---
+  if (hasApt0) {
+    const { apt, count } = aptitudeQueue[0];
+    const hdr = document.createElement("div");
+    hdr.className = "dice-col__header dice-col__header--apt";
+    hdr.textContent = apt.charAt(0).toUpperCase() + apt.slice(1);
+    leftCol.appendChild(hdr);
 
-        const slot = document.createElement("div");
-        slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
-
-        if (!removed && lastRollResults?.apt?.[resultIndex] !== undefined) {
-          slot.appendChild(makePip(lastRollResults.apt[resultIndex],
-            "apt", lastPushGroups?.apt?.[resultIndex]));
-          resultIndex++;
-        } else if (!removed) {
-          const img = document.createElement("img");
-          img.src = DIE_SVG_URL; img.alt = apt;
-          img.className = "die-slot__icon die-slot__icon--apt";
-          slot.appendChild(img);
-          resultIndex++;
-        } else {
-          // removed die — show faded icon, no result
-          const img = document.createElement("img");
-          img.src = DIE_SVG_URL; img.alt = apt;
-          img.className = "die-slot__icon die-slot__icon--apt";
-          slot.appendChild(img);
-        }
-        col.appendChild(slot);
+    for (let i = 0; i < count; i++) {
+      const removed = aptRemovedLeft > 0;
+      if (removed) aptRemovedLeft--;
+      const slot = document.createElement("div");
+      slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
+      if (!removed && lastRollResults?.apt?.[aptResultIndex] !== undefined) {
+        slot.appendChild(makePip(lastRollResults.apt[aptResultIndex], "apt", lastPushGroups?.apt?.[aptResultIndex]));
+        aptResultIndex++;
+      } else if (!removed) {
+        const img = document.createElement("img");
+        img.src = DIE_SVG_URL; img.alt = apt;
+        img.className = "die-slot__icon die-slot__icon--apt";
+        slot.appendChild(img);
+        aptResultIndex++;
+      } else {
+        const img = document.createElement("img");
+        img.src = DIE_SVG_URL; img.alt = apt;
+        img.className = "die-slot__icon die-slot__icon--apt";
+        slot.appendChild(img);
       }
-    });
-
-    display.appendChild(col);
+      leftCol.appendChild(slot);
+    }
   }
 
-  // --- Gear column ---
-  if (activeGear && rawGearCount() > 0) {
-    const col = document.createElement("div");
-    col.className = "dice-col";
-
-    const hdr = document.createElement("div");
-    hdr.className = "dice-col__header dice-col__header--gear";
-    hdr.textContent = activeGear.label;
-    col.appendChild(hdr);
+  // --- Left column: gear stacked below apt[0] ---
+  if (hasGear) {
+    const gearHdr = document.createElement("div");
+    gearHdr.className = hasApt0
+      ? "dice-col__subheader dice-col__subheader--gear"
+      : "dice-col__header dice-col__header--gear";
+    gearHdr.textContent = activeGear.label;
+    leftCol.appendChild(gearHdr);
 
     let gearRemovedLeft = gearRemoved;
     let gearResultIndex = 0;
     for (let i = 0; i < activeGear.count; i++) {
       const removed = gearRemovedLeft > 0;
       if (removed) gearRemovedLeft--;
-
       const slot = document.createElement("div");
       slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
-
       if (!removed && lastRollResults?.gear?.[gearResultIndex] !== undefined) {
-        slot.appendChild(makePip(lastRollResults.gear[gearResultIndex],
-          "gear", lastPushGroups?.gear?.[gearResultIndex]));
+        slot.appendChild(makePip(lastRollResults.gear[gearResultIndex], "gear", lastPushGroups?.gear?.[gearResultIndex]));
         gearResultIndex++;
       } else if (!removed) {
         const img = document.createElement("img");
@@ -987,11 +981,44 @@ function renderDiceTray() {
         img.className = "die-slot__icon die-slot__icon--gear";
         slot.appendChild(img);
       }
-      col.appendChild(slot);
+      leftCol.appendChild(slot);
     }
-
-    display.appendChild(col);
   }
+
+  // --- Right column: second aptitude ---
+  if (hasApt1) {
+    const { apt, count } = aptitudeQueue[1];
+    const hdr = document.createElement("div");
+    hdr.className = "dice-col__header dice-col__header--apt";
+    hdr.textContent = apt.charAt(0).toUpperCase() + apt.slice(1);
+    rightCol.appendChild(hdr);
+
+    for (let i = 0; i < count; i++) {
+      const removed = aptRemovedLeft > 0;
+      if (removed) aptRemovedLeft--;
+      const slot = document.createElement("div");
+      slot.className = "die-slot" + (removed ? " die-slot--removed" : "");
+      if (!removed && lastRollResults?.apt?.[aptResultIndex] !== undefined) {
+        slot.appendChild(makePip(lastRollResults.apt[aptResultIndex], "apt", lastPushGroups?.apt?.[aptResultIndex]));
+        aptResultIndex++;
+      } else if (!removed) {
+        const img = document.createElement("img");
+        img.src = DIE_SVG_URL; img.alt = apt;
+        img.className = "die-slot__icon die-slot__icon--apt";
+        slot.appendChild(img);
+        aptResultIndex++;
+      } else {
+        const img = document.createElement("img");
+        img.src = DIE_SVG_URL; img.alt = apt;
+        img.className = "die-slot__icon die-slot__icon--apt";
+        slot.appendChild(img);
+      }
+      rightCol.appendChild(slot);
+    }
+  }
+
+  if (leftCol.children.length > 0)  display.appendChild(leftCol);
+  if (rightCol.children.length > 0) display.appendChild(rightCol);
 
   updatePushBtn();
   updateSuccessBanner();
