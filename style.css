@@ -13,18 +13,15 @@ body {
 }
 
 #character-sheet {
-  max-width: calc(100% - 145px); /* leave room for tray when open */
-  flex-shrink: 0;
-}
-
-#character-sheet {
   position: relative;
   width: 100%;
+  max-width: calc(100vw - 110px); /* never wider than viewport minus tray */
   height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
   padding-bottom: 20px;
   box-sizing: border-box;
+  flex-shrink: 0;   /* ← add this */
 }
 
 #character-sheet,
@@ -286,8 +283,9 @@ body {
   position: relative !important;
   width: 100% !important;
   max-width: 420px !important;
-  height: 0 !important;
-  padding-bottom: 124.8% !important; /* 524/420 = 1.248 — maintains aspect ratio */
+  aspect-ratio: 420 / 524 !important;
+  height: auto !important;
+  padding: 0 !important;
   border: none !important;
   background: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_aptitudes.jpg") no-repeat center / 100% 100% !important;
   box-sizing: border-box;
@@ -1380,8 +1378,8 @@ input.single-digit {
 .dice-tray__panel {
   position: absolute;
   top: 0;
-  right: -145px;     /* hidden off-screen */
-  width: 145px;
+  width: 110px;      /* 2x36px pips + gap + side padding */
+  right: -110px;
   height: 100%;
   background: #1a1a1a;
   border-left: 1px solid #333;
@@ -1395,9 +1393,7 @@ input.single-digit {
   overflow-x: hidden;
 }
 
-.dice-tray__panel.is-open {
-  right: 0;
-}
+.dice-tray__tab.is-open { right: 110px; }
 
 /* Tab position */
 .dice-tray__tab         { right: 0;     }
