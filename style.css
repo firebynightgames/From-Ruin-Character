@@ -13,7 +13,7 @@ body {
 }
 
 #character-sheet {
-  max-width: calc(100% - 140px); /* leave room for tray when open */
+  max-width: calc(100% - 150px); /* leave room for tray when open */
   flex-shrink: 0;
 }
 
@@ -284,9 +284,10 @@ body {
    ================================================ */
 .sheet-panel {
   position: relative !important;
-  width: 420px !important;
-  height: 524px !important;
-  padding: 0 !important;
+  width: 100% !important;
+  max-width: 420px !important;
+  height: 0 !important;
+  padding-bottom: 124.8% !important; /* 524/420 = 1.248 — maintains aspect ratio */
   border: none !important;
   background: url("https://raw.githubusercontent.com/firebynightgames/From-Ruin-Character/refs/heads/main/edgecharacter_aptitudes.jpg") no-repeat center / 100% 100% !important;
   box-sizing: border-box;
@@ -1130,6 +1131,7 @@ input.single-digit {
   border-top: none !important;
   background-color: #ffffff !important;
   box-sizing: border-box;
+  padding: 0 !important;
 }
 
 .acc-body.weapons-body,
