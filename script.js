@@ -1318,6 +1318,7 @@ function wireRowDieIcons() {
           document.querySelector(`input[name="${countField}"]`)?.value
         ) || 0;
       toggleGear(slotKey, label, count);
+
     });
   });
 }
@@ -1717,3 +1718,4 @@ OBR.onReady(async () => {
 injectGearDieIcons();
 wireRowDieIcons();
 renderDiceTray();
+openTray();
