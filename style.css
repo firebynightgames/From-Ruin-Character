@@ -13,7 +13,7 @@ body {
 }
 
 #character-sheet {
-  max-width: calc(100% - 150px); /* leave room for tray when open */
+  max-width: calc(100% - 145px); /* leave room for tray when open */
   flex-shrink: 0;
 }
 
@@ -1377,12 +1377,11 @@ input.single-digit {
   opacity: 0.8;
 }
 
-/* The sliding panel */
 .dice-tray__panel {
   position: absolute;
   top: 0;
-  right: -120px; /* hidden off-screen */
-  width: 120px;
+  right: -145px;     /* hidden off-screen */
+  width: 145px;
   height: 100%;
   background: #1a1a1a;
   border-left: 1px solid #333;
@@ -1400,21 +1399,9 @@ input.single-digit {
   right: 0;
 }
 
-/* Close button — top right of panel */
-.dice-tray__close {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: transparent;
-  border: none;
-  color: #555;
-  font-size: 13px;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  transition: color 0.15s;
-  font-family: inherit;
-}
+/* Tab position */
+.dice-tray__tab         { right: 0;     }
+.dice-tray__tab.is-open { right: 145px; }
 
 .dice-tray__close:hover { color: #e74c3c; }
 
