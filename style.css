@@ -895,8 +895,8 @@ input.single-digit {
 }
 
 .col-gear-name, .hdr-gear-name { left: 2%;  width: 60%; }
-.col-gear-val,  .hdr-gear-val  { left: 74%; width: 12%; text-align: center; }
-.col-gear-bulk, .hdr-gear-bulk { left: 88%; width: 10%; }
+.col-gear-val,  .hdr-gear-val  { left: 70%; width: 10%; text-align: center; }
+.col-gear-bulk, .hdr-gear-bulk { left: 85%; width: 10%; }
 
 .hdr-gear-name { text-align: left !important; padding-left: 6px; }
 .col-gear-name input { text-align: left !important; padding-left: 6px; }
