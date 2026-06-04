@@ -665,8 +665,8 @@ input.single-digit {
 
 .weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;    width: 37%; }
 .weapons-headers .hdr-name                            { text-align: left !important; padding-left: 6px; }
-.weapon-row .col-die                                  { left: 40%;   width: 4%;  }
-.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 44%;   width: 14%; }
+.weapon-row .col-die                                  { left: 35%;   width: 4%;  }
+.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 40%;   width: 4%; }
 .weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 59%;   width: 9%; }
 .weapon-row .col-size, .weapons-headers .hdr-size     { left: 69%;   width: 9%; }
 .weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%; width: 9%; }
