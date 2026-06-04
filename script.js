@@ -1046,20 +1046,20 @@ function updateSuccessBanner() {
   if (hasPushed) headline.textContent += " Pushed";
   banner.appendChild(headline);
 
-  if (totalOnes > 0) {
-    const ones = document.createElement("span");
-    ones.className = "result-ones-summary";
-    ones.textContent = `⚠ Stress`;
-    const aptLine = document.createElement("span");
-    aptLine.className = "result-ones-summary";
-    aptLine.textContent = `Aptitude: ${aptOnes}`;
-    const gearLine = document.createElement("span");
-    gearLine.className = "result-ones-summary";
-    gearLine.textContent = `Gear: ${gearOnes}`;
-    banner.appendChild(ones);
-    banner.appendChild(aptLine);
-    banner.appendChild(gearLine);
-  }
+   if (totalOnes > 0) {
+     const ones = document.createElement("span");
+     ones.className = "result-ones-summary" + (hasPushed ? " result-ones-summary--stress" : "");
+     ones.textContent = `⚠ Stress`;
+     const aptLine = document.createElement("span");
+     aptLine.className = "result-ones-summary" + (hasPushed ? " result-ones-summary--stress" : "");
+     aptLine.textContent = `Aptitude: ${aptOnes}`;
+     const gearLine = document.createElement("span");
+     gearLine.className = "result-ones-summary" + (hasPushed ? " result-ones-summary--stress" : "");
+     gearLine.textContent = `Gear: ${gearOnes}`;
+     banner.appendChild(ones);
+     banner.appendChild(aptLine);
+     banner.appendChild(gearLine);
+   }
 }
    
 /* -----------------------------------------------
