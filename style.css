@@ -1336,15 +1336,36 @@ input.single-digit {
 /* ================================================
    DICE TRAY — Right-panel pop-out
    ================================================ */
-
-/* The tab button fixed to the right edge */
 #dice-tray {
   position: fixed;
   top: 0;
   right: 0;
+  width: 110px;
   height: 100%;
   z-index: 200;
-  pointer-events: none; /* children re-enable */
+  pointer-events: none;
+}
+
+.dice-tray__panel {
+  position: absolute;
+  top: 0;
+  right: -110px;
+  width: 110px;
+  height: 100%;
+  background: #1a1a1a;
+  border-left: 1px solid #333;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 6px;
+  pointer-events: auto;
+  transition: right 0.25s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dice-tray__panel.is-open {
+  right: 0;
 }
 
 .dice-tray__tab {
@@ -1366,8 +1387,8 @@ input.single-digit {
   z-index: 201;
 }
 
-.dice-tray__tab:hover { background: #444; }
-.dice-tray__tab.is-open { right: 120px; background: #333; }
+.dice-tray__tab:hover     { background: #444; }
+.dice-tray__tab.is-open   { right: 110px; background: #333; }
 
 .dice-tray__tab-icon {
   width: 18px;
@@ -1376,29 +1397,20 @@ input.single-digit {
   opacity: 0.8;
 }
 
-.dice-tray__panel {
+.dice-tray__close {
   position: absolute;
-  top: 0;
-  width: 110px;      /* 2x36px pips + gap + side padding */
-  right: -110px;
-  height: 100%;
-  background: #1a1a1a;
-  border-left: 1px solid #333;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  padding: 8px 6px;
-  pointer-events: auto;
-  transition: right 0.25s ease;
-  overflow-y: auto;
-  overflow-x: hidden;
+  top: 6px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+  font-family: inherit;
 }
-
-.dice-tray__tab.is-open { right: 110px; }
-
-/* Tab position */
-.dice-tray__tab         { right: 0;     }
-.dice-tray__tab.is-open { right: 145px; }
 
 .dice-tray__close:hover { color: #e74c3c; }
 
