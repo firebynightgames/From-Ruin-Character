@@ -42,7 +42,8 @@ body {
 .sheet-header-area {
   display: flex !important;
   justify-content: space-between !important;
-  align-items: center !important; 
+  align-items: center !important;
+  flex-direction: row !important;
   width: 357px !important;
   height: 65px !important;
   position: relative !important;
