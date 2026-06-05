@@ -665,8 +665,8 @@ input.single-digit {
 
 .weapon-row .col-name, .weapons-headers .hdr-name     { left: 2%;    width: 37%; }
 .weapons-headers .hdr-name                            { text-align: left !important; padding-left: 6px; }
-.weapon-row .col-die                                  { left: 35%;   width: 4%;  }
-.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 40%;   width: 4%; }
+.weapon-row .col-die                                  { left: 37%;   width: 5%;  }
+.weapon-row .col-gear, .weapons-headers .hdr-gear     { left: 43%;   width: 13%; }
 .weapon-row .col-hand, .weapons-headers .hdr-hand     { left: 59%;   width: 9%; }
 .weapon-row .col-size, .weapons-headers .hdr-size     { left: 69%;   width: 9%; }
 .weapon-row .col-damage, .weapons-headers .hdr-dmg    { left: 78.5%; width: 9%; }
@@ -845,8 +845,8 @@ input.single-digit {
 }
 
 .col-armor-name, .hdr-armor-name         { left: 2%;    width: 37%; }
-.armor-row .col-die                      { left: 40%;   width: 4%;  }
-.col-armor-gear, .hdr-armor-gear         { left: 44%;   width: 14%; }
+.armor-row .col-die                      { left: 37%;   width: 5%;  }
+.col-armor-gear, .hdr-armor-gear         { left: 43%;   width: 13%; }
 .col-armor-features, .hdr-armor-features { left: 59%;   width: 28%; }
 .col-armor-bulk, .hdr-armor-bulk         { left: 88%;   width: 10%; }
 
@@ -894,7 +894,7 @@ input.single-digit {
   height: 24px;
 }
 
-.col-gear-name, .hdr-gear-name { left: 2%;  width: 55%; }
+.col-gear-name, .hdr-gear-name { left: 2%;  width: 57%; }
 .col-gear-val,  .hdr-gear-val  { left: 60%; width: 10%; text-align: center; }
 .col-gear-bulk, .hdr-gear-bulk { left: 85%; width: 10%; }
 
