@@ -1368,64 +1368,41 @@ async function checkDicePlusReady() {
    ================================================ */
 const PREGENS = [
   {
-    name:    "Mira Ashveil",
-    background: "Smuggler",
-    tagline: "She always has a way out — usually through someone else's wall.",
-    aptitudeTags: ["Finesse 4", "Deceive 3", "Adapt 3"],
+    name: "Kodah",
+    background: "Hammerwhisperer",
+    tagline: "A warrior's path runs through the places spirits dare not follow.",
+    aptitudeTags: ["Finesse 3", "Exert 3", "Adapt 3", "Sense 2", "Resist 3"],
     data: {
       named: {
-        attr_finesse: "4", attr_devise: "1", attr_exert: "2",
-        attr_adapt: "3",   attr_sense: "2",  attr_resist: "1",
-        attr_deceive: "3", attr_relate: "2",
-        attr_advances_left: "3", attr_advances_right: "10"
-      },
-      checks: {},
-      desc: [
-        "Mira Ashveil", "32-year-old", "impulsive",
-        "Vashari", "narrowly escaped", "smuggler",
-        "a cracked compass", "a debt that never got repaid"
-      ],
-      features: [
-        "Always has a hidden exit route planned before entering any building.",
-        "Can forge travel documents given an hour and the right supplies."
-      ],
-      drives:   ["Get the cargo through, no matter the cost."],
-      flaws:    ["Trusts no one completely — not even her closest allies."],
-      relics:   ["", "", ""],
-      wounds:   [],
-      pairState: {
-        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
-        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
-        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
-      }
-    }
-  },
-  {
-    name:    "Corryn Dusk",
-    background: "Soldier",
-    tagline: "The war ended. He didn't get the message.",
-    aptitudeTags: ["Exert 4", "Resist 3", "Sense 3"],
-    data: {
-      named: {
-        attr_finesse: "2", attr_devise: "1", attr_exert: "4",
-        attr_adapt: "2",   attr_sense: "3",  attr_resist: "3",
+        attr_finesse: "3", attr_devise: "2", attr_exert: "3",
+        attr_adapt: "3",   attr_sense: "2",  attr_resist: "3",
         attr_deceive: "1", attr_relate: "2",
-        attr_advances_left: "3", attr_advances_right: "10"
+        attr_advances_left: "0", attr_advances_right: "0",
+        attr_weapon_name_1: "Large Hammer",   attr_weapon_gear_a_1: "2", attr_weapon_gear_b_1: "2", attr_weapon_hand_1: "1", attr_weapon_size_1: "3",  attr_weapon_damage_1: "4", attr_weapon_bulk_1: "4", attr_weapon_features_1: "Blunt, Pierce(1)",
+        attr_weapon_name_2: "Small Blade",    attr_weapon_gear_a_2: "1", attr_weapon_gear_b_2: "1", attr_weapon_hand_2: "1", attr_weapon_size_2: "0",  attr_weapon_damage_2: "1", attr_weapon_bulk_2: "1", attr_weapon_features_2: "Conceal, Quick, Throw",
+        attr_armor_name_1: "Flexible Medium Coat", attr_armor_gear_a_1: "3", attr_armor_gear_b_1: "3", attr_armor_features_1: "Cover(1), Flexible", attr_armor_bulk_1: "6",
+        attr_gear_name_1: "Satchel",       attr_gear_val_1: "3",  attr_gear_bulk_1: "1",
+        attr_gear_name_2: "Std. Clothing", attr_gear_val_2: "1",  attr_gear_bulk_2: "0",
+        attr_gear_name_3: "Torch",         attr_gear_val_3: "1",  attr_gear_bulk_3: "2",
+        attr_gear_name_4: "Healing Kit",   attr_gear_val_4: "3",  attr_gear_bulk_4: "1",
+        attr_gear_name_5: "Quiver",        attr_gear_val_5: "2",  attr_gear_bulk_5: "1",
+        attr_gear_name_6: "Waterskin",     attr_gear_val_6: "1",  attr_gear_bulk_6: "1",
+        attr_gear_name_7: "Ration (x2)",   attr_gear_val_7: "1",  attr_gear_bulk_7: "1",
+        attr_gear_name_8: "Blanket",       attr_gear_val_8: "2",  attr_gear_bulk_8: "2",
+        attr_relic_1: "Hood — A crystal that, when struck, emits silence over a size 3 area. Lasts for 1 hour. Can be moved."
       },
       checks: {},
-      desc: [
-        "Corryn Dusk", "40-year-old", "stubborn",
-        "Halteri", "survived", "soldier",
-        "a rusted medal", "the siege of Vael Hold"
-      ],
+      desc: ["Kodah", "Mature", "Guarded", "Yahtu", "Inherited", "Hammerwhisperer", "Loss", "Obsidian Chip"],
       features: [
-        "Trained to keep moving under fire — ignores the first Condition each encounter.",
-        "Can read a battlefield at a glance; always acts first in structured chaos."
+        "Soldier (Hammer)",
+        "Ritualist",
+        "Med. Equipment — You start out with the medium equipment package for your ancestry.",
+        "Parry — Spend an edge to add the gear value of your weapon to a defense roll."
       ],
-      drives:   ["Protect whoever's left standing beside me."],
-      flaws:    ["Solves problems with force long after subtlety would've worked better."],
-      relics:   ["", "", ""],
-      wounds:   [],
+      drives: ["Some answers lie beyond sight, calling to those willing to descend."],
+      flaws: ["Avoid revealing important truths or personal insights, then refresh."],
+      relics: ["Hood — A crystal that, when struck, emits silence over a size 3 area. Lasts for 1 hour. Can be moved.", "", ""],
+      wounds: [],
       pairState: {
         stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
         trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
@@ -1434,31 +1411,223 @@ const PREGENS = [
     }
   },
   {
-    name:    "Sable",
-    background: "Arcanist",
-    tagline: "She collects secrets the way other people collect scars.",
-    aptitudeTags: ["Devise 4", "Sense 3", "Relate 3"],
+    name: "Bolverk",
+    background: "Ark-Smith",
+    tagline: "A Keen Mind Can Craft a Spear From a Stick.",
+    aptitudeTags: ["Devise 3", "Exert 3", "Adapt 3", "Finesse 2", "Sense 2"],
     data: {
       named: {
-        attr_finesse: "2", attr_devise: "4", attr_exert: "1",
-        attr_adapt: "2",   attr_sense: "3",  attr_resist: "1",
-        attr_deceive: "2", attr_relate: "3",
-        attr_advances_left: "3", attr_advances_right: "10"
+        attr_finesse: "2", attr_devise: "3", attr_exert: "3",
+        attr_adapt: "3",   attr_sense: "2",  attr_resist: "2",
+        attr_deceive: "2", attr_relate: "1",
+        attr_advances_left: "0", attr_advances_right: "0",
+        attr_weapon_name_1: "Medium Axe",   attr_weapon_gear_a_1: "1", attr_weapon_gear_b_1: "1", attr_weapon_hand_1: "1", attr_weapon_size_1: "2",  attr_weapon_damage_1: "3", attr_weapon_bulk_1: "5", attr_weapon_features_1: "Hook",
+        attr_weapon_name_2: "Small Blade",  attr_weapon_gear_a_2: "1", attr_weapon_gear_b_2: "1", attr_weapon_hand_2: "1", attr_weapon_size_2: "0",  attr_weapon_damage_2: "1", attr_weapon_bulk_2: "1", attr_weapon_features_2: "Conceal, Quick, Throw",
+        attr_weapon_name_3: "Medium Shield",attr_weapon_gear_a_3: "2", attr_weapon_gear_b_3: "2", attr_weapon_hand_3: "1", attr_weapon_size_3: "2",  attr_weapon_damage_3: "1", attr_weapon_bulk_3: "3", attr_weapon_features_3: "Conceal, Quick, Throw",
+        attr_armor_name_1: "Medium Shirt",  attr_armor_gear_a_1: "3", attr_armor_gear_b_1: "3", attr_armor_features_1: "", attr_armor_bulk_1: "7",
+        attr_gear_name_1: "Sack",           attr_gear_val_1: "1",  attr_gear_bulk_1: "1",
+        attr_gear_name_2: "Simple Clothing",attr_gear_val_2: "1",  attr_gear_bulk_2: "0",
+        attr_gear_name_3: "Torch",          attr_gear_val_3: "1",  attr_gear_bulk_3: "2",
+        attr_gear_name_4: "Machine Tools",  attr_gear_val_4: "3",  attr_gear_bulk_4: "1",
+        attr_gear_name_5: "Bedroll",        attr_gear_val_5: "2",  attr_gear_bulk_5: "3",
+        attr_gear_name_6: "Alcohol Flask",  attr_gear_val_6: "1",  attr_gear_bulk_6: "1",
+        attr_gear_name_7: "Waterskin",      attr_gear_val_7: "1",  attr_gear_bulk_7: "1",
+        attr_gear_name_8: "Ration (x2)",    attr_gear_val_8: "1",  attr_gear_bulk_8: "1",
       },
       checks: {},
-      desc: [
-        "Sable", "27-year-old", "obsessive",
-        "Orvyn", "sought out", "arcanist",
-        "a sealed letter she's never opened", "a ritual gone wrong in the Deep"
-      ],
+      desc: ["Bolverk", "Mid-Aged", "Doomed", "Hark", "Trained for", "Ark-Smith", "Failure", "Solar Cell"],
       features: [
-        "Can read residual arcane traces left by rituals up to a week old.",
-        "Knows three languages no living person officially teaches."
+        "Scavenger (Search)",
+        "Artisan (Improvise)",
+        "Med. Equipment — You start out with the medium equipment package for your ancestry.",
+        "Inventing — Gain an extra success level when you succeed at creating new tools, traps, or knick-nacks."
       ],
-      drives:   ["Understand what the Deep actually is before it claims me."],
-      flaws:    ["Will delay action indefinitely if she thinks there's more to learn first."],
-      relics:   ["", "", ""],
-      wounds:   [],
+      drives: ["Even small creations breathe life into ruin."],
+      flaws: ["Declare defeat or abandon an achievable goal in the face of adversity, then refresh."],
+      relics: [
+        "Spike — A thick metal spike of size 1 that, once activated, cannot be moved.",
+        "Enhancer — A small ceramic triangle that increases the effect of another relic by x2.",
+        ""
+      ],
+      wounds: [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  },
+  {
+    name: "Roa",
+    background: "Wayfinder",
+    tagline: "Danger is a doorway, and I was born to open it.",
+    aptitudeTags: ["Finesse 3", "Devise 3", "Sense 3", "Exert 2", "Resist 2"],
+    data: {
+      named: {
+        attr_finesse: "3", attr_devise: "3", attr_exert: "2",
+        attr_adapt: "2",   attr_sense: "3",  attr_resist: "2",
+        attr_deceive: "2", attr_relate: "2",
+        attr_advances_left: "0", attr_advances_right: "0",
+        attr_weapon_name_1: "Strong Medium Bow", attr_weapon_gear_a_1: "1", attr_weapon_gear_b_1: "1", attr_weapon_hand_1: "1", attr_weapon_size_1: "3",  attr_weapon_damage_1: "4", attr_weapon_bulk_1: "4", attr_weapon_features_1: "Range 4",
+        attr_weapon_name_2: "Small Pick",        attr_weapon_gear_a_2: "1", attr_weapon_gear_b_2: "1", attr_weapon_hand_2: "1", attr_weapon_size_2: "1",  attr_weapon_damage_2: "2", attr_weapon_bulk_2: "1", attr_weapon_features_2: "Pierce 1",
+        attr_armor_name_1: "Strong Light Shirt", attr_armor_gear_a_1: "2", attr_armor_gear_b_1: "2", attr_armor_features_1: "Strong", attr_armor_bulk_1: "3",
+        attr_gear_name_1: "Satchel",        attr_gear_val_1: "3",  attr_gear_bulk_1: "1",
+        attr_gear_name_2: "Std. Clothing",  attr_gear_val_2: "1",  attr_gear_bulk_2: "0",
+        attr_gear_name_3: "Torch",          attr_gear_val_3: "1",  attr_gear_bulk_3: "2",
+        attr_gear_name_4: "Survival Tools", attr_gear_val_4: "3",  attr_gear_bulk_4: "1",
+        attr_gear_name_5: "Bedroll",        attr_gear_val_5: "2",  attr_gear_bulk_5: "3",
+        attr_gear_name_6: "Quiver (20)",    attr_gear_val_6: "2",  attr_gear_bulk_6: "1",
+        attr_gear_name_7: "Waterskin",      attr_gear_val_7: "1",  attr_gear_bulk_7: "1",
+        attr_gear_name_8: "Ration (x2)",    attr_gear_val_8: "1",  attr_gear_bulk_8: "1",
+      },
+      checks: {},
+      desc: ["Roa", "Young", "Naive", "Teng", "Volunteered for", "Wayfinder", "Oppression", "Stack of Discs"],
+      features: [
+        "Hunter",
+        "Outlander",
+        "Ranger — Gain an extra success level when you succeed at the Ranger role.",
+        "Sprinter — Spend an edge to gain two zones of movement. Can be repeated."
+      ],
+      drives: ["The earth cannot bind what was born to roam."],
+      flaws: ["Trust blindly or make assumptions counter to survival instincts, then refresh."],
+      relics: ["Mag — A crystal cube that, when crushed, emits a powerful sonic wave in a size 3 area.", "", ""],
+      wounds: [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  },
+  {
+    name: "Orujin",
+    background: "Storm Chaser",
+    tagline: "Carry the flame, even when it burns.",
+    aptitudeTags: ["Finesse 3", "Devise 3", "Relate 3", "Resist 3", "Adapt 3"],
+    data: {
+      named: {
+        attr_finesse: "3", attr_devise: "3", attr_exert: "1",
+        attr_adapt: "3",   attr_sense: "2",  attr_resist: "3",
+        attr_deceive: "2", attr_relate: "3",
+        attr_advances_left: "0", attr_advances_right: "0",
+        attr_weapon_name_1: "Strong Small Bow", attr_weapon_gear_a_1: "1", attr_weapon_gear_b_1: "1", attr_weapon_hand_1: "1", attr_weapon_size_1: "2",  attr_weapon_damage_1: "3", attr_weapon_bulk_1: "3", attr_weapon_features_1: "Range 3",
+        attr_weapon_name_2: "Medium Mace",      attr_weapon_gear_a_2: "1", attr_weapon_gear_b_2: "1", attr_weapon_hand_2: "1", attr_weapon_size_2: "2",  attr_weapon_damage_2: "3", attr_weapon_bulk_2: "3", attr_weapon_features_2: "Blunt",
+        attr_armor_name_1: "Flexible Light Shirt", attr_armor_gear_a_1: "2", attr_armor_gear_b_1: "2", attr_armor_features_1: "Flexible", attr_armor_bulk_1: "2",
+        attr_gear_name_1: "Quiver (1)",     attr_gear_val_1: "2",  attr_gear_bulk_1: "1",
+        attr_gear_name_2: "Std. Clothing",  attr_gear_val_2: "1",  attr_gear_bulk_2: "0",
+        attr_gear_name_3: "Torch",          attr_gear_val_3: "1",  attr_gear_bulk_3: "2",
+        attr_gear_name_4: "Writing Kit",    attr_gear_val_4: "3",  attr_gear_bulk_4: "1",
+        attr_gear_name_5: "Bedroll",        attr_gear_val_5: "2",  attr_gear_bulk_5: "3",
+        attr_gear_name_6: "50' Rope",       attr_gear_val_6: "2",  attr_gear_bulk_6: "2",
+        attr_gear_name_7: "Waterskin",      attr_gear_val_7: "1",  attr_gear_bulk_7: "1",
+        attr_gear_name_8: "Ration (x2)",    attr_gear_val_8: "1",  attr_gear_bulk_8: "1",
+      },
+      checks: {},
+      desc: ["Orujin", "Young", "Weary", "Rovin", "Trained for", "Storm Chaser", "Disdain", "Braid of Hair"],
+      features: [
+        "Infiltrator",
+        "Trader",
+        "Air Sphere — You gain access to the air sphere, giving you powers over the air.",
+        "Fire Sphere — You gain access to the fire sphere, giving you powers over fire.",
+        "Water Sphere — You gain access to the water sphere, giving you powers over water, ice, and steam."
+      ],
+      drives: ["The arcane is a river, that I must choose where it flows."],
+      flaws: ["Prioritize rest or disengagement when others require your contribution, then refresh."],
+      relics: [
+        "Shrieker — A wide ceramic cylinder that, when activated, emits an ear-piercing sound if it is touched.",
+        "Rewind — A glass lens that, when looked through, shows the last hour of this location.",
+        ""
+      ],
+      wounds: [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  },
+  {
+    name: "Leandra",
+    background: "Law-Seeker",
+    tagline: "A concealed power is a knife wrapped in cloth, harmless until revealed.",
+    aptitudeTags: ["Deceive 3", "Sense 3", "Adapt 3", "Relate 3", "Finesse 2"],
+    data: {
+      named: {
+        attr_finesse: "2", attr_devise: "2", attr_exert: "2",
+        attr_adapt: "3",   attr_sense: "3",  attr_resist: "1",
+        attr_deceive: "3", attr_relate: "3",
+        attr_advances_left: "0", attr_advances_right: "0",
+        attr_weapon_name_1: "Medium Crossbow", attr_weapon_gear_a_1: "2", attr_weapon_gear_b_1: "2", attr_weapon_hand_1: "1", attr_weapon_size_1: "2",  attr_weapon_damage_1: "4", attr_weapon_bulk_1: "4", attr_weapon_features_1: "Pierce 2, Range 4",
+        attr_weapon_name_2: "Small Blade",     attr_weapon_gear_a_2: "1", attr_weapon_gear_b_2: "1", attr_weapon_hand_2: "1", attr_weapon_size_2: "0",  attr_weapon_damage_2: "1", attr_weapon_bulk_2: "1", attr_weapon_features_2: "Conceal, Quick, Throw",
+        attr_armor_name_1: "Strong Light Shirt", attr_armor_gear_a_1: "2", attr_armor_gear_b_1: "2", attr_armor_features_1: "Strong", attr_armor_bulk_1: "3",
+        attr_gear_name_1: "Sack",              attr_gear_val_1: "1",  attr_gear_bulk_1: "1",
+        attr_gear_name_2: "Fine Clothing",     attr_gear_val_2: "2",  attr_gear_bulk_2: "0",
+        attr_gear_name_3: "Torch",             attr_gear_val_3: "1",  attr_gear_bulk_3: "2",
+        attr_gear_name_4: "Lockpicking Tools", attr_gear_val_4: "3",  attr_gear_bulk_4: "2",
+        attr_gear_name_5: "Quiver (1)",        attr_gear_val_5: "2",  attr_gear_bulk_5: "1",
+        attr_gear_name_6: "Blanket",           attr_gear_val_6: "2",  attr_gear_bulk_6: "2",
+        attr_gear_name_7: "Waterskin",         attr_gear_val_7: "1",  attr_gear_bulk_7: "1",
+        attr_gear_name_8: "Ration (x2)",       attr_gear_val_8: "1",  attr_gear_bulk_8: "1",
+      },
+      checks: {},
+      desc: ["Leandra", "Mature", "Paranoid", "Chryo", "Was forced into", "Law-Seeker", "Loss", "Prismatic Glass"],
+      features: [
+        "Envoy (Persuasion)",
+        "Scavenger",
+        "Mind Sphere — You gain access to the mind sphere, giving you powers over the mind, such as someone's thoughts or emotions."
+      ],
+      drives: ["Survival requires hearing the predator long before it growls."],
+      flaws: ["Accuse someone of deceit or conspiracy without evidence, then refresh."],
+      relics: [
+        "Compass — A metal chip that, when activated, will guide you to the object it touches for 7 days.",
+        "Eye — Two pieces that can be looked through as if connected no matter the distance. Cannot be moved once separated.",
+        ""
+      ],
+      wounds: [],
+      pairState: {
+        stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
+        pairConditions: { finesse_devise: false, exert_adapt: false, sense_resist: false, deceive_relate: false }
+      }
+    }
+  },
+  {
+    name: "Eshee",
+    background: "Blade Singer",
+    tagline: "A traitor's mark stains the soul.",
+    aptitudeTags: ["Exert 3", "Relate 3", "Resist 3", "Finesse 2", "Adapt 2"],
+    data: {
+      named: {
+        attr_finesse: "2", attr_devise: "1", attr_exert: "3",
+        attr_adapt: "2",   attr_sense: "2",  attr_resist: "3",
+        attr_deceive: "2", attr_relate: "3",
+        attr_advances_left: "0", attr_advances_right: "0",
+        attr_weapon_name_1: "Medium Blade", attr_weapon_gear_a_1: "2", attr_weapon_gear_b_1: "2", attr_weapon_hand_1: "1", attr_weapon_size_1: "1",  attr_weapon_damage_1: "2", attr_weapon_bulk_1: "2", attr_weapon_features_1: "Quick",
+        attr_weapon_name_2: "Small Blade",  attr_weapon_gear_a_2: "1", attr_weapon_gear_b_2: "1", attr_weapon_hand_2: "1", attr_weapon_size_2: "0",  attr_weapon_damage_2: "1", attr_weapon_bulk_2: "1", attr_weapon_features_2: "Conceal, Quick, Throw",
+        attr_armor_name_1: "Medium Shirt",  attr_armor_gear_a_1: "3", attr_armor_gear_b_1: "3", attr_armor_features_1: "", attr_armor_bulk_1: "7",
+        attr_armor_name_2: "Light Cap",     attr_armor_gear_a_2: "2", attr_armor_gear_b_2: "2", attr_armor_features_2: "", attr_armor_bulk_2: "2",
+        attr_gear_name_1: "Purse",          attr_gear_val_1: "2",  attr_gear_bulk_1: "0",
+        attr_gear_name_2: "Fine Clothing",  attr_gear_val_2: "2",  attr_gear_bulk_2: "0",
+        attr_gear_name_3: "Lantern",        attr_gear_val_3: "3",  attr_gear_bulk_3: "1",
+        attr_gear_name_4: "Writing Kit",    attr_gear_val_4: "3",  attr_gear_bulk_4: "1",
+        attr_gear_name_5: "Blanket",        attr_gear_val_5: "2",  attr_gear_bulk_5: "2",
+        attr_gear_name_6: "Alcohol Flask",  attr_gear_val_6: "1",  attr_gear_bulk_6: "1",
+        attr_gear_name_7: "Waterskin",      attr_gear_val_7: "1",  attr_gear_bulk_7: "1",
+        attr_gear_name_8: "Ration (x2)",    attr_gear_val_8: "1",  attr_gear_bulk_8: "1",
+      },
+      checks: {},
+      desc: ["Eshee", "Mid-Aged", "Vengeful", "Axi", "Was sworn into", "Blade Singer", "Betrayal", "Shrunken Head"],
+      features: [
+        "Artisan (Repair)",
+        "Soldier (Blade)",
+        "Med. Equipment — You start out with the medium equipment package for your ancestry.",
+        "Edged Weapon — Gain an extra success level when you succeed at fighting with axes, blades, or other edged weapons.",
+        "Relentless — Your determination is unmatched. You can spend an edge to push your roll again."
+      ],
+      drives: ["The beast slumbers within me, but it stirs with every provocation."],
+      flaws: ["Pursue retribution excessively, distracting from the broader goal, then refresh."],
+      relics: ["Ricochet — A thick metal disk that, when activated, bounces until it hits water, moving exponentially faster every time it bounces. Base injury if impacted is 1, add 1 each bounce.", "", ""],
+      wounds: [],
       pairState: {
         stress:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
         trauma:         { finesse_devise: Array(6).fill(false), exert_adapt: Array(6).fill(false), sense_resist: Array(6).fill(false), deceive_relate: Array(6).fill(false) },
