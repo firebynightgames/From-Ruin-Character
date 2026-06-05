@@ -718,7 +718,7 @@ function updateCurrentAptitudes() {
       if (el) {
         if (traumaCount > 0 && base > 0) {
           el.textContent = current;
-          el.style.color = current === 0 ? "red" : "rgba(255,0,0,0.7)";
+          el.style.color = current === 0 ? "#c0392b" : "#e74c3c";
         } else {
           el.textContent = "";
         }
