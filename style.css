@@ -18,12 +18,17 @@ body {
 
 #character-sheet {
   flex: 0 0 420px;
-  margin-right: 110px;  /* ← add this */
+  margin-right: 110px;
   height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
   padding-bottom: 20px;
   box-sizing: border-box;
+  scrollbar-width: none;
+}
+
+#character-sheet::-webkit-scrollbar {
+  display: none;
 }
 
 #character-sheet,
@@ -209,18 +214,18 @@ body {
 }
 
 .edge-box:not(:checked):hover {
-  border-color: #27ae60 !important;
-  background-color: #1e8449 !important;
+  border-color: #6cc6a0 !important;
+  background-color: #27ae60 !important;
 }
 
 .edge-box:checked {
-  background-color: #2ecc71 !important;
+  background-color: #27ae60 !important;
   border-color: #6cc6a0 !important;
 }
 
 .edge-box:checked:hover {
-  background-color: #27ae60 !important;
-  border-color: #1e8449 !important;
+  background-color: #6cc6a0 !important;
+  border-color: #27ae60 !important;
 }
 
 /* ================================================
@@ -284,7 +289,7 @@ body {
 .sheet-panel {
   position: relative !important;
   width: 100% !important;
-  max-width: 420px !important;
+  max-width: 100% !important;
   aspect-ratio: 420 / 524 !important;
   height: auto !important;
   padding: 0 !important;
@@ -316,7 +321,7 @@ body {
   position: absolute;
   font-size: 16px;
   font-weight: bold;
-  color: #C0392B;
+  color: #c0392b;
   text-align: center;
   pointer-events: none;
   width: 12.6%;
@@ -346,11 +351,11 @@ body {
 }
 
 .condition-checkbox:hover,
-.track:hover                  { background: rgba(244, 162, 89, 0.5); }
+.track:hover                  { background: rgba(231, 76, 60, 0.5); }
 .condition-checkbox:checked,
-.track:checked                { background: #f4a259 !important; }
+.track:checked                { background: #c0392b !important; }
 .condition-checkbox:checked:hover,
-.track:checked:hover          { background: #d9823f !important; }
+.track:checked:hover          { background: #e74c3c !important; }
 
 .condition-checkbox { left: 37.75%; }
 .cond-row-1 { top: 5.95%; }
@@ -496,9 +501,9 @@ body {
   margin: 0;
 }
 
-.diamond-box:checked          { background-color: #6cc6a0; border-color: #27ae60; }
-.diamond-box:hover            { border-color: #27ae60; background-color: #1e8449; }
-.diamond-box:checked:hover    { background-color: #1e8449; border-color: #27ae60; }
+.diamond-box:checked          { background-color: #27ae60; border-color: #6cc6a0; }
+.diamond-box:hover            { border-color: #6cc6a0; background-color: #27ae60; }
+.diamond-box:checked:hover    { background-color: #6cc6a0; border-color: #27ae60; }
 
 .db-1 { left: 6%;     top: 45%; }
 .db-2 { left: 35%;    top: 45%; }
@@ -744,9 +749,9 @@ input.single-digit {
   transition: background 0.15s ease;
 }
 
-.wound-patch:checked          { background-color: #6cc6a0; border-color: #27ae60; }
-.wound-patch:hover            { border-color: #27ae60; background-color: #1e8449; }
-.wound-patch:checked:hover    { border-color: #27ae60; background-color: #1e8449; }
+.wound-patch:checked          { background-color: #27ae60; border-color: #6cc6a0; }
+.wound-patch:hover            { border-color: #6cc6a0; background-color: #27ae60; }
+.wound-patch:checked:hover    { border-color: #27ae60; background-color: #6cc6a0; }
 
 /* ================================================
    ARMOR
@@ -1127,8 +1132,7 @@ input.single-digit {
    ACCORDION COHESION
    ================================================ */
 .acc-body.sheet-panel {
-  border: 1px solid #ccc !important;
-  border-top: none !important;
+  border: none !important;
   background-color: #ffffff !important;
   box-sizing: border-box;
   padding: 0 !important;
@@ -1468,7 +1472,7 @@ input.single-digit {
 .dice-col__header--apt  { color: #c0392b; }
 .dice-col__header--gear { color: #888; }
 
-/* Sub-header for second aptitude in same column */
+/* Sub-header for gear below first aptitude */
 .dice-col__subheader {
   font-size: 8px;
   font-weight: bold;
@@ -1484,6 +1488,8 @@ input.single-digit {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.dice-col__subheader--gear { color: #888; }
 
 /* Each die slot */
 .die-slot {
@@ -1501,8 +1507,8 @@ input.single-digit {
 
 /* Die icon (before rolling) */
 .die-slot__icon {
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
 }
 
 .die-slot__icon--apt {
@@ -1522,10 +1528,10 @@ input.single-digit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 4px;
-  font-size: 25px;
+  font-size: 20px;
   font-weight: bold;
   font-family: "Century Gothic", sans-serif;
   line-height: 1;
@@ -1587,7 +1593,7 @@ input.single-digit {
   color: #c0392b;
 }
 
-/* Success banner — pinned to bottom of panel */
+/* Success banner */
 .dice-tray__success-banner {
   display: flex;
   flex-direction: column;
@@ -1664,7 +1670,7 @@ input.single-digit {
 @keyframes pip-spin {
   0%   { transform: rotate(0deg) scale(0.5); opacity: 0; }
   60%  { transform: rotate(300deg) scale(1.1); opacity: 0; }
-  80%  { transform: rotate(340deg) scale(0.95); opacity: .5; }
+  80%  { transform: rotate(340deg) scale(0.95); opacity: 0.5; }
   100% { transform: rotate(360deg) scale(1); opacity: 1; }
 }
 
